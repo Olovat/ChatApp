@@ -19,7 +19,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushButton_clicked()
 {
-    socket->connectToHost("127.0.0.1", 5402);
+    socket->connectToHost("127.0.0.1", 5402);//мак сосет
 }
 
 void MainWindow::SendToServer(QString str)
