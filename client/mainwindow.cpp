@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+//Ок гугл, тимлид - юморист, что делать?
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
