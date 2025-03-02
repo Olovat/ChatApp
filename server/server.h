@@ -1,18 +1,25 @@
 #ifndef SERVER_H
 #define SERVER_H
-#include<QTcpServer>
-#include<QTcpSocket>
-#include<QVector>
 
-class Server : public QTcpServer{
-private:
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <QSqlDatabase>
+#include <QSqlError>  // Add this for lastError()
+#include <QDir>       // Add this for QDir
+#include <QCoreApplication> // Add this for applicationDirPath()
+#include <QVector>
+
+class Server : public QTcpServer
+{
     Q_OBJECT
-
 public:
-    Server();
-    QTcpSocket *socket;
+    explicit Server();
+    virtual ~Server();
+    bool connectDB();
 
 private:
+    QTcpSocket *socket;
+    QSqlDatabase srv_db;
     QVector<QTcpSocket*> Sockets;//чтобы записывать сокеты в вектор
     QByteArray Data;// данные передаваемые между сервером и клиентом
     void SendToCllient(QString str);//передает данные клиенту

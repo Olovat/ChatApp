@@ -14,6 +14,25 @@ Server::Server(){
     nextBlockSize = 0;
 }
 
+Server::~Server()
+{
+    // снос соединения с клиентами
+    for (QTcpSocket* socket : Sockets) {
+        if (socket && socket->isOpen()) {
+            socket->close();
+            socket->deleteLater();
+        }
+    }
+    Sockets.clear();
+    
+    // снос соединения с базой данных
+    if (srv_db.isOpen()) {
+        srv_db.close();
+    }
+    
+    qDebug() << "Server destroyed";
+}
+
 //обработчик новых подключений
 void Server::incomingConnection(qintptr socketDescriptor){
     socket = new QTcpSocket;
@@ -84,11 +103,16 @@ void Server::SendToCllient(QString str){
     }
 }
 
-
-
-
-
-
-
-
-
+bool Server::connectDB()
+{
+    srv_db = QSqlDatabase::addDatabase("QSQLITE");
+    QString dbPath = QCoreApplication::applicationDirPath() + "/data";
+    QDir().mkpath(dbPath);
+    srv_db.setDatabaseName(dbPath + "/authorisation.db");
+    if(!srv_db.open())
+    {
+        qDebug() << "Cannot open database: " << srv_db.lastError();
+        return false;
+    }
+    return true;
+}
