@@ -3,17 +3,27 @@
 #include <QtDebug>
 #include <QMessageBox>
 #include <QtSql>
+#include<QScreen>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
+    //делает окно по центру
+    QScreen *screen = QGuiApplication::primaryScreen();
+    if (screen) {
+        QRect screenGeometry = screen->geometry();
+        int x = (screenGeometry.width() - this->width()) / 2;
+        int y = (screenGeometry.height() - this->height()) / 2;
+        this->move(x, y);
+    }
+
     ui->setupUi(this);
     socket = new QTcpSocket(this);
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected, this, &MainWindow::deleteLater);
     nextBlockSize = 0;
-    
+
     // Создание авторизации и регистрации пользователя , сигналы с кнопок
     user_counter = 0;
     m_loginSuccesfull = false;
@@ -31,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     {
         qDebug() << "Failed to connect DB";
     }
-            
+
     // прячем главное окно
     this->hide();
 }
@@ -123,7 +133,6 @@ void MainWindow::authorizeUser()
     int yPos = 0;
     int width = 0;
     int length = 0;
-
     db_input = str_t.arg(m_username);
 
     QSqlQuery query;
@@ -225,3 +234,5 @@ void MainWindow::registerUser()
         ui_Auth.show();
     }
 }
+
+
