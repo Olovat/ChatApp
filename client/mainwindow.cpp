@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(socket, &QTcpSocket::disconnected, this, &MainWindow::deleteLater);
     nextBlockSize = 0;
     
-    // Authentication setup
+    // Создание авторизации и регистрации пользователя , сигналы с кнопок
     user_counter = 0;
     m_loginSuccesfull = false;
     connect(&ui_Auth, SIGNAL(login_button_clicked()),
@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "Failed to connect DB";
     }
             
-    // Initially hide main window
+    // прячем главное окно
     this->hide();
 }
 
@@ -66,7 +66,7 @@ void MainWindow::slotReadyRead()
     if (in.status() == QDataStream::Ok){
         /*QString str;
         in >> str;
-        ui->textBrowser->append(str);*/
+        ui->textBrowser->append(str);*/ //позже доделать
         for(;;){
             if(nextBlockSize == 0){
                 if(socket->bytesAvailable() < 2){
@@ -173,7 +173,7 @@ bool MainWindow::connectDB()
         return false;
     }
     
-    // Create table if it doesn't exist
+    // Создание БД, если не существует, пока не понятно как синхронизировать данные с сервером
     QSqlQuery query;
     db_input = "CREATE TABLE IF NOT EXISTS userlist ( "
                "number INTEGER PRIMARY KEY NOT NULL,"
@@ -194,24 +194,24 @@ bool MainWindow::connectDB()
 
 void MainWindow::registerWindowShow()
 {
-    // Hide authentication window and show registration window
+    // Прячем окно авторизации, показ окна регистрации
     ui_Auth.hide();
     ui_Reg.show();
 }
 
 void MainWindow::registerUser()
 {
-    // Get input from registration form
+    // Получение данных с окна
     m_username = ui_Reg.getName();
     m_userpass = ui_Reg.getPass();
     
-    // Check if passwords match
+    // повторная проверка паролей
     if(!ui_Reg.checkPass()) {
         QMessageBox::warning(this, "Registration Error", "Passwords don't match!");
         return;
     }
     
-    // Create SQL query to register user
+    // Очередь для создания пользователя
     QString str_t = "INSERT INTO userlist (name, pass) VALUES ('%1', '%2')";
     db_input = str_t.arg(m_username).arg(m_userpass);
     

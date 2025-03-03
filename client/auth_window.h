@@ -34,4 +34,4 @@ private:
     QString m_userpass;
 };
 
-#endif // AUTH_WINDOW_H
+#endif 

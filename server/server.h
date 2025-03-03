@@ -4,9 +4,9 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QSqlDatabase>
-#include <QSqlError>  // Add this for lastError()
-#include <QDir>       // Add this for QDir
-#include <QCoreApplication> // Add this for applicationDirPath()
+#include <QSqlError> 
+#include <QDir>      
+#include <QCoreApplication> 
 #include <QVector>
 
 class Server : public QTcpServer
