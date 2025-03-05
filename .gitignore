@@ -1,13 +1,57 @@
-# Qt Creator
-.qtcreator/
+# C++ objects and libs
+*.slo
+*.lo
+*.o
+*.a
+*.la
+*.lai
+*.so
+*.so.*
+*.dll
+*.dylib
+
+# Qt-es
+object_script.*.Release
+object_script.*.Debug
+*_plugin_import.cpp
+/.qmake.cache
+/.qmake.stash
 *.pro.user
 *.pro.user.*
 *.qbs.user
 *.qbs.user.*
+*.moc
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.qmlc
+*.jsc
+Makefile*
+*build-*
+*.qm
+*.prl
+
+# Qt unit tests
+target_wrapper.*
+
+# QtCreator
+*.autosave
+
+# QtCreator Qml
 *.qmlproject.user
 *.qmlproject.user.*
-.qtc_clangd/
 
+# QtCreator CMake
+CMakeLists.txt.user*
+
+# QtCreator 4.8< compilation database
+compile_commands.json
+
+# QtCreator local machine specific files for imported projects
+*creator.user*
+
+*_qmlcache.qrc
 # macOS
 .DS_Store
 
@@ -22,10 +66,3 @@ Makefile*
 moc_*.cpp
 ui_*.h
 qrc_*.cpp
-
-# Скомпилированные файлы
-*.exe
-*.dll
-*.so
-*.dylib
-
