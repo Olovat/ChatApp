@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected, this, &MainWindow::deleteLater);
     nextBlockSize = 0;
-
+    
     // Создание авторизации и регистрации пользователя , сигналы с кнопок
     user_counter = 0;
     m_loginSuccesfull = false;
@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     {
         qDebug() << "Failed to connect DB";
     }
-
+            
     // прячем главное окно
     this->hide();
 }

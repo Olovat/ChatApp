@@ -1,0 +1,31 @@
+# Qt Creator
+.qtcreator/
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.qmlproject.user
+*.qmlproject.user.*
+.qtc_clangd/
+
+# macOS
+.DS_Store
+
+# Build папка
+build/
+debug/
+release/
+.qmake.stash
+Makefile*
+*.o
+*.obj
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+
+# Скомпилированные файлы
+*.exe
+*.dll
+*.so
+*.dylib
+
