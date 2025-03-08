@@ -128,8 +128,16 @@ void Server::slotReadyRead()
                 }
             }
             else {
-                // Отправка сообщения всем клиентам
-                SendToCllient(message);
+                QString senderUsername = "Unknown";
+                for (const AuthenticatedUser& user : authenticatedUsers) {
+                    if (user.socket == socket) {
+                        senderUsername = user.username;
+                        break;
+                    }
+                }
+                
+                QString formattedMessage = senderUsername + ": " + message;
+                SendToCllient(formattedMessage);
             }
             
             break;

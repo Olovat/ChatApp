@@ -7,6 +7,7 @@
 #include <QtSql/QtSql>
 #include "auth_window.h"
 #include "reg_window.h"
+#include <QUuid>
 
 
 QT_BEGIN_NAMESPACE
@@ -61,6 +62,9 @@ private:
     //----------------------------------------------
     void SendToServer(QString str); //создаем блок для хранения
 
+    QString lastReceivedMessage;
+
+    QStringList recentSentMessages;
     
 public slots:
     void slotReadyRead();

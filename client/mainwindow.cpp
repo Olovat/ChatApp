@@ -41,13 +41,20 @@ MainWindow::~MainWindow()
 
 void MainWindow::SendToServer(QString str)
 {
-    ui->textBrowser->append(m_username + ": " + str);
+    QString messageId = QUuid::createUuid().toString();
+    
+    QString formattedMessage = m_username + ": " + str;
+    ui->textBrowser->append(formattedMessage);
+    
+    recentSentMessages.append(formattedMessage);
+    while (recentSentMessages.size() > 20) {
+        recentSentMessages.removeFirst();
+    }
     
     Data.clear();
-    //создаем данные на вывод, передаем массив байтов(&Data) и режим работы(QIODevice::WriteOnly) только для записи
     QDataStream out(&Data, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_2);
-    out << quint16(0) << str;
+    out << quint16(0) << str; 
     out.device()->seek(0);
     out << quint16(Data.size() - sizeof(quint16));
     socket->write(Data);
@@ -92,8 +99,28 @@ void MainWindow::slotReadyRead()
                 QMessageBox::warning(this, "Registration Error", "Username may already exist!");
             }
             else {
-                // Обычное сообщение пользователя
-                ui->textBrowser->append(str);
+                if (!lastReceivedMessage.isEmpty() && str == lastReceivedMessage) {
+                    continue;
+                }
+                
+                lastReceivedMessage = str;
+                
+                if (recentSentMessages.contains(str)) {
+                    continue;
+                }
+                
+                bool isDuplicate = false;
+                
+                for (const QString &recentMsg : recentSentMessages) {
+                    if (str.contains(recentMsg) || recentMsg == str) {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+                
+                if (!isDuplicate) {
+                    ui->textBrowser->append(str);
+                }
             }
         }
     }
