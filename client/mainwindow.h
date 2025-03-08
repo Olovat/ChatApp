@@ -25,7 +25,7 @@ public:
 
     void display(); // прототип пользовательской функции отображения
 
-    bool connectDB(); // прототип метода подключения к БД
+    bool connectToServer();
 
 private slots:
     void authorizeUser(); // пользовательские слоты
@@ -34,7 +34,6 @@ private slots:
 
     void registerUser();
 
-    void on_pushButton_clicked();
 
     void on_pushButton_2_clicked();
 
@@ -57,12 +56,6 @@ private:
     QString m_username;
 
     QString m_userpass;
-
-    QString db_input;
-
-    QSqlDatabase mw_db;
-
-    int user_counter;
 
     bool m_loginSuccesfull;
     //----------------------------------------------

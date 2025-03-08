@@ -1,4 +1,4 @@
-# C++ objects and libs
+# C++
 *.slo
 *.lo
 *.o
@@ -10,7 +10,7 @@
 *.dll
 *.dylib
 
-# Qt-es
+# Qt
 object_script.*.Release
 object_script.*.Debug
 *_plugin_import.cpp
@@ -32,8 +32,6 @@ Makefile*
 *build-*
 *.qm
 *.prl
-
-# Qt unit tests
 target_wrapper.*
 
 # QtCreator
@@ -53,6 +51,7 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
 # macOS
 .DS_Store
 

@@ -14,19 +14,6 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="pushButton">
-    <property name="geometry">
-     <rect>
-      <x>19</x>
-      <y>30</y>
-      <width>331</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>connect</string>
-    </property>
-   </widget>
    <widget class="QLineEdit" name="lineEdit">
     <property name="geometry">
      <rect>
@@ -67,7 +54,7 @@
      <x>0</x>
      <y>0</y>
      <width>379</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>
