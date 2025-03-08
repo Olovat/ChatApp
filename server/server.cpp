@@ -154,14 +154,28 @@ void Server::SendToCllient(QString str){
 bool Server::connectDB()
 {
     srv_db = QSqlDatabase::addDatabase("QSQLITE");
-    QString dbPath = QCoreApplication::applicationDirPath() + "/data";
-    QDir().mkpath(dbPath);
-    srv_db.setDatabaseName(dbPath + "/authorisation.db");
+    
+    QDir appDir(QCoreApplication::applicationDirPath());
+    
+    appDir.cdUp();
+    appDir.cdUp();
+    appDir.cdUp(); 
+    
+    QString dataPath = appDir.absolutePath() + "/data";
+    QDir dataDir(dataPath);
+    if (!dataDir.exists()) {
+        dataDir.mkpath(".");
+    }
+    
+    srv_db.setDatabaseName(dataPath + "/authorisation.db");
+    
     if(!srv_db.open())
     {
         qDebug() << "Cannot open database: " << srv_db.lastError();
         return false;
     }
+    
+    qDebug() << "Connected to database at: " << dataPath + "/authorisation.db";
     
     if (!initUserTable()) {
         qDebug() << "Failed to initialize user table";
