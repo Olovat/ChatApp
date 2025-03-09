@@ -3,7 +3,7 @@
 #include <QApplication>
 #include <QMessageBox>
 #include <QMainWindow>
-#include<QTcpSocket>
+#include <QTcpSocket>
 #include <QString>
 #include <QtSql/QtSql>
 #include "auth_window.h"
