@@ -57,7 +57,11 @@ void MainWindow::SendToServer(QString str)
     out << quint16(0) << str; 
     out.device()->seek(0);
     out << quint16(Data.size() - sizeof(quint16));
-    socket->write(Data);
+    
+    //Отправка данных на сервер
+    if (socket && socket->isValid()) {
+        socket->write(Data);
+    }
     ui->lineEdit->clear();
 }
 
