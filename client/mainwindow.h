@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-
+#include <QApplication>
+#include <QMessageBox>
 #include <QMainWindow>
 #include<QTcpSocket>
 #include <QString>
@@ -25,7 +26,10 @@ public:
     ~MainWindow();
 
     void display(); // прототип пользовательской функции отображения
-
+    void setLogin(const QString &login);
+    void setPass(const QString &pass);
+    QString getUsername() const;
+    QString getUserpass() const;
     bool connectToServer();
 
 private slots:

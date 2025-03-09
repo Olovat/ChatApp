@@ -161,6 +161,7 @@ void Server::SendToCllient(QString str){
 
 bool Server::connectDB()
 {
+
     srv_db = QSqlDatabase::addDatabase("QSQLITE");
     
     QDir appDir(QCoreApplication::applicationDirPath());

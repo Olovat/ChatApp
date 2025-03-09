@@ -130,6 +130,21 @@ void MainWindow::slotReadyRead()
     }
 }
 
+void MainWindow::setLogin(const QString &login) {
+    m_username = login;
+}
+
+void MainWindow::setPass(const QString &pass) {
+    m_userpass = pass;
+}
+
+QString MainWindow::getUsername() const {
+    return m_username;
+}
+
+QString MainWindow::getUserpass() const {
+    return m_userpass;
+}
 
 void MainWindow::on_pushButton_2_clicked()
 {
