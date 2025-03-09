@@ -242,18 +242,18 @@ QString Server::getUsernameBySocket(QTcpSocket *socket)
 void Server::clientDisconnected()
 {
     QTcpSocket* socket = qobject_cast<QTcpSocket*>(sender());
-    if (socket) {
-        // Удаление пользователя из авторизированных, при разрыве соединения
-        for (int i = 0; i < authenticatedUsers.size(); ++i) {
-            if (authenticatedUsers[i].socket == socket) {
-                qDebug() << "User" << authenticatedUsers[i].username << "disconnected";
-                authenticatedUsers.removeAt(i);
-                break;
-            }
+    if (!socket) return;
+
+    QString username = "Unknown";
+    for (int i = 0; i < authenticatedUsers.size(); ++i) {
+        if (authenticatedUsers[i].socket == socket) {
+            username = authenticatedUsers[i].username;
+            authenticatedUsers.removeAt(i);
+            break;
         }
-        
-        // Удаление сокета из вектора
-        Sockets.removeOne(socket);
-        qDebug() << "Client disconnected";
     }
+
+    qDebug() << "User " << username << " disconnected";
+
+    Sockets.removeOne(socket);
 }
