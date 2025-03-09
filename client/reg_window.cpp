@@ -48,3 +48,8 @@ bool reg_window::checkPass()
 {
     return (m_confirmation == m_userPass);
 }
+
+void reg_window::ConfirmClear()
+{
+    ui->Confirm_line->clear();
+}

@@ -19,6 +19,7 @@ public:
     QString getName();
     QString getPass();
     bool checkPass();
+    void ConfirmClear();
 
 signals:
     void register_button_clicked2();

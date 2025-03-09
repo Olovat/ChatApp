@@ -17,6 +17,7 @@ public:
     ~auth_window();
     QString getLogin();
     QString getPass();
+    void LineClear();
 
 signals:
     void login_button_clicked();

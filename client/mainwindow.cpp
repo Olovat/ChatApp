@@ -89,6 +89,7 @@ void MainWindow::slotReadyRead()
             else if(str == "AUTH_FAILED") {
                 QMessageBox::warning(this, "Authentication Error", "Invalid username or password!");
                 m_loginSuccesfull = false;
+                ui_Auth.LineClear();
             }
             else if(str == "REGISTER_SUCCESS") {
                 QMessageBox::information(this, "Success", "Registration successful!");
@@ -189,6 +190,7 @@ void MainWindow::registerUser()
 {
     if(!ui_Reg.checkPass()) {
         QMessageBox::warning(this, "Registration Error", "Passwords don't match!");
+        ui_Reg.ConfirmClear();
         return;
     }
 

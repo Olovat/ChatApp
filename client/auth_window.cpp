@@ -47,3 +47,9 @@ QString auth_window::getPass()  // геттер пароля
 {
     return auth_window::m_userpass;
 }
+
+void auth_window::LineClear()
+{
+    ui->lineEdit->clear();
+    ui->lineEdit_2->clear();
+}
