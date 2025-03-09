@@ -2,7 +2,7 @@ name: ChatApp CI
 
 on:
   push:
-    branches: [ main, master, UNIT-TEST ]
+    branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
 
