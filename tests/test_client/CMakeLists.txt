@@ -34,7 +34,7 @@ if(NOT TARGET GTest::gtest)
 endif()
 
 # Add client sources - excluding main.cpp to avoid multiple main functions
-set(CLIENT_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../client")
+set(CLIENT_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../client")
 file(GLOB CLIENT_SOURCES "${CLIENT_SRC_DIR}/*.cpp")
 file(GLOB CLIENT_HEADERS "${CLIENT_SRC_DIR}/*.h")
 file(GLOB CLIENT_FORMS "${CLIENT_SRC_DIR}/*.ui")
