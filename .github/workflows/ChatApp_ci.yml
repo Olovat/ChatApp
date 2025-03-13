@@ -42,7 +42,6 @@ jobs:
       uses: jurplel/install-qt-action@v3
       with:
         version: ${{ matrix.config.qt_version }}
-        modules: ${{ matrix.config.qt_modules }}
         cache: true
 
     - name: Install Google Test
