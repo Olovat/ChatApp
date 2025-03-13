@@ -77,8 +77,8 @@ jobs:
     - name: Setup xvfb for Linux
       if: runner.os == 'Linux'
       run: |
-        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-        echo "DISPLAY=:99" >> $GITHUB_ENV
+        export DISPLAY=:99.0
+        Xvfb :99 -screen 0 1024x768x16 &
       
     - name: Run Tests
       run: |
