@@ -3,6 +3,8 @@
 #include "../../client/auth_window.h"
 #include "../../client/reg_window.h"
 #include <QApplication>
+#include <QLineEdit>
+#include <QPushButton>
 #include <QTest>
 
 class AuthUITests : public ::testing::Test {
