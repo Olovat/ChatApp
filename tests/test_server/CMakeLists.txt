@@ -14,24 +14,23 @@ set(CMAKE_AUTOUIC ON)
 find_package(Qt6 COMPONENTS Core Network Sql REQUIRED)
 
 # Find GTest
-if ($ENV{GOOGLETEST_DIR})
-    get_filename_component(_GTEST_BASE $ENV{GOOGLETEST_DIR} REALPATH)
-elseif (EXISTS "D:/Qt_project/googletest-main") # set by QC
-    get_filename_component(_GTEST_BASE "D:/Qt_project/googletest-main" REALPATH) # set by QC
+if(DEFINED ENV{GOOGLETEST_DIR})
+    set(GOOGLETEST_DIR $ENV{GOOGLETEST_DIR})
+elseif(EXISTS "/usr/src/googletest")
+    set(GOOGLETEST_DIR "/usr/src/googletest")
+else()
+    message(STATUS "Using FetchContent to get GoogleTest")
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.12.1
+    )
+    FetchContent_MakeAvailable(googletest)
 endif()
 
-if (NOT GTEST_ROOT)
-    if (_GTEST_BASE)
-        message("Setting GTEST_ROOT to ${_GTEST_BASE}")
-        set(GTEST_ROOT ${_GTEST_BASE})
-    else()
-        message("No GTEST_ROOT specified - using system defaults.")
-    endif()
-endif()
-
-find_package(GTest REQUIRED)
-if (NOT GTest_FOUND)
-    message(FATAL_ERROR "No GTest Found")
+if(NOT TARGET GTest::gtest)
+    find_package(GTest REQUIRED)
 endif()
 
 # Server source files
