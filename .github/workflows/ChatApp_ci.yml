@@ -62,29 +62,16 @@ jobs:
       run: |
         dir
         dir tests || echo "No tests directory"
-        dir tests\test_client
-        dir tests\test_server 
         
-    - name: Configure CMake for Client Tests
+    - name: Configure CMake
       run: |
-        mkdir -p build_client_tests
-        cd build_client_tests
+        mkdir build
+        cd build
         cmake ../tests/test_client -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/gtest_install
 
-    - name: Build Client Tests
+    - name: Build
       run: |
-        cd build_client_tests
-        cmake --build . --config Release
-
-    - name: Configure CMake for Server Tests
-      run: |
-        mkdir -p build_server_tests
-        cd build_server_tests
-        cmake ../tests/test_server -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/gtest_install
-
-    - name: Build Server Tests
-      run: |
-        cd build_server_tests
+        cd build
         cmake --build . --config Release
 
     - name: Setup xvfb for Linux
@@ -93,28 +80,7 @@ jobs:
         export DISPLAY=:99.0
         Xvfb :99 -screen 0 1024x768x16 &
       
-    - name: Run Client Tests
+    - name: Run Tests
       run: |
-        cd build_client_tests
-        ctest -C Release --output-on-failure
-        
-    - name: Run Server Tests
-      run: |
-        cd build_server_tests
-        ctest -C Release --output-on-failure
-        
-    - name: Configure Main Project with Tests
-      run: |
-        mkdir -p build_all
-        cd build_all
-        cmake .. -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/gtest_install
-        
-    - name: Build All Tests
-      run: |
-        cd build_all
-        cmake --build . --config Release --target test_client test_server
-        
-    - name: Run All Tests
-      run: |
-        cd build_all
+        cd build
         ctest -C Release --output-on-failure
