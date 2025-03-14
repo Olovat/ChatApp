@@ -36,18 +36,15 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install -y libxcb-xinerama0 libxcb-randr0 libxcb-render0 libxcb-shm0
-        sudo apt-get install -y libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0
-        sudo apt-get install -y libxcb-xfixes0 libxcb-shape0 libxcb-sync-dev libxcb-xkb-dev
-        sudo apt-get install -y libxkbcommon-dev libxkbcommon-x11-dev libxkbcommon-x11-0
-        sudo apt-get install -y libgl1-mesa-dev xvfb
+        sudo apt-get install -y libxcb-xinerama0
+        sudo apt-get install -y libgl1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 libxcb-xkb1 xvfb
+        sudo apt-get install -y libxcb-randr0 libxcb-shape0 libxcb-cursor0 libxcb-sync1 libxcb-xfixes0 libxcb-shm0 libxcb-glx0
 
     - name: Set up Qt
       uses: jurplel/install-qt-action@v3
       with:
         version: ${{ matrix.config.qt_version }}
         cache: true
-        modules: ${{ matrix.config.qt_modules }}
 
     - name: Install Google Test
       run: |
@@ -79,15 +76,17 @@ jobs:
         cd build
         cmake --build . --config Release
 
-    - name: Setup xvfb for Linux
+    - name: Run Tests on Linux
       if: runner.os == 'Linux'
-      uses: GabrielBB/xvfb-action@v1.0
-      with:
-        run: |
-          cd build
-          ctest -C Release --output-on-failure
-        
-    - name: Run Tests (Windows)
+      run: |
+        cd build
+        export DISPLAY=:99
+        export QT_QPA_PLATFORM=xcb
+        sudo Xvfb :99 -screen 0 1024x768x24 &
+        sleep 3
+        ctest -C Release --output-on-failure
+      
+    - name: Run Tests on Windows
       if: runner.os == 'Windows'
       run: |
         cd build
