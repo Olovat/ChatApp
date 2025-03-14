@@ -17,10 +17,6 @@ public:
     explicit Server();
     virtual ~Server();
     bool connectDB();
-        // Авторизация и регистрация пользователя
-    bool authenticateUser(const QString &username, const QString &password);
-    bool registerUser(const QString &username, const QString &password);
-    QString getUsernameBySocket(QTcpSocket *socket);
 
 private:
     QTcpSocket *socket;
@@ -29,7 +25,12 @@ private:
     QByteArray Data; // данные передаваемые между сервером и клиентом
     void SendToCllient(QString str); // передает данные клиенту
     quint16 nextBlockSize;
-
+    
+    // Авторизация и регистрация пользователя
+    bool authenticateUser(const QString &username, const QString &password);
+    bool registerUser(const QString &username, const QString &password);
+    QString getUsernameBySocket(QTcpSocket *socket);
+    
     // Структура для хранения авторизованных пользователей
     struct AuthenticatedUser {
         QString username;
