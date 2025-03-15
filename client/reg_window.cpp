@@ -53,3 +53,17 @@ void reg_window::ConfirmClear()
 {
     ui->Confirm_line->clear();
 }
+
+// Тоже самое, что и в auth_window.cpp
+
+void reg_window::setButtonsEnabled(bool enabled)
+{
+    
+    if (ui->Register_button) {
+        ui->Register_button->setEnabled(enabled);
+        ui->Register_button->repaint();
+    }
+
+    // Обновление UI тоже самое, что и в auth_window.cpp
+    QApplication::processEvents();
+}

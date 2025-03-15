@@ -53,3 +53,18 @@ void auth_window::LineClear()
     ui->lineEdit->clear();
     ui->lineEdit_2->clear();
 }
+
+void auth_window::setButtonsEnabled(bool enabled)
+{
+    if (ui->Login_button) {
+        ui->Login_button->setEnabled(enabled);
+        ui->Login_button->repaint();
+    } 
+    
+    if (ui->Register_button) {
+        ui->Register_button->setEnabled(enabled);
+        ui->Register_button->repaint();
+    }
+    // Обновление UI
+    QApplication::processEvents();
+}

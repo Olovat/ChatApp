@@ -1,3 +1,4 @@
+#include <QApplication>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QtDebug>
@@ -14,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
     nextBlockSize = 0;
+    currentOperation = None; // Начальное состояние, потом будет изменено на Auth или Register, в завивимости от процесса.
     
     // Подключение к серверу
     socket->connectToHost("127.0.0.1", 5402);
@@ -26,12 +28,15 @@ MainWindow::MainWindow(QWidget *parent)
     
     // Инициализация окон авторизации и регистрации
     connect(&ui_Auth, &auth_window::login_button_clicked, this, &MainWindow::authorizeUser);
-    connect(&ui_Auth, &auth_window::register_button_clicked, &ui_Reg, &reg_window::show);
+    connect(&ui_Auth, &auth_window::register_button_clicked, this, &MainWindow::prepareForRegistration);
     
     // Инициализация окна регистрации
     connect(&ui_Reg, &reg_window::register_button_clicked2, this, &MainWindow::registerUser);            
     // прячем главное окно
     this->hide();
+    
+    // Инициализация переменной для отслеживания последнего ответа авторизации
+    lastAuthResponse = "";
 }
 
 MainWindow::~MainWindow()
@@ -84,24 +89,59 @@ void MainWindow::slotReadyRead()
             in >> str;
             nextBlockSize = 0;
             
-            // Обработка ответа сервера
+            // Проверяем, не является ли строка ответом авторизации/регистрации
+            bool isAuthResponse = (str == "AUTH_SUCCESS" || str == "AUTH_FAILED" || 
+                                  str == "REGISTER_SUCCESS" || str == "REGISTER_FAILED");
+            
+            // Если это ответ авторизации/регистрации и мы уже обрабатывали такой же ответ, пропускаем его
+            if (isAuthResponse && str == lastAuthResponse) {
+                continue;
+            }
+            
+            // Сохраняем текущий ответ авторизации/регистрации
+            if (isAuthResponse) {
+                lastAuthResponse = str;
+            }
+            
+            // Обработка ответа сервера в зависимости от текущей операции
             if(str == "AUTH_SUCCESS") {
-                m_loginSuccesfull = true;
-                ui_Auth.close();
-                this->show();
+                if (currentOperation == Auth || currentOperation == None) {
+                    m_loginSuccesfull = true;
+                    ui_Auth.close();
+                    this->show();
+                    currentOperation = None;
+                }
+                // Включаем кнопки после обработки ответа
+                ui_Auth.setButtonsEnabled(true);
             }
             else if(str == "AUTH_FAILED") {
-                QMessageBox::warning(this, "Authentication Error", "Invalid username or password!");
-                m_loginSuccesfull = false;
-                ui_Auth.LineClear();
+                if (currentOperation == Auth || currentOperation == None) {
+                    QMessageBox::warning(this, "Authentication Error", "Invalid username or password!");
+                    m_loginSuccesfull = false;
+                    ui_Auth.LineClear();
+                    currentOperation = None;
+                    // Включаем кнопки после обработки ответа
+                    ui_Auth.setButtonsEnabled(true);
+                }
             }
             else if(str == "REGISTER_SUCCESS") {
-                QMessageBox::information(this, "Success", "Registration successful!");
-                ui_Reg.hide();
-                ui_Auth.show();
+                if (currentOperation == Register || currentOperation == None) {
+                    QMessageBox::information(this, "Success", "Registration successful!");
+                    ui_Reg.hide();
+                    ui_Auth.show();
+                    currentOperation = None;
+                    // Включаем кнопки после обработки ответа
+                    ui_Reg.setButtonsEnabled(true);
+                    ui_Auth.setButtonsEnabled(true);
+                }
             }
             else if(str == "REGISTER_FAILED") {
-                QMessageBox::warning(this, "Registration Error", "Username may already exist!");
+                if (currentOperation == Register || currentOperation == None) {
+                    QMessageBox::warning(this, "Registration Error", "Username may already exist!");
+                    currentOperation = None;
+                    // Включаем кнопки после обработки ответа
+                    ui_Reg.setButtonsEnabled(true);
+                }
             }
             else {
                 if (!lastReceivedMessage.isEmpty() && str == lastReceivedMessage) {
@@ -170,8 +210,17 @@ void MainWindow::display()
 // авторизация и регистрация пользователя
 void MainWindow::authorizeUser()
 {
+    // Очистка любых ожидающих данных и установка состояния операции
+    clearSocketBuffer();
+    currentOperation = Auth;
+    
     m_username = ui_Auth.getLogin();
     m_userpass = ui_Auth.getPass();
+    m_userpass = ui_Auth.getPass();
+    
+    // Делаем кнопки неактивными, чтобы пользователь не спамил запросами в БД!
+    ui_Auth.setButtonsEnabled(false);
+    QApplication::processEvents(); // Форсировать немедленное обновление UI
     
     // Отправка запроса на авторизацию на сервер
     QString authString = QString("AUTH:%1:%2").arg(m_username, m_userpass);
@@ -184,8 +233,8 @@ void MainWindow::authorizeUser()
     out.device()->seek(0);
     out << quint16(Data.size() - sizeof(quint16));
     socket->write(Data);
+    socket->waitForBytesWritten();
 }
-
 
 bool MainWindow::connectToServer()
 {
@@ -206,7 +255,11 @@ void MainWindow::registerWindowShow()
 }
 
 void MainWindow::registerUser()
-{
+{    
+    // Очистка любых ожидающих данных и установка состояния операции
+    clearSocketBuffer();
+    currentOperation = Register;
+    
     if(!ui_Reg.checkPass()) {
         QMessageBox::warning(this, "Registration Error", "Passwords don't match!");
         ui_Reg.ConfirmClear();
@@ -215,6 +268,10 @@ void MainWindow::registerUser()
 
     m_username = ui_Reg.getName();
     m_userpass = ui_Reg.getPass();
+    
+    // Отключаем кнопки, чтобы пользователь не спамил запросами в БД!
+    ui_Reg.setButtonsEnabled(false);
+    QApplication::processEvents(); //Форсировать немедленное обновление UI
     
     // Отправка запроса на регистрацию на сервер
     QString regString = QString("REGISTER:%1:%2").arg(m_username, m_userpass);
@@ -227,4 +284,26 @@ void MainWindow::registerUser()
     out.device()->seek(0);
     out << quint16(Data.size() - sizeof(quint16));
     socket->write(Data);
+    socket->waitForBytesWritten();
+}
+
+// Что нужно сделать при подготовке к регистрации
+void MainWindow::prepareForRegistration()
+{
+    clearSocketBuffer();
+    currentOperation = None;
+    ui_Reg.show();
+    ui_Auth.hide();
+}
+
+// Очистка буфера сокета
+void MainWindow::clearSocketBuffer()
+{
+    // Очищаем отслеживание последнего ответа авторизации при новом запросе
+    lastAuthResponse = "";
+    
+    if (socket && socket->bytesAvailable() > 0) {
+        socket->readAll();
+    }
+    nextBlockSize = 0;
 }

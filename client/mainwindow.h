@@ -39,10 +39,11 @@ private slots:
 
     void registerUser();
 
-
     void on_pushButton_2_clicked();
 
     void on_lineEdit_returnPressed();
+
+    void prepareForRegistration(); // Чтобы исправить баг при переходе с авторизации на регистрацию и множественном вызове окна регистрации
 
 private:
     Ui::MainWindow *ui;
@@ -69,6 +70,19 @@ private:
     QString lastReceivedMessage;
 
     QStringList recentSentMessages;
+
+    // создаем состояния операций
+    enum OperationType {
+        None,
+        Auth,
+        Register
+    };
+
+    // очищаем буфер сокета
+    void clearSocketBuffer();
+    OperationType currentOperation;
+
+    QString lastAuthResponse; // Хранит последний ответ авторизации/регистрации
     
 public slots:
     void slotReadyRead();

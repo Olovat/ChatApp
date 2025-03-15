@@ -18,6 +18,7 @@ public:
     QString getLogin();
     QString getPass();
     void LineClear();
+    void setButtonsEnabled(bool enabled);
 
 signals:
     void login_button_clicked();
@@ -35,4 +36,4 @@ private:
     QString m_userpass;
 };
 
-#endif 
+#endif

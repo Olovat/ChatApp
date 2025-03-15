@@ -20,6 +20,7 @@ public:
     QString getPass();
     bool checkPass();
     void ConfirmClear();
+    void setButtonsEnabled(bool enabled);
 
 signals:
     void register_button_clicked2();
