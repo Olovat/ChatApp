@@ -18,6 +18,7 @@ object_script.*.Debug
 .qtcreator/
 /.qmake.cache
 /.qmake.stash
+*.pro.user
 *.pro.user.*
 *.qbs.user
 *.qbs.user.*
@@ -54,6 +55,9 @@ compile_commands.json
 
 # macOS
 .DS_Store
+
+# DB
+server/data/
 
 # Build папка
 build/
