@@ -9,6 +9,7 @@
 #include <QDir>      
 #include <QCoreApplication> 
 #include <QVector>
+#include <QList>
 
 class Server : public QTcpServer
 {
@@ -36,15 +37,23 @@ private:
         QString username;
         QTcpSocket* socket;
     };
-    QVector<AuthenticatedUser> authenticatedUsers;
+    QList<AuthenticatedUser> authenticatedUsers;
     
     // Создание таблицы пользователей
     bool initUserTable();
+    bool initMessageTable();  // New method
+    bool logMessage(const QString &sender, const QString &recipient, const QString &message);  // New method
+
+    void broadcastUserList();
+
+    void sendUserList(QTcpSocket* clientSocket);
 
 public slots:
     void incomingConnection(qintptr socketDescriptor); // обработчик новых подключений
     void slotReadyRead(); // слот для сигнала; обработчик полученных от клиента сообщений
     void clientDisconnected(); // обработчик отключения клиента
+    bool sendPrivateMessage(const QString &recipientUsername, const QString &message);
+
 };
 
 #endif // SERVER_H
