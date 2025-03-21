@@ -41,8 +41,11 @@ private:
     
     // Создание таблицы пользователей
     bool initUserTable();
-    bool initMessageTable();  // New method
-    bool logMessage(const QString &sender, const QString &recipient, const QString &message);  // New method
+    bool initMessageTable();  
+    bool initHistoryTable();  // Новый метод для создания таблицы истории
+    bool logMessage(const QString &sender, const QString &recipient, const QString &message);
+    bool saveToHistory(const QString &sender, const QString &message);  // Новый метод для сохранения в историю
+    void sendMessageHistory(QTcpSocket* socket);  // Новый метод для отправки истории
 
     void broadcastUserList();
 

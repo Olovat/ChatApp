@@ -5,6 +5,7 @@
 #include <QSqlError>
 #include <QDataStream>
 #include <QDebug>
+#include <QThread>  
 
 Server::Server(){
     if(this->listen(QHostAddress::Any, 5402))
@@ -58,7 +59,7 @@ void Server::slotReadyRead()
     in.setVersion(QDataStream::Qt_6_2);
 
     if(in.status() == QDataStream::Ok){
-        while(socket->bytesAvailable() > 0){ // Changed from for(;;) to ensure we process all available data
+        while(socket->bytesAvailable() > 0){
             if(nextBlockSize == 0){
                 if(socket->bytesAvailable() < 2){
                     break;
@@ -100,6 +101,9 @@ void Server::slotReadyRead()
 
                             // Обновляем список пользователей для всех после успешной авторизации
                             broadcastUserList();
+                            
+                            // Отправляем историю сообщений после успешной авторизации
+                            sendMessageHistory(socket);
                         }
                     }
 
@@ -185,6 +189,9 @@ void Server::slotReadyRead()
 
                 // Логируем общее сообщение
                 logMessage(senderUsername, "", message);
+                
+                // Сохраняем сообщение в историю
+                saveToHistory(senderUsername, message);
 
                 QString formattedMessage = senderUsername + ": " + message;
                 SendToCllient(formattedMessage);
@@ -203,7 +210,7 @@ void Server::SendToCllient(QString str){
     out << quint16(Data.size() - sizeof(quint16));
     for(int i = 0; i < Sockets.size(); i++){
         Sockets[i]->write(Data);
-        Sockets[i]->flush(); // Add explicit flush to ensure data is sent immediately
+        Sockets[i]->flush(); 
     }
     qDebug() << "Sent message to all clients:" << str;
 }
@@ -307,6 +314,11 @@ bool Server::connectDB()
         qDebug() << "Failed to initialize message table";
         return false;
     }
+    
+    if (!initHistoryTable()) {
+        qDebug() << "Failed to initialize history table";
+        return false;
+    }
 
     return true;
 }
@@ -335,12 +347,22 @@ bool Server::initMessageTable()
                       "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)");
 }
 
+bool Server::initHistoryTable()
+{
+    QSqlQuery query(srv_db);
+    return query.exec("CREATE TABLE IF NOT EXISTS history ("
+                      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                      "sender VARCHAR(20), "
+                      "message TEXT, "
+                      "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)");
+}
+
 bool Server::logMessage(const QString &sender, const QString &recipient, const QString &message)
 {
     QSqlQuery query(srv_db);
     query.prepare("INSERT INTO messages (sender, recipient, message) VALUES (:sender, :recipient, :message)");
     query.bindValue(":sender", sender);
-    query.bindValue(":recipient", recipient.isEmpty() ? QVariant(QVariant::String) : recipient);
+    query.bindValue(":recipient", recipient.isEmpty() ? QVariant() : recipient);
     query.bindValue(":message", message);
 
     bool success = query.exec();
@@ -348,6 +370,106 @@ bool Server::logMessage(const QString &sender, const QString &recipient, const Q
         qDebug() << "Failed to log message:" << query.lastError().text();
     }
     return success;
+}
+
+bool Server::saveToHistory(const QString &sender, const QString &message)
+{
+    QSqlQuery query(srv_db);
+    query.prepare("INSERT INTO history (sender, message) VALUES (:sender, :message)");
+    query.bindValue(":sender", sender);
+    query.bindValue(":message", message);
+
+    bool success = query.exec();
+    if (!success) {
+        qDebug() << "Failed to save message to history:" << query.lastError().text();
+    } else {
+        qDebug() << "Message saved to history - sender:" << sender << "message:" << message;
+    }
+    return success;
+}
+
+void Server::sendMessageHistory(QTcpSocket* clientSocket)
+{
+    qDebug() << "Sending message history to client...";
+    
+    // 1.Настройка начала истории
+    {
+        Data.clear();
+        QDataStream beginOut(&Data, QIODevice::WriteOnly);
+        beginOut.setVersion(QDataStream::Qt_6_2);
+        beginOut << quint16(0) << QString("HISTORY_CMD:BEGIN");
+        beginOut.device()->seek(0);
+        beginOut << quint16(Data.size() - sizeof(quint16));
+        clientSocket->write(Data);
+        clientSocket->flush();
+        qDebug() << "Sent history begin marker";
+        
+        
+        QThread::msleep(10);
+    }
+    
+    // 2. Отправка всех сообщений истории
+    QSqlQuery query(srv_db);
+    query.exec("SELECT sender, message, timestamp FROM history ORDER BY timestamp");
+    
+
+    bool hasRecords = query.next();
+    
+    if (!hasRecords) {
+        // Если истории нет выводим сообщение об этом
+        qDebug() << "No history records found, sending empty history message";
+        
+        Data.clear();
+        QDataStream msgOut(&Data, QIODevice::WriteOnly);
+        msgOut.setVersion(QDataStream::Qt_6_2);
+        QString noHistoryMsg = "HISTORY_MSG:0000-00-00 00:00:00|Система|История сообщений пуста";
+        msgOut << quint16(0) << noHistoryMsg;
+        msgOut.device()->seek(0);
+        msgOut << quint16(Data.size() - sizeof(quint16));
+        clientSocket->write(Data);
+        clientSocket->flush();
+        qDebug() << "Sent empty history message:" << noHistoryMsg;
+        
+
+        QThread::msleep(10);
+    } else {
+        // Отправка истории сообщений
+        do {
+            QString sender = query.value("sender").toString();
+            QString message = query.value("message").toString();
+            QString timestamp = query.value("timestamp").toString();
+            
+            QString historyMsg = QString("HISTORY_MSG:%1|%2|%3").arg(timestamp, sender, message);
+            
+            Data.clear();
+            QDataStream msgOut(&Data, QIODevice::WriteOnly);
+            msgOut.setVersion(QDataStream::Qt_6_2);
+            msgOut << quint16(0) << historyMsg;
+            msgOut.device()->seek(0);
+            msgOut << quint16(Data.size() - sizeof(quint16));
+            clientSocket->write(Data);
+            clientSocket->flush();
+            qDebug() << "Sent history message:" << historyMsg;
+            
+            
+            QThread::msleep(10);
+        } while (query.next());
+    }
+    
+    // 3. Конец истории
+    {
+        QThread::msleep(10);
+        
+        Data.clear();
+        QDataStream endOut(&Data, QIODevice::WriteOnly);
+        endOut.setVersion(QDataStream::Qt_6_2);
+        endOut << quint16(0) << QString("HISTORY_CMD:END");
+        endOut.device()->seek(0);
+        endOut << quint16(Data.size() - sizeof(quint16));
+        clientSocket->write(Data);
+        clientSocket->flush();
+        qDebug() << "Sent history end marker";
+    }
 }
 
 bool Server::authenticateUser(const QString &username, const QString &password)

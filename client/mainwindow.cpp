@@ -48,6 +48,12 @@ void MainWindow::updateUserList(const QStringList &users)
     ui->userListWidget->clear();
     for (const QString &user : users) {
         QListWidgetItem *item = new QListWidgetItem(user);
+        
+        //Просто подсветка пользователя, так проще отличать их когда 1 в 1 сообщения тестишь, я устал смотреть кто есть кто.
+        if (user == getCurrentUsername()) {
+            item->setForeground(QBrush(QColor("green")));
+        }
+        
         ui->userListWidget->addItem(item);
     }
 }
@@ -90,7 +96,7 @@ void MainWindow::SendToServer(QString str)
 
     if (socket && socket->isValid()) {
         socket->write(Data);
-        socket->flush(); // Add explicit flush
+        socket->flush(); 
     }
     ui->lineEdit->clear();
 }
@@ -118,7 +124,7 @@ void MainWindow::slotReadyRead()
     QDataStream in(socket);
     in.setVersion(QDataStream::Qt_6_2);
     if (in.status() == QDataStream::Ok){
-        while(socket->bytesAvailable() > 0){ // Changed to while loop to process all data
+        while(socket->bytesAvailable() > 0){
             if(nextBlockSize == 0){
                 if(socket->bytesAvailable() < 2){
                     break;
@@ -134,8 +140,46 @@ void MainWindow::slotReadyRead()
 
             qDebug() << "Received from server:" << str;
 
-            // Удаляем обработку JSON сообщений
-            if (str.startsWith("USERLIST:")) {
+            // Обработка начала истории
+            if (str == "HISTORY_CMD:BEGIN") {
+                qDebug() << "HISTORY_BEGIN received - starting history display";
+                ui->textBrowser->append("---------- ИСТОРИЯ СООБЩЕНИЙ ----------\n");
+            }
+            // Обработка сообщений истории
+            else if (str.startsWith("HISTORY_MSG:")) {
+                QString historyData = str.mid(QString("HISTORY_MSG:").length());
+                QStringList parts = historyData.split("|", Qt::SkipEmptyParts);
+                
+                qDebug() << "History message parts:" << parts.size() << "Raw data:" << historyData;
+                
+                if (parts.size() >= 3) {
+                    QString timestamp = parts[0];
+                    QString sender = parts[1];
+                    QString message = parts.mid(2).join("|"); // На случай, если сообщение содержит символы |
+                    
+                    QString timeOnly;
+                    if (timestamp.length() >= 16)
+                        timeOnly = timestamp.mid(11, 5); // Оставляем только время
+                    
+                    // Улучшаем форматирование для истории с отображением только времени
+                    QString formattedMessage = QString("[%1] %2: %3").arg(
+                        timeOnly,
+                        sender,
+                        message
+                    );
+                    ui->textBrowser->append(formattedMessage);
+                    qDebug() << "Added history message:" << formattedMessage;
+                } else {
+                    qDebug() << "Error: Invalid history format. Raw data:" << historyData;
+                }
+            }
+            // Обработка конца истории
+            else if (str == "HISTORY_CMD:END") {
+                qDebug() << "HISTORY_END received - history display complete";
+                ui->textBrowser->append("---------- КОНЕЦ ИСТОРИИ СООБЩЕНИЙ ----------\n");
+            } 
+            // Обработка остальных сообщений как раньше
+            else if (str.startsWith("USERLIST:")) {
                 QStringList users = str.mid(QString("USERLIST:").length()).split(",");
                 qDebug() << "User list received:" << users;
                 updateUserList(users);
@@ -186,21 +230,21 @@ void MainWindow::slotReadyRead()
                 }
             }
             else {
-                // Simplified duplicate message detection
+                
                 bool isDuplicate = false;
                 
-                // Check only exact matches in recent sent messages
+                
                 if (recentSentMessages.contains(str)) {
                     isDuplicate = true;
                 }
                 
-                // If not a duplicate, display it
+                
                 if (!isDuplicate) {
                     ui->textBrowser->append(str);
                     lastReceivedMessage = str;
                 }
             }
-            // No break statement here to process all available messages
+            
         }
     }
     else{
