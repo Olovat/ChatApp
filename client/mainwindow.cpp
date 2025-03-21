@@ -90,6 +90,7 @@ void MainWindow::SendToServer(QString str)
 
     if (socket && socket->isValid()) {
         socket->write(Data);
+        socket->flush(); // Add explicit flush
     }
     ui->lineEdit->clear();
 }
@@ -117,7 +118,7 @@ void MainWindow::slotReadyRead()
     QDataStream in(socket);
     in.setVersion(QDataStream::Qt_6_2);
     if (in.status() == QDataStream::Ok){
-        for(;;){
+        while(socket->bytesAvailable() > 0){ // Changed to while loop to process all data
             if(nextBlockSize == 0){
                 if(socket->bytesAvailable() < 2){
                     break;
@@ -185,29 +186,21 @@ void MainWindow::slotReadyRead()
                 }
             }
             else {
-                if (!lastReceivedMessage.isEmpty() && str == lastReceivedMessage) {
-                    continue;
-                }
-
-                lastReceivedMessage = str;
-
-                if (recentSentMessages.contains(str)) {
-                    continue;
-                }
-
+                // Simplified duplicate message detection
                 bool isDuplicate = false;
-
-                for (const QString &recentMsg : recentSentMessages) {
-                    if (str.contains(recentMsg) || recentMsg == str) {
-                        isDuplicate = true;
-                        break;
-                    }
+                
+                // Check only exact matches in recent sent messages
+                if (recentSentMessages.contains(str)) {
+                    isDuplicate = true;
                 }
-
+                
+                // If not a duplicate, display it
                 if (!isDuplicate) {
                     ui->textBrowser->append(str);
+                    lastReceivedMessage = str;
                 }
             }
+            // No break statement here to process all available messages
         }
     }
     else{

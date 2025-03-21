@@ -58,7 +58,7 @@ void Server::slotReadyRead()
     in.setVersion(QDataStream::Qt_6_2);
 
     if(in.status() == QDataStream::Ok){
-        for(;;){
+        while(socket->bytesAvailable() > 0){ // Changed from for(;;) to ensure we process all available data
             if(nextBlockSize == 0){
                 if(socket->bytesAvailable() < 2){
                     break;
@@ -190,8 +190,6 @@ void Server::slotReadyRead()
                 SendToCllient(formattedMessage);
                 qDebug() << "Broadcasting message to all clients:" << formattedMessage;
             }
-
-            break;
         }
     }
 }
@@ -205,6 +203,7 @@ void Server::SendToCllient(QString str){
     out << quint16(Data.size() - sizeof(quint16));
     for(int i = 0; i < Sockets.size(); i++){
         Sockets[i]->write(Data);
+        Sockets[i]->flush(); // Add explicit flush to ensure data is sent immediately
     }
     qDebug() << "Sent message to all clients:" << str;
 }
@@ -220,6 +219,7 @@ bool Server::sendPrivateMessage(const QString &recipientUsername, const QString 
             out.device()->seek(0);
             out << quint16(Data.size() - sizeof(quint16));
             user.socket->write(Data);
+            user.socket->flush(); // Add explicit flush here too
             qDebug() << "Sent private message to" << recipientUsername << ":" << message;
             return true;
         }
