@@ -46,6 +46,7 @@ private:
     bool logMessage(const QString &sender, const QString &recipient, const QString &message);
     bool saveToHistory(const QString &sender, const QString &message);  // Новый метод для сохранения в историю
     void sendMessageHistory(QTcpSocket* socket);  // Новый метод для отправки истории
+    void sendPrivateMessageHistory(QTcpSocket* socket, const QString &user1, const QString &user2);  // Новый метод для отправки истории личных сообщений
 
     void broadcastUserList();
 

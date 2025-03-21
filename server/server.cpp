@@ -178,6 +178,19 @@ void Server::slotReadyRead()
                     }
                 }
             }
+            else if (message.startsWith("GET_PRIVATE_HISTORY:")) {
+                QString otherUser = message.mid(QString("GET_PRIVATE_HISTORY:").length());
+                
+                QString currentUser = "Unknown";
+                for (const AuthenticatedUser& user : authenticatedUsers) {
+                    if (user.socket == socket) {
+                        currentUser = user.username;
+                        break;
+                    }
+                }
+                
+                sendPrivateMessageHistory(socket, currentUser, otherUser);
+            }
             else if (message != "GET_USERLIST") { // Фильтрация системного сообщения
                 QString senderUsername = "Unknown";
                 for (const AuthenticatedUser& user : authenticatedUsers) {
@@ -226,7 +239,7 @@ bool Server::sendPrivateMessage(const QString &recipientUsername, const QString 
             out.device()->seek(0);
             out << quint16(Data.size() - sizeof(quint16));
             user.socket->write(Data);
-            user.socket->flush(); // Add explicit flush here too
+            user.socket->flush(); 
             qDebug() << "Sent private message to" << recipientUsername << ":" << message;
             return true;
         }
@@ -469,6 +482,106 @@ void Server::sendMessageHistory(QTcpSocket* clientSocket)
         clientSocket->write(Data);
         clientSocket->flush();
         qDebug() << "Sent history end marker";
+    }
+}
+
+void Server::sendPrivateMessageHistory(QTcpSocket* clientSocket, const QString &user1, const QString &user2)
+{
+    qDebug() << "Sending private message history between" << user1 << "and" << user2;
+    // Находим кто запрашивает историю по соединению
+    QString requesterUsername = "Unknown";
+    for (const AuthenticatedUser& user : authenticatedUsers) {
+        if (user.socket == clientSocket) {
+            requesterUsername = user.username;
+            break;
+        }
+    }
+    
+    if (requesterUsername != user1 && requesterUsername != user2) {
+        qDebug() << "Security issue: User" << requesterUsername 
+                 << "tried to access chat history between" << user1 << "and" << user2;
+        return;
+    }
+    
+    // 1. Настройка начала истории
+    {
+        QString otherUser = (requesterUsername == user1) ? user2 : user1;
+        Data.clear();
+        QDataStream beginOut(&Data, QIODevice::WriteOnly);
+        beginOut.setVersion(QDataStream::Qt_6_2);
+        beginOut << quint16(0) << QString("PRIVATE_HISTORY_CMD:BEGIN:%1").arg(otherUser);
+        beginOut.device()->seek(0);
+        beginOut << quint16(Data.size() - sizeof(quint16));
+        clientSocket->write(Data);
+        clientSocket->flush();
+        qDebug() << "Sent private history begin marker for" << otherUser;
+        QThread::msleep(10);
+    }
+    
+    // 2. Очередьт сообщений истории
+    QSqlQuery query(srv_db);
+    query.prepare("SELECT sender, recipient, message, timestamp FROM messages "
+                 "WHERE ((sender = :user1 AND recipient = :user2) OR "
+                 "(sender = :user2 AND recipient = :user1)) "
+                 "ORDER BY timestamp");
+    query.bindValue(":user1", user1);
+    query.bindValue(":user2", user2);
+    
+    bool hasRecords = false;
+    if (query.exec()) {
+        hasRecords = query.next();
+    } else {
+        qDebug() << "Database error when retrieving private history:" << query.lastError().text();
+    }
+    
+    if (!hasRecords) {
+        // Если истории личных сообщений нет, выводим сообщение об этом
+        Data.clear();
+        QDataStream msgOut(&Data, QIODevice::WriteOnly);
+        msgOut.setVersion(QDataStream::Qt_6_2);
+        QString noHistoryMsg = "PRIVATE_HISTORY_MSG:0000-00-00 00:00:00|Система|История личных сообщений пуста";
+        msgOut << quint16(0) << noHistoryMsg;
+        msgOut.device()->seek(0);
+        msgOut << quint16(Data.size() - sizeof(quint16));
+        clientSocket->write(Data);
+        clientSocket->flush();
+        qDebug() << "Sent empty private history message";
+        QThread::msleep(10);
+    } else {
+        // Вывод истории личных сообщений
+        do {
+            QString sender = query.value("sender").toString();
+            QString recipient = query.value("recipient").toString();
+            QString message = query.value("message").toString();
+            QString timestamp = query.value("timestamp").toString();
+            
+            QString historyMsg = QString("PRIVATE_HISTORY_MSG:%1|%2|%3|%4").arg(
+                timestamp, sender, recipient, message);
+            
+            Data.clear();
+            QDataStream msgOut(&Data, QIODevice::WriteOnly);
+            msgOut.setVersion(QDataStream::Qt_6_2);
+            msgOut << quint16(0) << historyMsg;
+            msgOut.device()->seek(0);
+            msgOut << quint16(Data.size() - sizeof(quint16));
+            clientSocket->write(Data);
+            clientSocket->flush();
+            qDebug() << "Sent private history message:" << historyMsg;
+            QThread::msleep(10);
+        } while (query.next());
+    }
+    
+    // 3. Конец истории
+    {
+        Data.clear();
+        QDataStream endOut(&Data, QIODevice::WriteOnly);
+        endOut.setVersion(QDataStream::Qt_6_2);
+        endOut << quint16(0) << QString("PRIVATE_HISTORY_CMD:END");
+        endOut.device()->seek(0);
+        endOut << quint16(Data.size() - sizeof(quint16));
+        clientSocket->write(Data);
+        clientSocket->flush();
+        qDebug() << "Sent private history end marker";
     }
 }
 

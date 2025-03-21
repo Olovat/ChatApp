@@ -37,6 +37,7 @@ public:
     void sendMessageToServer(const QString &message); // Метод для отправки сообщения на сервер
     void handlePrivateMessage(const QString &sender, const QString &message); // Обработка приватных сообщений
     void sendPrivateMessage(const QString &recipient, const QString &message);
+    void requestPrivateMessageHistory(const QString &otherUser);
 
 private slots:
     void authorizeUser(); // пользовательские слоты
@@ -104,6 +105,10 @@ private:
     void handlePrivateMessage(const QString &sender, const QString &recipient, const QString &message);
     QString getCurrentUsername() const;
     PrivateChatWindow* findOrCreatePrivateChatWindow(const QString &username);
+
+    // Добавляем переменные для хранения истории сообщений
+    QString currentPrivateHistoryRecipient;
+    bool receivingPrivateHistory = false;
 
 public slots:
     void slotReadyRead();

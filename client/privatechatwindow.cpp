@@ -23,6 +23,11 @@ PrivateChatWindow::PrivateChatWindow(const QString &username, MainWindow *mainWi
     // Настройка горячих клавиш для отправки сообщений
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Return), ui->messageEdit);
     connect(shortcut, &QShortcut::activated, this, &PrivateChatWindow::on_sendButton_clicked);
+
+    if (mainWindow) {
+        // Запрашиваем историю сообщений у сервера
+        mainWindow->requestPrivateMessageHistory(username);
+    }
 }
 
 PrivateChatWindow::~PrivateChatWindow()
@@ -65,4 +70,21 @@ void PrivateChatWindow::receiveMessage(const QString &sender, const QString &mes
     QTime currentTime = QTime::currentTime();
     QString timeStr = currentTime.toString("hh:mm");
     ui->chatBrowser->append("[" + timeStr + "] " + sender + ": " + message);
+}
+
+void PrivateChatWindow::beginHistoryDisplay()
+{
+    //ui->chatBrowser->append("---------- ИСТОРИЯ ЛИЧНЫХ СООБЩЕНИЙ ----------");
+    historyDisplayed = true;
+}
+
+void PrivateChatWindow::addHistoryMessage(const QString &formattedMessage)
+{
+    ui->chatBrowser->append(formattedMessage);
+}
+
+void PrivateChatWindow::endHistoryDisplay()
+{
+    //ui->chatBrowser->append("---------- КОНЕЦ ИСТОРИИ ЛИЧНЫХ СООБЩЕНИЙ ----------");
+    ui->chatBrowser->append(""); // просто отделение истории от новых сообщений
 }

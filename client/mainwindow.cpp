@@ -143,7 +143,8 @@ void MainWindow::slotReadyRead()
             // Обработка начала истории
             if (str == "HISTORY_CMD:BEGIN") {
                 qDebug() << "HISTORY_BEGIN received - starting history display";
-                ui->textBrowser->append("---------- ИСТОРИЯ СООБЩЕНИЙ ----------\n");
+                //ui->textBrowser->append("---------- ИСТОРИЯ СООБЩЕНИЙ ----------\n");
+                ui->textBrowser->append(""); // просто отделение истории от новых сообщений
             }
             // Обработка сообщений истории
             else if (str.startsWith("HISTORY_MSG:")) {
@@ -176,7 +177,7 @@ void MainWindow::slotReadyRead()
             // Обработка конца истории
             else if (str == "HISTORY_CMD:END") {
                 qDebug() << "HISTORY_END received - history display complete";
-                ui->textBrowser->append("---------- КОНЕЦ ИСТОРИИ СООБЩЕНИЙ ----------\n");
+                //ui->textBrowser->append("---------- КОНЕЦ ИСТОРИИ СООБЩЕНИЙ ----------\n");
             } 
             // Обработка остальных сообщений как раньше
             else if (str.startsWith("USERLIST:")) {
@@ -228,6 +229,52 @@ void MainWindow::slotReadyRead()
                     QString privateMessage = parts.mid(2).join(":");
                     handlePrivateMessage(sender, privateMessage);
                 }
+            }
+            else if (str.startsWith("PRIVATE_HISTORY_CMD:BEGIN:")) {
+                currentPrivateHistoryRecipient = str.mid(QString("PRIVATE_HISTORY_CMD:BEGIN:").length());
+                receivingPrivateHistory = true;
+                
+                if (privateChatWindows.contains(currentPrivateHistoryRecipient)) {
+                    privateChatWindows[currentPrivateHistoryRecipient]->beginHistoryDisplay();
+                }
+            }
+            else if (str.startsWith("PRIVATE_HISTORY_MSG:")) {
+                if (receivingPrivateHistory && !currentPrivateHistoryRecipient.isEmpty() && 
+                    privateChatWindows.contains(currentPrivateHistoryRecipient)) {
+                    
+                    QString historyData = str.mid(QString("PRIVATE_HISTORY_MSG:").length());
+                    QStringList parts = historyData.split("|", Qt::SkipEmptyParts);
+                    
+                    if (parts.size() >= 4) {
+                        QString timestamp = parts[0];
+                        QString sender = parts[1];
+                        QString recipient = parts[2];
+                        QString message = parts.mid(3).join("|");
+                        
+                        QString timeOnly;
+                        if (timestamp.length() >= 16)
+                            timeOnly = timestamp.mid(11, 5);
+                        
+                        QString formattedMsg;
+                        if (sender == getCurrentUsername()) {
+                            formattedMsg = QString("[%1] Вы: %2").arg(timeOnly, message);
+                        } else {
+                            formattedMsg = QString("[%1] %2: %3").arg(timeOnly, sender, message);
+                        }
+                        
+                        privateChatWindows[currentPrivateHistoryRecipient]->addHistoryMessage(formattedMsg);
+                    }
+                }
+            }
+            else if (str == "PRIVATE_HISTORY_CMD:END") {
+                if (receivingPrivateHistory && !currentPrivateHistoryRecipient.isEmpty() &&
+                    privateChatWindows.contains(currentPrivateHistoryRecipient)) {
+                    
+                    privateChatWindows[currentPrivateHistoryRecipient]->endHistoryDisplay();
+                }
+                
+                receivingPrivateHistory = false;
+                currentPrivateHistoryRecipient.clear();
             }
             else {
                 
@@ -391,7 +438,7 @@ void MainWindow::sendPrivateMessage(const QString &recipient, const QString &mes
 {
     qDebug() << "MainWindow: Подготовка приватного сообщения для" << recipient << ":" << message;
     
-    // Формируем строку в формате "PRIVATE:recipient:message"
+    // Формируем строку в формате "PRIVATE:получатель:сообщение"
     QString privateMessage = QString("PRIVATE:%1:%2").arg(recipient, message);
     
     qDebug() << "MainWindow: Сообщение для отправки:" << privateMessage;
@@ -441,4 +488,10 @@ void MainWindow::handlePrivateMessage(const QString &sender, const QString &reci
     } else {
         qDebug() << "MainWindow: ОШИБКА - Сообщение не предназначено для текущего пользователя!";
     }
+}
+
+void MainWindow::requestPrivateMessageHistory(const QString &otherUser)
+{
+    QString request = QString("GET_PRIVATE_HISTORY:%1").arg(otherUser);
+    sendMessageToServer(request);
 }

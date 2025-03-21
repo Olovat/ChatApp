@@ -19,6 +19,10 @@ public:
 
     void receiveMessage(const QString &sender, const QString &message);
 
+    void beginHistoryDisplay();
+    void addHistoryMessage(const QString &formattedMessage);
+    void endHistoryDisplay();
+
 private slots:
     void on_sendButton_clicked();
 
@@ -28,6 +32,9 @@ private:
     MainWindow *mainWindow;
     
     void sendMessage(const QString &message);
+
+    // Флаги для отображения истории сообщений
+    bool historyDisplayed = false;
 };
 
 #endif // PRIVATECHATWINDOW_H
