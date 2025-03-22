@@ -11,6 +11,7 @@
 #include <QUuid>
 #include <QListWidgetItem>
 #include <QMap>
+#include <gtest/gtest.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -23,11 +24,18 @@ class PrivateChatWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
+    FRIEND_TEST(MainWindowTest, AuthorizeUser);
+    FRIEND_TEST(MainWindowTest, RegisterUser);
+    FRIEND_TEST(MainWindowTest, SendToServer);
+    FRIEND_TEST(MainWindowTest, UpdateUserList);
+    FRIEND_TEST(MainWindowTest, HandlePrivateMessage);
+    FRIEND_TEST(MainWindowTest, SlotReadyRead);
+    friend class MainWindowTest;
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
+    QTcpSocket* getSocket() const { return socket; }
+    void setSocket(QTcpSocket* newSocket) { socket = newSocket; }
     void display(); // прототип пользовательской функции отображения
     void setLogin(const QString &login);
     void setPass(const QString &pass);

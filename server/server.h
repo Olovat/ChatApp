@@ -10,15 +10,23 @@
 #include <QCoreApplication> 
 #include <QVector>
 #include <QList>
+#include <gtest/gtest.h>
+
 
 class Server : public QTcpServer
 {
     Q_OBJECT
+    FRIEND_TEST(ServerTest, RegisterUser);
+    FRIEND_TEST(ServerTest, AuthenticateUser);
+    FRIEND_TEST(ServerTest, SendToClient);
+    FRIEND_TEST(ServerTest, LogMessage);
+    FRIEND_TEST(ServerTest, SaveToHistory);
 public:
     explicit Server();
     virtual ~Server();
     bool connectDB();
-
+    bool initializeDatabase();
+     QSqlDatabase& getDatabase();
 private:
     QTcpSocket *socket;
     QSqlDatabase srv_db;
