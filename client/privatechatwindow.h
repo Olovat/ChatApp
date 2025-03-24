@@ -18,6 +18,7 @@ public:
     ~PrivateChatWindow();
 
     void receiveMessage(const QString &sender, const QString &message);
+    void receiveMessage(const QString &sender, const QString &message, const QString &timestamp);
     void setOfflineStatus(bool offline);
 
     void beginHistoryDisplay();
@@ -38,6 +39,14 @@ private:
 
     // Флаги для отображения истории сообщений
     bool historyDisplayed = false;
+    bool statusMessagePending = false; // Флаг ожидающего сообщения о статусе
+    bool previousOfflineStatus = false; // Предыдущий статус оффлайн
+    
+    // Метод для добавления сообщения о статусе после загрузки истории
+    void addStatusMessage();
+    
+    // Метод для конвертации времени UTC в локальное
+    QString convertUtcToLocalTime(const QString &utcTimestamp);
 };
 
 #endif // PRIVATECHATWINDOW_H

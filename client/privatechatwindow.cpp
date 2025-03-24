@@ -5,6 +5,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QTime>
+#include <QDateTime>
 #include <QShortcut>
 
 PrivateChatWindow::PrivateChatWindow(const QString &username, MainWindow *mainWindow, QWidget *parent) :
@@ -12,7 +13,9 @@ PrivateChatWindow::PrivateChatWindow(const QString &username, MainWindow *mainWi
     ui(new Ui::PrivateChatWindow), // Используем правильный UI класс
     username(username),
     mainWindow(mainWindow),
-    isOffline(false)
+    isOffline(false),
+    statusMessagePending(false),
+    previousOfflineStatus(false)
 {
     ui->setupUi(this); // Стандартная настройка UI
 
@@ -35,20 +38,40 @@ void PrivateChatWindow::setOfflineStatus(bool offline)
 {
     // Обновляем только если статус действительно изменился
     if (isOffline != offline) {
+        previousOfflineStatus = isOffline;
         isOffline = offline;
         updateWindowTitle();
         
-        QTime currentTime = QTime::currentTime();
-        QString timeStr = currentTime.toString("hh:mm");
+        // Отложим добавление сообщения о статусе, если история еще загружается
+        statusMessagePending = true;
         
-        if (isOffline) {
-            // Добавляем системное сообщение об уходе пользователя
-            ui->chatBrowser->append("<i>[" + timeStr + "] Пользователь " + username + " вышел из сети. Сообщения будут доставлены, когда пользователь вернется.</i>");
-        } else {
-            // Добавляем системное сообщение о возвращении пользователя
-            ui->chatBrowser->append("<i>[" + timeStr + "] Пользователь " + username + " вернулся в сеть.</i>");
+        // Если история уже загружена, добавим сообщение о статусе сразу
+        if (historyDisplayed) {
+            addStatusMessage();
         }
     }
+}
+
+// Новый метод для добавления сообщения о статусе
+void PrivateChatWindow::addStatusMessage()
+{
+    if (!statusMessagePending) return;
+    
+    QTime currentTime = QTime::currentTime();
+    QString timeStr = currentTime.toString("hh:mm");
+    
+    if (isOffline) {
+        // Сообщение об уходе пользователя
+        ui->chatBrowser->append("<i>[" + timeStr + "] Пользователь " + username + " вышел из сети. Сообщения ниже будут доставлены, когда пользователь вернется.</i>");
+    } else if (!previousOfflineStatus) {
+        // Сообщение о первом входе пользователя (избегаем дублирования)
+        ui->chatBrowser->append("<i>[" + timeStr + "] Пользователь " + username + " в сети.</i>");
+    } else {
+        // Сообщение о возвращении пользователя
+        ui->chatBrowser->append("<i>[" + timeStr + "] Пользователь " + username + " вернулся в сеть.</i>");
+    }
+    
+    statusMessagePending = false;
 }
 
 void PrivateChatWindow::updateWindowTitle()
@@ -68,13 +91,6 @@ void PrivateChatWindow::on_sendButton_clicked()
     if (!message.isEmpty()) {
         sendMessage(message);
         ui->messageEdit->clear();
-        
-        if (isOffline) {
-            // Опционально: информационное сообщение о доставке
-            QTime currentTime = QTime::currentTime();
-            QString timeStr = currentTime.toString("hh:mm");
-            ui->chatBrowser->append("<i>[" + timeStr + "] Сообщение будет доставлено, когда пользователь вернется в сеть</i>");
-        }
     }
 }
 
@@ -97,13 +113,44 @@ void PrivateChatWindow::sendMessage(const QString &message)
     }
 }
 
+// Метод для конвертации UTC времени в локальное
+QString PrivateChatWindow::convertUtcToLocalTime(const QString &utcTimestamp)
+{
+    // Если строка времени содержит дату и время
+    if (utcTimestamp.contains("-") && utcTimestamp.contains(":")) {
+        QDateTime utcTime = QDateTime::fromString(utcTimestamp, "yyyy-MM-dd hh:mm:ss");
+        utcTime.setTimeSpec(Qt::UTC);
+        QDateTime localTime = utcTime.toLocalTime();
+        return localTime.toString("hh:mm");
+    }
+    // Если строка времени содержит только время (уже в локальном формате)
+    else if (utcTimestamp.contains(":")) {
+        return utcTimestamp;
+    }
+    // Возвращаем исходное значение, если формат неизвестен
+    return utcTimestamp;
+}
+
 void PrivateChatWindow::receiveMessage(const QString &sender, const QString &message)
 {
-    qDebug() << "PrivateChatWindow: Получено сообщение от" << sender << ":" << message;
-    
     QTime currentTime = QTime::currentTime();
     QString timeStr = currentTime.toString("hh:mm");
-    ui->chatBrowser->append("[" + timeStr + "] " + sender + ": " + message);
+    receiveMessage(sender, message, timeStr);
+}
+
+void PrivateChatWindow::receiveMessage(const QString &sender, const QString &message, const QString &timestamp)
+{
+    qDebug() << "PrivateChatWindow: Получено сообщение от" << sender << ":" << message << "в" << timestamp;
+    
+    // Конвертируем время UTC в локальное, если необходимо
+    QString localTimeStr = convertUtcToLocalTime(timestamp);
+    
+    // Если сообщение уже содержит временную метку в формате [timestamp], используем его как есть
+    if (message.startsWith("[") && message.contains("]")) {
+        ui->chatBrowser->append(message);
+    } else {
+        ui->chatBrowser->append("[" + localTimeStr + "] " + sender + ": " + message);
+    }
 }
 
 void PrivateChatWindow::beginHistoryDisplay()
@@ -114,6 +161,7 @@ void PrivateChatWindow::beginHistoryDisplay()
 
 void PrivateChatWindow::addHistoryMessage(const QString &formattedMessage)
 {
+    // История уже форматируется в MainWindow с учетом временной зоны
     ui->chatBrowser->append(formattedMessage);
 }
 
@@ -121,4 +169,10 @@ void PrivateChatWindow::endHistoryDisplay()
 {
     //ui->chatBrowser->append("---------- КОНЕЦ ИСТОРИИ ЛИЧНЫХ СООБЩЕНИЙ ----------");
     ui->chatBrowser->append(""); // просто отделение истории от новых сообщений
+    historyDisplayed = true;
+    
+    // Добавляем сообщение о статусе после загрузки истории
+    if (statusMessagePending) {
+        addStatusMessage();
+    }
 }

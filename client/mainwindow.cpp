@@ -143,6 +143,16 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
         }
         
         privateChatWindows[selectedUser] = chatWindow;
+        
+        // Отображаем все непрочитанные сообщения в новое окно чата
+        if (unreadMessages.contains(selectedUser) && !unreadMessages[selectedUser].isEmpty()) {
+            for (const UnreadMessage &msg : unreadMessages[selectedUser]) {
+                chatWindow->receiveMessage(msg.sender, msg.message, msg.timestamp);
+            }
+            // Очищаем непрочитанные сообщения после отображения
+            unreadMessages[selectedUser].clear();
+        }
+        
         chatWindow->show();
     }
 }
@@ -229,9 +239,13 @@ void MainWindow::slotReadyRead()
                     QString sender = parts[1];
                     QString message = parts.mid(2).join("|"); // На случай, если сообщение содержит символы |
                     
-                    QString timeOnly;
-                    if (timestamp.length() >= 16)
-                        timeOnly = timestamp.mid(11, 5); // Оставляем только время
+                    // Преобразование времени из UTC в локальное
+                    QDateTime utcTime = QDateTime::fromString(timestamp, "yyyy-MM-dd hh:mm:ss");
+                    utcTime.setTimeSpec(Qt::UTC);
+                    QDateTime localTime = utcTime.toLocalTime();
+                    
+                    // Форматируем только время для отображения
+                    QString timeOnly = localTime.toString("hh:mm");
                     
                     // Улучшаем форматирование для истории с отображением только времени
                     QString formattedMessage = QString("[%1] %2: %3").arg(
@@ -240,7 +254,7 @@ void MainWindow::slotReadyRead()
                         message
                     );
                     ui->textBrowser->append(formattedMessage);
-                    qDebug() << "Added history message:" << formattedMessage;
+                    qDebug() << "Added history message:" << formattedMessage << "(UTC time:" << timestamp << ", local time:" << timeOnly << ")";
                 } else {
                     qDebug() << "Error: Invalid history format. Raw data:" << historyData;
                 }
@@ -322,9 +336,13 @@ void MainWindow::slotReadyRead()
                         QString recipient = parts[2];
                         QString message = parts.mid(3).join("|");
                         
-                        QString timeOnly;
-                        if (timestamp.length() >= 16)
-                            timeOnly = timestamp.mid(11, 5);
+                        // Преобразование времени из UTC в локальное
+                        QDateTime utcTime = QDateTime::fromString(timestamp, "yyyy-MM-dd hh:mm:ss");
+                        utcTime.setTimeSpec(Qt::UTC);
+                        QDateTime localTime = utcTime.toLocalTime();
+                        
+                        // Форматируем только время для отображения
+                        QString timeOnly = localTime.toString("hh:mm");
                         
                         QString formattedMsg;
                         if (sender == getCurrentUsername()) {
@@ -388,13 +406,18 @@ QString MainWindow::getUserpass() const {
 
 void MainWindow::on_pushButton_2_clicked()
 {
-    QString text = ui->lineEdit->text();
-    SendToServer(text);
+    QString text = ui->lineEdit->text().trimmed();
+    if (!text.isEmpty()) {
+        SendToServer(text);
+    }
 }
 
 void MainWindow::on_lineEdit_returnPressed()
 {
-    SendToServer(ui->lineEdit->text());
+    QString text = ui->lineEdit->text().trimmed();
+    if (!text.isEmpty()) {
+        SendToServer(text);
+    }
 }
 
 void MainWindow::display()
@@ -492,15 +515,24 @@ void MainWindow::clearSocketBuffer()
 
 void MainWindow::handlePrivateMessage(const QString &sender, const QString &message)
 {
-    // Если окно чата с этим пользователем уже открыто
-    if (privateChatWindows.contains(sender)) {
+    // Получаем текущее время для сохранения с сообщением
+    QTime currentTime = QTime::currentTime();
+    QString timeStr = currentTime.toString("hh:mm");
+    
+    // Если окно чата с этим пользователем уже открыто и видимо
+    if (privateChatWindows.contains(sender) && privateChatWindows[sender]->isVisible()) {
+        // Доставляем сообщение напрямую в открытое окно
         privateChatWindows[sender]->receiveMessage(sender, message);
+        privateChatWindows[sender]->activateWindow(); // Активируем окно, чтобы привлечь внимание
     } else {
-        // Окно чата не открыто - создаем новое
-        PrivateChatWindow *chatWindow = new PrivateChatWindow(sender, this);
-        privateChatWindows[sender] = chatWindow;
-        chatWindow->show();
-        chatWindow->receiveMessage(sender, message);
+        // Если окно не открыто или невидимо, сохраняем сообщение
+        UnreadMessage unread;
+        unread.sender = sender;
+        unread.message = message;
+        unread.timestamp = timeStr;
+        unreadMessages[sender].append(unread);
+        
+        qDebug() << "Сохранено непрочитанное сообщение от" << sender << ":" << message;
     }
 }
 

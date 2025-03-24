@@ -105,6 +105,14 @@ private:
 
     void updatePrivateChatStatuses(const QMap<QString, bool> &userStatusMap);
 
+    // Структура для хранения непрочитанных сообщений
+    struct UnreadMessage {
+        QString sender;
+        QString message;
+        QString timestamp;
+    };
+    QMap<QString, QList<UnreadMessage>> unreadMessages;
+
 public slots:
     void slotReadyRead();
 };
