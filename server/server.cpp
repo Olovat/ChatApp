@@ -87,24 +87,38 @@ void Server::slotReadyRead()
 
                     if (success) {
                         bool userExists = false;
-                        for (const AuthenticatedUser& user : authenticatedUsers) {
-                            if (user.username == username) {
+                        int userIndex = -1;
+                        
+                        // Проверяем, существует ли пользователь в списке
+                        for (int i = 0; i < authenticatedUsers.size(); ++i) {
+                            if (authenticatedUsers[i].username == username) {
                                 userExists = true;
+                                userIndex = i;
                                 break;
                             }
                         }
-                        if (!userExists) {
+                        
+                        if (userExists) {
+                            // Если пользователь уже существует, обновляем его статус и сокет
+                            authenticatedUsers[userIndex].isOnline = true;
+                            authenticatedUsers[userIndex].socket = socket;
+                            
+                            // Отправляем сохраненные оффлайн-сообщения
+                            sendStoredOfflineMessages(username, socket);
+                        } else {
+                            // Если пользователь новый, добавляем его
                             AuthenticatedUser user;
                             user.username = username;
                             user.socket = socket;
+                            user.isOnline = true;
                             authenticatedUsers.append(user);
-
-                            // Обновляем список пользователей для всех после успешной авторизации
-                            broadcastUserList();
-                            
-                            // Отправляем историю сообщений после успешной авторизации
-                            sendMessageHistory(socket);
                         }
+
+                        // Обновляем список пользователей для всех после успешной авторизации
+                        broadcastUserList();
+                        
+                        // Отправляем историю сообщений после успешной авторизации
+                        sendMessageHistory(socket);
                     }
 
                     Data.clear();
@@ -232,16 +246,26 @@ bool Server::sendPrivateMessage(const QString &recipientUsername, const QString 
 {
     for (const AuthenticatedUser& user : authenticatedUsers) {
         if (user.username == recipientUsername) {
-            Data.clear();
-            QDataStream out(&Data, QIODevice::WriteOnly);
-            out.setVersion(QDataStream::Qt_6_2);
-            out << quint16(0) << message;
-            out.device()->seek(0);
-            out << quint16(Data.size() - sizeof(quint16));
-            user.socket->write(Data);
-            user.socket->flush(); 
-            qDebug() << "Sent private message to" << recipientUsername << ":" << message;
-            return true;
+            if (user.isOnline && user.socket) {
+                Data.clear();
+                QDataStream out(&Data, QIODevice::WriteOnly);
+                out.setVersion(QDataStream::Qt_6_2);
+                out << quint16(0) << message;
+                out.device()->seek(0);
+                out << quint16(Data.size() - sizeof(quint16));
+                user.socket->write(Data);
+                user.socket->flush(); 
+                qDebug() << "Sent private message to" << recipientUsername << ":" << message;
+                return true;
+            } else {
+                // Пользователь оффлайн, сохраняем сообщение для последующей отправки
+                QString sender = message.split(":")[1]; // Извлекаем отправителя из формата "PRIVATE:sender:message"
+                QString content = message.mid(message.indexOf(":", message.indexOf(":") + 1) + 1); // Извлекаем текст сообщения
+                
+                storeOfflineMessage(sender, recipientUsername, content);
+                qDebug() << "User" << recipientUsername << "is offline, message stored";
+                return true; // Возвращаем true, так как сообщение успешно сохранено
+            }
         }
     }
     qDebug() << "User not found for private message:" << recipientUsername;
@@ -253,7 +277,8 @@ void Server::broadcastUserList()
 {
     QStringList users;
     for (const AuthenticatedUser& user : authenticatedUsers) {
-        users.append(user.username);
+        // Формат: username:status (1 - онлайн, 0 - оффлайн)
+        users.append(user.username + ":" + (user.isOnline ? "1" : "0"));
     }
 
     QString userList = "USERLIST:" + users.join(",");
@@ -264,9 +289,11 @@ void Server::broadcastUserList()
     out.device()->seek(0);
     out << quint16(Data.size() - sizeof(quint16));
 
-    // Отправляем список всем авторизованным пользователям
+    // Отправляем список всем онлайн пользователям
     for (const AuthenticatedUser& user : authenticatedUsers) {
-        user.socket->write(Data);
+        if (user.isOnline && user.socket) {
+            user.socket->write(Data);
+        }
     }
 
     qDebug() << "Broadcast user list to all clients:" << userList;
@@ -277,7 +304,8 @@ void Server::sendUserList(QTcpSocket* clientSocket)
 {
     QStringList users;
     for (const AuthenticatedUser& user : authenticatedUsers) {
-        users.append(user.username);
+        // Формат: username:status (1 - онлайн, 0 - оффлайн)
+        users.append(user.username + ":" + (user.isOnline ? "1" : "0"));
     }
 
     QString userList = "USERLIST:" + users.join(",");
@@ -627,15 +655,64 @@ void Server::clientDisconnected()
     for (int i = 0; i < authenticatedUsers.size(); ++i) {
         if (authenticatedUsers[i].socket == socket) {
             username = authenticatedUsers[i].username;
-            authenticatedUsers.removeAt(i);
+            // Не удаляем пользователя, а только помечаем его как оффлайн
+            authenticatedUsers[i].isOnline = false;
+            authenticatedUsers[i].socket = nullptr; // Очищаем указатель на сокет
             break;
         }
     }
 
-    qDebug() << "User " << username << " disconnected";
+    qDebug() << "User " << username << " disconnected (marked as offline)";
 
     Sockets.removeOne(socket);
 
     // Обновляем список пользователей для всех после отключения пользователя
     broadcastUserList();
+}
+
+// Метод для хранения сообщений, отправленных оффлайн-пользователям
+void Server::storeOfflineMessage(const QString &sender, const QString &recipient, const QString &message)
+{
+    QSqlQuery query(srv_db);
+    query.prepare("INSERT INTO messages (sender, recipient, message) VALUES (:sender, :recipient, :message)");
+    query.bindValue(":sender", sender);
+    query.bindValue(":recipient", recipient);
+    query.bindValue(":message", message);
+    
+    if (!query.exec()) {
+        qDebug() << "Failed to store offline message:" << query.lastError().text();
+    } else {
+        qDebug() << "Offline message stored for" << recipient << "from" << sender;
+    }
+}
+
+// Метод для отправки сохраненных оффлайн-сообщений
+void Server::sendStoredOfflineMessages(const QString &username, QTcpSocket* socket)
+{
+    QSqlQuery query(srv_db);
+    query.prepare("SELECT sender, message, timestamp FROM messages WHERE recipient = :username AND recipient <> ''");
+    query.bindValue(":username", username);
+    
+    if (!query.exec()) {
+        qDebug() << "Failed to retrieve offline messages:" << query.lastError().text();
+        return;
+    }
+    
+    while (query.next()) {
+        QString sender = query.value("sender").toString();
+        QString message = query.value("message").toString();
+        
+        // Формируем сообщение в правильном формате и отправляем
+        QString privateMessage = "PRIVATE:" + sender + ":" + message;
+        
+        Data.clear();
+        QDataStream out(&Data, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_6_2);
+        out << quint16(0) << privateMessage;
+        out.device()->seek(0);
+        out << quint16(Data.size() - sizeof(quint16));
+        socket->write(Data);
+        
+        qDebug() << "Sent stored offline message to" << username << "from" << sender << ":" << message;
+    }
 }

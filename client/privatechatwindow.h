@@ -18,6 +18,7 @@ public:
     ~PrivateChatWindow();
 
     void receiveMessage(const QString &sender, const QString &message);
+    void setOfflineStatus(bool offline);
 
     void beginHistoryDisplay();
     void addHistoryMessage(const QString &formattedMessage);
@@ -30,8 +31,10 @@ private:
     Ui::PrivateChatWindow *ui;
     QString username;
     MainWindow *mainWindow;
+    bool isOffline;
     
     void sendMessage(const QString &message);
+    void updateWindowTitle();
 
     // Флаги для отображения истории сообщений
     bool historyDisplayed = false;

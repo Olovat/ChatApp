@@ -36,6 +36,7 @@ private:
     struct AuthenticatedUser {
         QString username;
         QTcpSocket* socket;
+        bool isOnline; // Флаг онлайн-статуса
     };
     QList<AuthenticatedUser> authenticatedUsers;
     
@@ -51,6 +52,12 @@ private:
     void broadcastUserList();
 
     void sendUserList(QTcpSocket* clientSocket);
+    
+    // Метод для хранения сообщений, отправленных оффлайн-пользователям
+    void storeOfflineMessage(const QString &sender, const QString &recipient, const QString &message);
+    
+    // Метод для отправки сохраненных оффлайн-сообщений
+    void sendStoredOfflineMessages(const QString &username, QTcpSocket* socket);
 
 public slots:
     void incomingConnection(qintptr socketDescriptor); // обработчик новых подключений

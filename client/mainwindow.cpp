@@ -45,16 +45,80 @@ MainWindow::~MainWindow()
 void MainWindow::updateUserList(const QStringList &users)
 {
     qDebug() << "Updating user list with users:" << users;
-    ui->userListWidget->clear();
-    for (const QString &user : users) {
-        QListWidgetItem *item = new QListWidgetItem(user);
+    
+    // Создаем карту статусов для более удобного доступа
+    QMap<QString, bool> userStatusMap;
+    
+    for (const QString &userInfo : users) {
+        QStringList parts = userInfo.split(":");
         
-        //Просто подсветка пользователя, так проще отличать их когда 1 в 1 сообщения тестишь, я устал смотреть кто есть кто.
-        if (user == getCurrentUsername()) {
-            item->setForeground(QBrush(QColor("green")));
+        if (parts.size() >= 2) {
+            QString username = parts[0];
+            bool isOnline = (parts[1] == "1");
+            
+            // Сохраняем статус в карту
+            userStatusMap[username] = isOnline;
         }
+    }
+    
+    // Обновляем статусы в открытых окнах чатов
+    updatePrivateChatStatuses(userStatusMap);
+    
+    // Очищаем и заново заполняем список пользователей
+    ui->userListWidget->clear();
+    
+    for (const QString &userInfo : users) {
+        QStringList parts = userInfo.split(":");
         
-        ui->userListWidget->addItem(item);
+        if (parts.size() >= 2) {
+            QString username = parts[0];
+            bool isOnline = (parts[1] == "1");
+            
+            QListWidgetItem *item = new QListWidgetItem(username);
+            
+            // Устанавливаем рамку в зависимости от статуса
+            if (isOnline) {
+                // Зеленая рамка для онлайн пользователей
+                item->setForeground(QBrush(QColor("black")));
+                item->setBackground(QBrush(QColor(200, 255, 200))); // Светло-зеленый фон
+                item->setData(Qt::UserRole, true); // Сохраняем статус
+            } else {
+                // Серая рамка для оффлайн пользователей
+                item->setForeground(QBrush(QColor("gray")));
+                item->setBackground(QBrush(QColor(240, 240, 240))); // Светло-серый фон
+                item->setData(Qt::UserRole, false); // Сохраняем статус
+            }
+            
+            // Подсветка текущего пользователя
+            if (username == getCurrentUsername()) {
+                QFont font = item->font();
+                font.setBold(true);
+                item->setFont(font);
+            }
+            
+            ui->userListWidget->addItem(item);
+        }
+    }
+}
+
+// Новый метод для обновления статусов в окнах приватных чатов
+void MainWindow::updatePrivateChatStatuses(const QMap<QString, bool> &userStatusMap)
+{
+    // Проходим по всем открытым окнам чатов
+    for (auto it = privateChatWindows.begin(); it != privateChatWindows.end(); ++it) {
+        QString chatUsername = it.key();
+        PrivateChatWindow *chatWindow = it.value();
+        
+        // Если пользователь есть в карте статусов
+        if (userStatusMap.contains(chatUsername)) {
+            bool isOnline = userStatusMap[chatUsername];
+            
+            // Обновляем статус в окне чата
+            chatWindow->setOfflineStatus(!isOnline);
+            
+            qDebug() << "Updated status for chat with" << chatUsername << "to" 
+                     << (isOnline ? "online" : "offline");
+        }
     }
 }
 
@@ -62,7 +126,8 @@ void MainWindow::updateUserList(const QStringList &users)
 void MainWindow::onUserSelected(QListWidgetItem *item)
 {
     QString selectedUser = item->text();
-    qDebug() << "User selected:" << selectedUser;
+    bool isOnline = item->data(Qt::UserRole).toBool();
+    qDebug() << "User selected:" << selectedUser << "(Online: " << (isOnline ? "yes" : "no") << ")";
 
     // Если окно чата с этим пользователем уже открыто
     if (privateChatWindows.contains(selectedUser)) {
@@ -71,6 +136,12 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
     } else {
         // Создаем новое окно чата
         PrivateChatWindow *chatWindow = new PrivateChatWindow(selectedUser, this);
+        
+        // Если пользователь оффлайн, показываем информацию об этом
+        if (!isOnline) {
+            chatWindow->setOfflineStatus(true);
+        }
+        
         privateChatWindows[selectedUser] = chatWindow;
         chatWindow->show();
     }
@@ -477,7 +548,7 @@ void MainWindow::handlePrivateMessage(const QString &sender, const QString &reci
     if (sender == getCurrentUsername()) {
         qDebug() << "MainWindow: Мы отправитель сообщения";
         // Мы отправитель - находим или создаем окно чата с получателем
-        PrivateChatWindow* chatWindow = findOrCreatePrivateChatWindow(recipient);
+        //PrivateChatWindow* chatWindow = findOrCreatePrivateChatWindow(recipient);
         // Не добавляем сообщение, т.к. оно уже было добавлено при отправке
     } 
     else if (recipient == getCurrentUsername()) {

@@ -41,19 +41,12 @@ public:
 
 private slots:
     void authorizeUser(); // пользовательские слоты
-
     void registerWindowShow();
-
     void registerUser();
-
     void on_pushButton_2_clicked();
-
     void on_lineEdit_returnPressed();
-
     void prepareForRegistration(); // Чтобы исправить баг при переходе с авторизации на регистрацию и множественном вызове окна регистрации
-
     void updateUserList(const QStringList &users);
-
     void onUserSelected(QListWidgetItem *item);
 
 private:
@@ -109,6 +102,8 @@ private:
     // Добавляем переменные для хранения истории сообщений
     QString currentPrivateHistoryRecipient;
     bool receivingPrivateHistory = false;
+
+    void updatePrivateChatStatuses(const QMap<QString, bool> &userStatusMap);
 
 public slots:
     void slotReadyRead();

@@ -11,11 +11,12 @@ PrivateChatWindow::PrivateChatWindow(const QString &username, MainWindow *mainWi
     QWidget(parent),
     ui(new Ui::PrivateChatWindow), // Используем правильный UI класс
     username(username),
-    mainWindow(mainWindow)
+    mainWindow(mainWindow),
+    isOffline(false)
 {
     ui->setupUi(this); // Стандартная настройка UI
 
-    setWindowTitle("Чат с " + username);
+    updateWindowTitle();
 
     // Используем новый синтаксис для соединения сигналов и слотов
     connect(ui->sendButton, &QPushButton::clicked, this, &PrivateChatWindow::on_sendButton_clicked);
@@ -30,6 +31,32 @@ PrivateChatWindow::PrivateChatWindow(const QString &username, MainWindow *mainWi
     }
 }
 
+void PrivateChatWindow::setOfflineStatus(bool offline)
+{
+    // Обновляем только если статус действительно изменился
+    if (isOffline != offline) {
+        isOffline = offline;
+        updateWindowTitle();
+        
+        QTime currentTime = QTime::currentTime();
+        QString timeStr = currentTime.toString("hh:mm");
+        
+        if (isOffline) {
+            // Добавляем системное сообщение об уходе пользователя
+            ui->chatBrowser->append("<i>[" + timeStr + "] Пользователь " + username + " вышел из сети. Сообщения будут доставлены, когда пользователь вернется.</i>");
+        } else {
+            // Добавляем системное сообщение о возвращении пользователя
+            ui->chatBrowser->append("<i>[" + timeStr + "] Пользователь " + username + " вернулся в сеть.</i>");
+        }
+    }
+}
+
+void PrivateChatWindow::updateWindowTitle()
+{
+    QString statusIndicator = isOffline ? " (Не в сети)" : " (В сети)";
+    setWindowTitle("Чат с " + username + statusIndicator);
+}
+
 PrivateChatWindow::~PrivateChatWindow()
 {
     delete ui;
@@ -41,6 +68,13 @@ void PrivateChatWindow::on_sendButton_clicked()
     if (!message.isEmpty()) {
         sendMessage(message);
         ui->messageEdit->clear();
+        
+        if (isOffline) {
+            // Опционально: информационное сообщение о доставке
+            QTime currentTime = QTime::currentTime();
+            QString timeStr = currentTime.toString("hh:mm");
+            ui->chatBrowser->append("<i>[" + timeStr + "] Сообщение будет доставлено, когда пользователь вернется в сеть</i>");
+        }
     }
 }
 
