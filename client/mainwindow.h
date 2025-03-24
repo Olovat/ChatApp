@@ -86,18 +86,13 @@ private:
     void clearSocketBuffer();
     OperationType currentOperation;
 
-    void openPrivateChat(const QString &username);
-
-    void SendPrivateMessage(const QString &recipient, const QString &message);
+    PrivateChatWindow* findOrCreatePrivateChatWindow(const QString &username);
 
     QString lastAuthResponse; // Хранит последний ответ авторизации/регистрации
     
     QMap<QString, PrivateChatWindow*> privateChatWindows; // Map для хранения открытых приватных чатов
 
-    void processJsonMessage(const QJsonDocument &jsonDoc);
-    void handlePrivateMessage(const QString &sender, const QString &recipient, const QString &message);
     QString getCurrentUsername() const;
-    PrivateChatWindow* findOrCreatePrivateChatWindow(const QString &username);
 
     // Добавляем переменные для хранения истории сообщений
     QString currentPrivateHistoryRecipient;

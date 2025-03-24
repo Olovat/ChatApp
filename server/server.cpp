@@ -445,16 +445,15 @@ void Server::sendMessageHistory(QTcpSocket* clientSocket)
         clientSocket->flush();
         qDebug() << "Sent history begin marker";
         
-        
         QThread::msleep(10);
     }
     
-    // 2. Отправка всех сообщений истории
+    // 2. Отправка сообщений истории - увеличим период до 7 дней вместо 2
     QSqlQuery query(srv_db);
-    query.exec("SELECT sender, message, timestamp FROM history ORDER BY timestamp");
+    // Измененный запрос для отображения большей истории
+    query.prepare("SELECT sender, message, timestamp FROM history WHERE timestamp >= datetime('now','-7 days') ORDER BY timestamp");
     
-
-    bool hasRecords = query.next();
+    bool hasRecords = query.exec() && query.next();
     
     if (!hasRecords) {
         // Если истории нет выводим сообщение об этом
@@ -471,7 +470,6 @@ void Server::sendMessageHistory(QTcpSocket* clientSocket)
         clientSocket->flush();
         qDebug() << "Sent empty history message:" << noHistoryMsg;
         
-
         QThread::msleep(10);
     } else {
         // Отправка истории сообщений
@@ -491,7 +489,6 @@ void Server::sendMessageHistory(QTcpSocket* clientSocket)
             clientSocket->write(Data);
             clientSocket->flush();
             qDebug() << "Sent history message:" << historyMsg;
-            
             
             QThread::msleep(10);
         } while (query.next());
@@ -546,11 +543,12 @@ void Server::sendPrivateMessageHistory(QTcpSocket* clientSocket, const QString &
         QThread::msleep(10);
     }
     
-    // 2. Очередьт сообщений истории
+    // 2. Очередь сообщений истории - увеличим период до 7 дней вместо 2
     QSqlQuery query(srv_db);
     query.prepare("SELECT sender, recipient, message, timestamp FROM messages "
                  "WHERE ((sender = :user1 AND recipient = :user2) OR "
                  "(sender = :user2 AND recipient = :user1)) "
+                 "AND timestamp >= datetime('now','-7 days') "
                  "ORDER BY timestamp");
     query.bindValue(":user1", user1);
     query.bindValue(":user2", user2);

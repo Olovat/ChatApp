@@ -10,23 +10,24 @@
 
 PrivateChatWindow::PrivateChatWindow(const QString &username, MainWindow *mainWindow, QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::PrivateChatWindow), // Используем правильный UI класс
+    ui(new Ui::PrivateChatWindow),
     username(username),
     mainWindow(mainWindow),
     isOffline(false),
     statusMessagePending(false),
-    previousOfflineStatus(false)
+    previousOfflineStatus(false),
+    lastMessageDate(QDate())
 {
-    ui->setupUi(this); // Стандартная настройка UI
+    ui->setupUi(this);
 
     updateWindowTitle();
 
-    // Используем новый синтаксис для соединения сигналов и слотов
-    connect(ui->sendButton, &QPushButton::clicked, this, &PrivateChatWindow::on_sendButton_clicked);
+    // Исправляем соединение сигналов и слотов
+    connect(ui->sendButton, SIGNAL(clicked()), this, SLOT(on_sendButton_clicked()));
 
     // Настройка горячих клавиш для отправки сообщений
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Return), ui->messageEdit);
-    connect(shortcut, &QShortcut::activated, this, &PrivateChatWindow::on_sendButton_clicked);
+    connect(shortcut, SIGNAL(activated()), this, SLOT(on_sendButton_clicked()));
 
     if (mainWindow) {
         // Запрашиваем историю сообщений у сервера
@@ -119,7 +120,7 @@ QString PrivateChatWindow::convertUtcToLocalTime(const QString &utcTimestamp)
     // Если строка времени содержит дату и время
     if (utcTimestamp.contains("-") && utcTimestamp.contains(":")) {
         QDateTime utcTime = QDateTime::fromString(utcTimestamp, "yyyy-MM-dd hh:mm:ss");
-        utcTime.setTimeSpec(Qt::UTC);
+        utcTime.setTimeZone(QTimeZone::UTC);
         QDateTime localTime = utcTime.toLocalTime();
         return localTime.toString("hh:mm");
     }
@@ -143,20 +144,61 @@ void PrivateChatWindow::receiveMessage(const QString &sender, const QString &mes
     qDebug() << "PrivateChatWindow: Получено сообщение от" << sender << ":" << message << "в" << timestamp;
     
     // Конвертируем время UTC в локальное, если необходимо
-    QString localTimeStr = convertUtcToLocalTime(timestamp);
+    QString localTimeStr;
+    QDateTime messageDateTime;
     
-    // Если сообщение уже содержит временную метку в формате [timestamp], используем его как есть
+    // Если строка времени содержит дату и время
+    if (timestamp.contains("-") && timestamp.contains(":")) {
+        QDateTime utcTime = QDateTime::fromString(timestamp, "yyyy-MM-dd hh:mm:ss");
+        utcTime.setTimeZone(QTimeZone::UTC);
+        messageDateTime = utcTime.toLocalTime();
+        localTimeStr = messageDateTime.toString("hh:mm");
+    } else if (timestamp.contains(":")) {
+        // Если строка содержит только время, создаем QDateTime с текущей датой
+        QTime time = QTime::fromString(timestamp, "hh:mm");
+        messageDateTime = QDateTime(QDate::currentDate(), time);
+        localTimeStr = timestamp;
+    } else {
+        // Если формат неизвестен, используем текущее время
+        messageDateTime = QDateTime::currentDateTime();
+        localTimeStr = timestamp;
+    }
+    
+    // Добавляем разделитель даты, если необходимо
+    addDateSeparatorIfNeeded(messageDateTime);
+    
+    // Если сообщение уже содержит временную метку в формате [timestamp], используем его как есть без изменения выравнивания
     if (message.startsWith("[") && message.contains("]")) {
         ui->chatBrowser->append(message);
     } else {
+        // Отображаем сообщение без специального выравнивания - оно будет слева по умолчанию
         ui->chatBrowser->append("[" + localTimeStr + "] " + sender + ": " + message);
+    }
+}
+
+// Метод для добавления разделителя даты
+void PrivateChatWindow::addDateSeparatorIfNeeded(const QDateTime &messageDateTime)
+{
+    QDate messageDate = messageDateTime.date();
+    if (lastMessageDate != messageDate) {
+        // Форматируем строку даты
+        QString dateStr = messageDate.toString("d MMMM yyyy");
+        
+        // Добавляем красивый разделитель с датой, центрированный
+        ui->chatBrowser->append("<div style='text-align:center'><span style='background-color: #e6e6e6; padding: 3px 10px; border-radius: 10px;'>" + dateStr + "</span></div>");
+        
+        // Обновляем последнюю дату
+        lastMessageDate = messageDate;
     }
 }
 
 void PrivateChatWindow::beginHistoryDisplay()
 {
-    //ui->chatBrowser->append("---------- ИСТОРИЯ ЛИЧНЫХ СООБЩЕНИЙ ----------");
-    historyDisplayed = true;
+    historyDisplayed = false;
+    // Очищаем чат перед отображением истории
+    ui->chatBrowser->clear();
+    // Сбрасываем дату последнего сообщения
+    lastMessageDate = QDate();
 }
 
 void PrivateChatWindow::addHistoryMessage(const QString &formattedMessage)

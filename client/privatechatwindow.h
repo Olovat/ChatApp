@@ -2,6 +2,7 @@
 #define PRIVATECHATWINDOW_H
 
 #include <QWidget>
+#include <QDate> // Добавляем заголовочный файл для QDate
 
 class MainWindow;
 
@@ -47,6 +48,12 @@ private:
     
     // Метод для конвертации времени UTC в локальное
     QString convertUtcToLocalTime(const QString &utcTimestamp);
+    
+    // Поле для отслеживания даты последнего сообщения
+    QDate lastMessageDate;
+    
+    // Метод для добавления разделителя даты, если необходимо
+    void addDateSeparatorIfNeeded(const QDateTime &messageDateTime);
 };
 
 #endif // PRIVATECHATWINDOW_H

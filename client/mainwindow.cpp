@@ -134,8 +134,8 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
         privateChatWindows[selectedUser]->show();
         privateChatWindows[selectedUser]->activateWindow();
     } else {
-        // Создаем новое окно чата
-        PrivateChatWindow *chatWindow = new PrivateChatWindow(selectedUser, this);
+        // Создаем новое окно чата с правильными параметрами
+        PrivateChatWindow *chatWindow = new PrivateChatWindow(selectedUser, this, nullptr);
         
         // Если пользователь оффлайн, показываем информацию об этом
         if (!isOnline) {
@@ -159,13 +159,15 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
 
 void MainWindow::SendToServer(QString str)
 {
-    QString messageId = QUuid::createUuid().toString();
-    QString formattedMessage = m_username + ": " + str;
-    ui->textBrowser->append(formattedMessage);
+    // Не отображать системные команды в чате пользователя
+    if (!str.startsWith("GET_") && !str.contains("USERLIST")) {
+        QString formattedMessage = m_username + ": " + str;
+        ui->textBrowser->append(formattedMessage);
 
-    recentSentMessages.append(formattedMessage);
-    while (recentSentMessages.size() > 20) {
-        recentSentMessages.removeFirst();
+        recentSentMessages.append(formattedMessage);
+        while (recentSentMessages.size() > 20) {
+            recentSentMessages.removeFirst();
+        }
     }
 
     Data.clear();
@@ -224,7 +226,8 @@ void MainWindow::slotReadyRead()
             // Обработка начала истории
             if (str == "HISTORY_CMD:BEGIN") {
                 qDebug() << "HISTORY_BEGIN received - starting history display";
-                //ui->textBrowser->append("---------- ИСТОРИЯ СООБЩЕНИЙ ----------\n");
+                // Очищаем текстовый браузер перед отображением истории чтобы избежать дублирования
+                ui->textBrowser->clear();
                 ui->textBrowser->append(""); // просто отделение истории от новых сообщений
             }
             // Обработка сообщений истории
@@ -241,18 +244,19 @@ void MainWindow::slotReadyRead()
                     
                     // Преобразование времени из UTC в локальное
                     QDateTime utcTime = QDateTime::fromString(timestamp, "yyyy-MM-dd hh:mm:ss");
-                    utcTime.setTimeSpec(Qt::UTC);
+                    utcTime.setTimeZone(QTimeZone::UTC);
                     QDateTime localTime = utcTime.toLocalTime();
                     
                     // Форматируем только время для отображения
                     QString timeOnly = localTime.toString("hh:mm");
                     
-                    // Улучшаем форматирование для истории с отображением только времени
+                    // Выравниваем сообщение по левому краю
                     QString formattedMessage = QString("[%1] %2: %3").arg(
                         timeOnly,
                         sender,
                         message
                     );
+                    ui->textBrowser->setAlignment(Qt::AlignLeft);
                     ui->textBrowser->append(formattedMessage);
                     qDebug() << "Added history message:" << formattedMessage << "(UTC time:" << timestamp << ", local time:" << timeOnly << ")";
                 } else {
@@ -262,7 +266,6 @@ void MainWindow::slotReadyRead()
             // Обработка конца истории
             else if (str == "HISTORY_CMD:END") {
                 qDebug() << "HISTORY_END received - history display complete";
-                //ui->textBrowser->append("---------- КОНЕЦ ИСТОРИИ СООБЩЕНИЙ ----------\n");
             } 
             // Обработка остальных сообщений как раньше
             else if (str.startsWith("USERLIST:")) {
@@ -277,7 +280,8 @@ void MainWindow::slotReadyRead()
                     this->show();
                     currentOperation = None;
 
-                    SendToServer("GET_USERLIST");
+                    // Отправляем запрос на получение списка пользователей без отображения в чате
+                    sendMessageToServer("GET_USERLIST");
                 }
                 ui_Auth.setButtonsEnabled(true);
             }
@@ -338,7 +342,7 @@ void MainWindow::slotReadyRead()
                         
                         // Преобразование времени из UTC в локальное
                         QDateTime utcTime = QDateTime::fromString(timestamp, "yyyy-MM-dd hh:mm:ss");
-                        utcTime.setTimeSpec(Qt::UTC);
+                        utcTime.setTimeZone(QTimeZone::UTC);
                         QDateTime localTime = utcTime.toLocalTime();
                         
                         // Форматируем только время для отображения
@@ -366,21 +370,22 @@ void MainWindow::slotReadyRead()
                 currentPrivateHistoryRecipient.clear();
             }
             else {
-                
                 bool isDuplicate = false;
                 
+                // Игнорировать системные сообщения
+                if (str.startsWith("GET_") || str == "GET_USERLIST") {
+                    isDuplicate = true;
+                }
                 
                 if (recentSentMessages.contains(str)) {
                     isDuplicate = true;
                 }
-                
                 
                 if (!isDuplicate) {
                     ui->textBrowser->append(str);
                     lastReceivedMessage = str;
                 }
             }
-            
         }
     }
     else{
@@ -563,33 +568,11 @@ PrivateChatWindow* MainWindow::findOrCreatePrivateChatWindow(const QString &user
         privateChatWindows[username]->activateWindow();
         return privateChatWindows[username];
     } else {
-        PrivateChatWindow *chatWindow = new PrivateChatWindow(username, this);
+        // Исправляем создание окна с правильными параметрами
+        PrivateChatWindow *chatWindow = new PrivateChatWindow(username, this, nullptr);
         privateChatWindows[username] = chatWindow;
         chatWindow->show();
         return chatWindow;
-    }
-}
-
-// Обновленный метод обработки приватных сообщений
-void MainWindow::handlePrivateMessage(const QString &sender, const QString &recipient, const QString &message)
-{
-    qDebug() << "MainWindow: Обработка приватного сообщения от" << sender << "к" << recipient << ":" << message;
-    qDebug() << "MainWindow: Текущий пользователь:" << getCurrentUsername();
-    
-    // Проверяем, кто мы в этом сообщении - отправитель или получатель
-    if (sender == getCurrentUsername()) {
-        qDebug() << "MainWindow: Мы отправитель сообщения";
-        // Мы отправитель - находим или создаем окно чата с получателем
-        //PrivateChatWindow* chatWindow = findOrCreatePrivateChatWindow(recipient);
-        // Не добавляем сообщение, т.к. оно уже было добавлено при отправке
-    } 
-    else if (recipient == getCurrentUsername()) {
-        qDebug() << "MainWindow: Мы получатель сообщения";
-        // Мы получатель - находим или создаем окно чата с отправителем
-        PrivateChatWindow* chatWindow = findOrCreatePrivateChatWindow(sender);
-        chatWindow->receiveMessage(sender, message);
-    } else {
-        qDebug() << "MainWindow: ОШИБКА - Сообщение не предназначено для текущего пользователя!";
     }
 }
 
