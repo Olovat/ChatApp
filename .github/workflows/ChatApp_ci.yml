@@ -69,7 +69,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake ../tests/test_client -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/gtest_install
+        cmake .. -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/gtest_install
 
     - name: Build
       run: |
