@@ -15,8 +15,7 @@ PrivateChatWindow::PrivateChatWindow(const QString &username, MainWindow *mainWi
     mainWindow(mainWindow),
     isOffline(false),
     statusMessagePending(false),
-    previousOfflineStatus(false),
-    lastMessageDate(QDate())
+    previousOfflineStatus(false)
 {
     ui->setupUi(this);
 
@@ -163,32 +162,10 @@ void PrivateChatWindow::receiveMessage(const QString &sender, const QString &mes
         messageDateTime = QDateTime::currentDateTime();
         localTimeStr = timestamp;
     }
-    
-    // Добавляем разделитель даты, если необходимо
-    addDateSeparatorIfNeeded(messageDateTime);
-    
-    // Если сообщение уже содержит временную метку в формате [timestamp], используем его как есть без изменения выравнивания
     if (message.startsWith("[") && message.contains("]")) {
         ui->chatBrowser->append(message);
     } else {
-        // Отображаем сообщение без специального выравнивания - оно будет слева по умолчанию
         ui->chatBrowser->append("[" + localTimeStr + "] " + sender + ": " + message);
-    }
-}
-
-// Метод для добавления разделителя даты
-void PrivateChatWindow::addDateSeparatorIfNeeded(const QDateTime &messageDateTime)
-{
-    QDate messageDate = messageDateTime.date();
-    if (lastMessageDate != messageDate) {
-        // Форматируем строку даты
-        QString dateStr = messageDate.toString("d MMMM yyyy");
-        
-        // Добавляем красивый разделитель с датой, центрированный
-        ui->chatBrowser->append("<div style='text-align:center'><span style='background-color: #e6e6e6; padding: 3px 10px; border-radius: 10px;'>" + dateStr + "</span></div>");
-        
-        // Обновляем последнюю дату
-        lastMessageDate = messageDate;
     }
 }
 
@@ -197,8 +174,6 @@ void PrivateChatWindow::beginHistoryDisplay()
     historyDisplayed = false;
     // Очищаем чат перед отображением истории
     ui->chatBrowser->clear();
-    // Сбрасываем дату последнего сообщения
-    lastMessageDate = QDate();
 }
 
 void PrivateChatWindow::addHistoryMessage(const QString &formattedMessage)

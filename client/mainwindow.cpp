@@ -23,7 +23,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&ui_Auth, &auth_window::register_button_clicked, this, &MainWindow::prepareForRegistration);
     connect(&ui_Reg, &reg_window::register_button_clicked2, this, &MainWindow::registerUser);
     this->hide();
-    lastAuthResponse = "";
 
     // Подключение сигнала для обработки выбора пользователя из списка
     connect(ui->userListWidget, &QListWidget::itemClicked, this, &MainWindow::onUserSelected);
@@ -383,7 +382,6 @@ void MainWindow::slotReadyRead()
                 
                 if (!isDuplicate) {
                     ui->textBrowser->append(str);
-                    lastReceivedMessage = str;
                 }
             }
         }
@@ -437,8 +435,7 @@ void MainWindow::authorizeUser()
     currentOperation = Auth;
 
     m_username = ui_Auth.getLogin();
-    m_userpass = ui_Auth.getPass();
-    m_userpass = ui_Auth.getPass();
+    m_userpass = ui_Auth.getPass(); // Убираем дублирующее присваивание
 
     ui_Auth.setButtonsEnabled(false);
     QApplication::processEvents();
@@ -463,12 +460,6 @@ bool MainWindow::connectToServer()
         return false;
     }
     return true;
-}
-
-void MainWindow::registerWindowShow()
-{
-    ui_Auth.hide();
-    ui_Reg.show();
 }
 
 void MainWindow::registerUser()
@@ -510,8 +501,6 @@ void MainWindow::prepareForRegistration()
 
 void MainWindow::clearSocketBuffer()
 {
-    lastAuthResponse = "";
-
     if (socket && socket->bytesAvailable() > 0) {
         socket->readAll();
     }
