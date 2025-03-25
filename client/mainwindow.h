@@ -49,60 +49,46 @@ public:
 
 private slots:
     void authorizeUser(); // пользовательские слоты
-    void registerWindowShow();
     void registerUser();
     void on_pushButton_2_clicked();
     void on_lineEdit_returnPressed();
-    void prepareForRegistration(); // Чтобы исправить баг при переходе с авторизации на регистрацию и множественном вызове окна регистрации
+    void prepareForRegistration(); // Чтобы исправить баг при переходе с авторизации на регистрацию
     void updateUserList(const QStringList &users);
     void onUserSelected(QListWidgetItem *item);
 
 private:
     Ui::MainWindow *ui;
-
     QTcpSocket *socket;
-
     QByteArray Data;
-
     quint16 nextBlockSize;
-    //переменные для работы с окнами авторизации и регистрации
-    //----------------------------------------------
+    
+    // Переменные для работы с окнами авторизации и регистрации
     auth_window ui_Auth;
-
     reg_window ui_Reg;
-
     QString m_username;
-
     QString m_userpass;
-
     bool m_loginSuccesfull;
-    //----------------------------------------------
-    void SendToServer(QString str); //создаем блок для хранения
-
-    QString lastReceivedMessage;
-
+    
+    void SendToServer(QString str);
     QStringList recentSentMessages;
 
-    // создаем состояния операций
+    // Состояния операций
     enum OperationType {
         None,
         Auth,
         Register
     };
 
-    // очищаем буфер сокета
     void clearSocketBuffer();
     OperationType currentOperation;
 
     PrivateChatWindow* findOrCreatePrivateChatWindow(const QString &username);
-
-    QString lastAuthResponse; // Хранит последний ответ авторизации/регистрации
     
     QMap<QString, PrivateChatWindow*> privateChatWindows; // Map для хранения открытых приватных чатов
 
     QString getCurrentUsername() const;
 
-    // Добавляем переменные для хранения истории сообщений
+    // Переменные для хранения истории сообщений
     QString currentPrivateHistoryRecipient;
     bool receivingPrivateHistory = false;
 
