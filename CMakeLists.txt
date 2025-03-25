@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 project(ChatApp)
 
-set(CMAKEWINDOWSEXPORTALLSYMBOLS ON)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 # Включаем Google Test через FetchContent
 include(FetchContent)
@@ -16,7 +16,7 @@ FetchContent_MakeAvailable(googletest)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-find_package(Qt6 REQUIRED COMPONENTS Core Network Sql Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Network Sql Widgets Test)
 
 # Указываем пути к заголовочным файлам
 include_directories(${CMAKE_SOURCE_DIR}/server)
@@ -35,7 +35,7 @@ qt6_wrap_ui(UI_HEADERS ${UI_FILES})
 
 # Компилируем сервер
 add_executable(server server/main.cpp server/server.cpp server/server.h)
-target_link_libraries(server Qt6::Core Qt6::Network Qt6::Sql)
+target_link_libraries(server gtest gtest_main Qt6::Core Qt6::Network Qt6::Sql)
 
 # Компилируем клиент
 add_executable(client
@@ -50,7 +50,7 @@ add_executable(client
     client/privatechatwindow.h
     ${UI_HEADERS}
 )
-target_link_libraries(client Qt6::Core Qt6::Network Qt6::Sql Qt6::Widgets)
+target_link_libraries(client gtest gtest_main Qt6::Core Qt6::Network Qt6::Sql Qt6::Widgets Qt6::Test)
 
 # Компилируем тесты для сервера
 add_executable(test_server tests/test_server/main.cpp server/server.cpp server/server.h)
@@ -70,4 +70,4 @@ add_executable(test_client
     client/privatechatwindow.h
     ${UI_HEADERS}
 )
-target_link_libraries(test_client gtest gtest_main Qt6::Core Qt6::Network Qt6::Sql Qt6::Widgets gmock gmock_main)
+target_link_libraries(test_client gtest gtest_main Qt6::Core Qt6::Network Qt6::Sql Qt6::Widgets Qt6::Test gmock gmock_main)

@@ -10,14 +10,26 @@
 #include <QCoreApplication> 
 #include <QVector>
 #include <QList>
+#include <gtest/gtest.h>
+
 
 class Server : public QTcpServer
 {
     Q_OBJECT
+
 public:
     explicit Server();
     virtual ~Server();
     bool connectDB();
+    bool initializeDatabase();
+
+    QSqlDatabase& getDatabase();
+
+    bool testRegisterUser(const QString &username, const QString &password);
+    bool testAuthenticateUser(const QString &username, const QString &password);
+    void testSendToClient(const QString &str);
+    bool testLogMessage(const QString &sender, const QString &recipient, const QString &message);
+    bool testSaveToHistory(const QString &sender, const QString &message);
 
 private:
     QTcpSocket *socket;

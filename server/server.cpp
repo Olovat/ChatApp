@@ -42,6 +42,27 @@ Server::~Server()
     qDebug() << "Server destroyed";
 }
 
+bool Server::initializeDatabase() {
+    if (!initUserTable()) {
+        qDebug() << "Failed to initialize user table.";
+        return false;
+    }
+    if (!initMessageTable()) {
+        qDebug() << "Failed to initialize message table.";
+        return false;
+    }
+    if (!initHistoryTable()) {
+        qDebug() << "Failed to initialize history table.";
+        return false;
+    }
+    qDebug() << "Database initialized successfully.";
+    return true;
+}
+
+QSqlDatabase& Server::getDatabase() {
+    return srv_db;
+}
+
 void Server::incomingConnection(qintptr socketDescriptor){
     socket = new QTcpSocket;
     socket->setSocketDescriptor(socketDescriptor);
@@ -324,43 +345,42 @@ bool Server::connectDB()
 {
     srv_db = QSqlDatabase::addDatabase("QSQLITE");
 
-    QDir appDir(QCoreApplication::applicationDirPath());
+        QDir appDir(QCoreApplication::applicationDirPath());
 
-    appDir.cdUp();
-    appDir.cdUp();
-    appDir.cdUp();
+        appDir.cdUp();
+        appDir.cdUp();
+        appDir.cdUp();
 
-    QString dataPath = appDir.absolutePath() + "/data";
-    QDir dataDir(dataPath);
-    if (!dataDir.exists()) {
-        dataDir.mkpath(".");
-    }
+        QString dataPath = appDir.absolutePath() + "/data";
+        QDir dataDir(dataPath);
+        if (!dataDir.exists()) {
+            dataDir.mkpath(".");
+        }
 
-    srv_db.setDatabaseName(dataPath + "/authorisation.db");
+        srv_db.setDatabaseName(dataPath + "/authorisation.db");
 
-    if(!srv_db.open())
-    {
-        qDebug() << "Cannot open database: " << srv_db.lastError();
-        return false;
-    }
+        if(!srv_db.open())
+        {
+            qDebug() << "Cannot open database: " << srv_db.lastError();
+            return false;
+        }
 
-    qDebug() << "Connected to database at: " << dataPath + "/authorisation.db";
+        qDebug() << "Connected to database at: " << dataPath + "/authorisation.db";
 
-    if (!initUserTable()) {
-        qDebug() << "Failed to initialize user table";
-        return false;
-    }
+        if (!initUserTable()) {
+            qDebug() << "Failed to initialize user table";
+            return false;
+        }
 
-    if (!initMessageTable()) {
-        qDebug() << "Failed to initialize message table";
-        return false;
-    }
+        if (!initMessageTable()) {
+            qDebug() << "Failed to initialize message table";
+            return false;
+        }
     
-    if (!initHistoryTable()) {
-        qDebug() << "Failed to initialize history table";
-        return false;
-    }
-
+        if (!initHistoryTable()) {
+            qDebug() << "Failed to initialize history table";
+            return false;
+        }
     return true;
 }
 
@@ -508,6 +528,26 @@ void Server::sendMessageHistory(QTcpSocket* clientSocket)
         clientSocket->flush();
         qDebug() << "Sent history end marker";
     }
+}
+
+bool Server::testRegisterUser(const QString &username, const QString &password) {
+    return registerUser(username, password);
+}
+
+bool Server::testAuthenticateUser(const QString &username, const QString &password) {
+    return authenticateUser(username, password);
+}
+
+void Server::testSendToClient(const QString &str) {
+    SendToCllient(str);
+}
+
+bool Server::testLogMessage(const QString &sender, const QString &recipient, const QString &message) {
+    return logMessage(sender, recipient, message);
+}
+
+bool Server::testSaveToHistory(const QString &sender, const QString &message) {
+    return saveToHistory(sender, message);
 }
 
 void Server::sendPrivateMessageHistory(QTcpSocket* clientSocket, const QString &user1, const QString &user2)
