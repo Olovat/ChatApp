@@ -24,13 +24,13 @@ class PrivateChatWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    FRIEND_TEST(MainWindowTest, AuthorizeUser);
+    FRIEND_TEST(MainWindowTest, AuthWithoutMocks);
     FRIEND_TEST(MainWindowTest, RegisterUser);
     FRIEND_TEST(MainWindowTest, SendToServer);
     FRIEND_TEST(MainWindowTest, UpdateUserList);
     FRIEND_TEST(MainWindowTest, HandlePrivateMessage);
     FRIEND_TEST(MainWindowTest, SlotReadyRead);
-    friend class MainWindowTest;
+    friend class TestMainWindow;
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();

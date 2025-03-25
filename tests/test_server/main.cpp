@@ -34,36 +34,24 @@
         QString username = "testuser";
         QString password = "testpass";
 
-        // Проверяем, что пользователь успешно регистрируется
-        EXPECT_TRUE(server->registerUser(username, password));
-        // Проверяем, что повторная регистрация с тем же именем пользователя не удается
-        EXPECT_FALSE(server->registerUser(username, password));
+        EXPECT_TRUE(server->testRegisterUser(username, password));
+        EXPECT_FALSE(server->testRegisterUser(username, password));
     }
 
-    // Тест аутентификации пользователя
     TEST_F(ServerTest, AuthenticateUser) {
         QString username = "testuser11";
         QString password = "testpass11";
 
-        // Регистрация пользователя
-        ASSERT_TRUE(server->registerUser(username, password));
+        ASSERT_TRUE(server->testRegisterUser(username, password));
 
-        // Аутентификация с правильными данными
-        EXPECT_TRUE(server->authenticateUser(username, password));
-
-        // Аутентификация с неправильным паролем
-        EXPECT_FALSE(server->authenticateUser(username, "wrongpass"));
-
-        // Аутентификация несуществующего пользователя
-        EXPECT_FALSE(server->authenticateUser("nonexistentuser", password));
+        EXPECT_TRUE(server->testAuthenticateUser(username, password));
+        EXPECT_FALSE(server->testAuthenticateUser(username, "wrongpass"));
+        EXPECT_FALSE(server->testAuthenticateUser("nonexistentuser", password));
     }
 
     TEST_F(ServerTest, SendToClient) {
-        QString message = "Hello, World!";
-        server->SendToCllient(message);
-
-        // Проверяем, что сообщение было отправлено
-        EXPECT_TRUE(true);
+        server->testSendToClient("Hello, World!");
+        EXPECT_TRUE(true); // Проверяем, что метод вызывается без ошибок
     }
 
     TEST_F(ServerTest, LogMessage) {
@@ -71,10 +59,8 @@
         QString recipient = "otheruser";
         QString message = "Hello!";
 
-        // Логируем сообщение
-        EXPECT_TRUE(server->logMessage(sender, recipient, message));
+        EXPECT_TRUE(server->testLogMessage(sender, recipient, message));
 
-        // Проверяем, что сообщение сохранено в базе данных
         QSqlQuery query(server->getDatabase());
         query.prepare("SELECT * FROM messages WHERE sender = :sender AND recipient = :recipient AND message = :message");
         query.bindValue(":sender", sender);
@@ -85,15 +71,12 @@
         EXPECT_TRUE(query.next());
     }
 
-    // Тест сохранения сообщений в историю
     TEST_F(ServerTest, SaveToHistory) {
         QString sender = "testuser";
         QString message = "Hello, World!";
 
-        // Сохраняем сообщение в историю
-        EXPECT_TRUE(server->saveToHistory(sender, message));
+        EXPECT_TRUE(server->testSaveToHistory(sender, message));
 
-        // Проверяем, что сообщение сохранено в базе данных
         QSqlQuery query(server->getDatabase());
         query.prepare("SELECT * FROM history WHERE sender = :sender AND message = :message");
         query.bindValue(":sender", sender);

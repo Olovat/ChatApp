@@ -505,6 +505,26 @@ void Server::sendMessageHistory(QTcpSocket* clientSocket)
     }
 }
 
+bool Server::testRegisterUser(const QString &username, const QString &password) {
+    return registerUser(username, password);
+}
+
+bool Server::testAuthenticateUser(const QString &username, const QString &password) {
+    return authenticateUser(username, password);
+}
+
+void Server::testSendToClient(const QString &str) {
+    SendToCllient(str);
+}
+
+bool Server::testLogMessage(const QString &sender, const QString &recipient, const QString &message) {
+    return logMessage(sender, recipient, message);
+}
+
+bool Server::testSaveToHistory(const QString &sender, const QString &message) {
+    return saveToHistory(sender, message);
+}
+
 void Server::sendPrivateMessageHistory(QTcpSocket* clientSocket, const QString &user1, const QString &user2)
 {
     qDebug() << "Sending private message history between" << user1 << "and" << user2;
