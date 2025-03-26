@@ -12,6 +12,7 @@
 #include <QListWidgetItem>
 #include <QMap>
 #include <gtest/gtest.h>
+#include <QTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -24,13 +25,7 @@ class PrivateChatWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    FRIEND_TEST(MainWindowTest, AuthWithoutMocks);
-    FRIEND_TEST(MainWindowTest, RegisterUser);
-    FRIEND_TEST(MainWindowTest, SendToServer);
-    FRIEND_TEST(MainWindowTest, UpdateUserList);
-    FRIEND_TEST(MainWindowTest, HandlePrivateMessage);
-    FRIEND_TEST(MainWindowTest, SlotReadyRead);
-    friend class TestMainWindow;
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -55,6 +50,8 @@ private slots:
     void prepareForRegistration(); // Чтобы исправить баг при переходе с авторизации на регистрацию
     void updateUserList(const QStringList &users);
     void onUserSelected(QListWidgetItem *item);
+    void handleAuthenticationTimeout();
+    void handleSocketError(QAbstractSocket::SocketError socketError);
 
 private:
     Ui::MainWindow *ui;
@@ -101,6 +98,8 @@ private:
         QString timestamp;
     };
     QMap<QString, QList<UnreadMessage>> unreadMessages;
+
+    QTimer *authTimeoutTimer;
 
 public slots:
     void slotReadyRead();
