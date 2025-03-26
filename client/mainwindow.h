@@ -11,6 +11,7 @@
 #include <QUuid>
 #include <QListWidgetItem>
 #include <QMap>
+#include <QTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -47,6 +48,8 @@ private slots:
     void prepareForRegistration(); // Чтобы исправить баг при переходе с авторизации на регистрацию
     void updateUserList(const QStringList &users);
     void onUserSelected(QListWidgetItem *item);
+    void handleAuthenticationTimeout();
+    void handleSocketError(QAbstractSocket::SocketError socketError);
 
 private:
     Ui::MainWindow *ui;
@@ -93,6 +96,8 @@ private:
         QString timestamp;
     };
     QMap<QString, QList<UnreadMessage>> unreadMessages;
+
+    QTimer *authTimeoutTimer;
 
 public slots:
     void slotReadyRead();

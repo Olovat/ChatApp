@@ -15,6 +15,14 @@ MainWindow::MainWindow(QWidget *parent) :
     socket = new QTcpSocket(this);
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::slotReadyRead);
     connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
+    connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
+            this, &MainWindow::handleSocketError);
+    
+    // Создание таймера, чтобы клиент падал при падении сервера.
+    authTimeoutTimer = new QTimer(this);
+    authTimeoutTimer->setSingleShot(true);
+    connect(authTimeoutTimer, &QTimer::timeout, this, &MainWindow::handleAuthenticationTimeout);
+    
     nextBlockSize = 0;
     currentOperation = None;
 
@@ -47,6 +55,7 @@ void MainWindow::updateUserList(const QStringList &users)
     
     // Создаем карту статусов для более удобного доступа
     QMap<QString, bool> userStatusMap;
+    QString currentUsername = getCurrentUsername();
     
     for (const QString &userInfo : users) {
         QStringList parts = userInfo.split(":");
@@ -66,6 +75,11 @@ void MainWindow::updateUserList(const QStringList &users)
     // Очищаем и заново заполняем список пользователей
     ui->userListWidget->clear();
     
+    // Создаем списки для онлайн и оффлайн пользователей
+    QStringList onlineUsers;
+    QStringList offlineUsers;
+    
+    // Разделяем пользователей на онлайн и оффлайн (исключая текущего)
     for (const QString &userInfo : users) {
         QStringList parts = userInfo.split(":");
         
@@ -73,27 +87,85 @@ void MainWindow::updateUserList(const QStringList &users)
             QString username = parts[0];
             bool isOnline = (parts[1] == "1");
             
-            QListWidgetItem *item = new QListWidgetItem(username);
-            
-            // Устанавливаем рамку в зависимости от статуса
-            if (isOnline) {
-                // Зеленая рамка для онлайн пользователей
-                item->setForeground(QBrush(QColor("black")));
-                item->setBackground(QBrush(QColor(200, 255, 200))); // Светло-зеленый фон
-                item->setData(Qt::UserRole, true); // Сохраняем статус
-            } else {
-                // Серая рамка для оффлайн пользователей
-                item->setForeground(QBrush(QColor("gray")));
-                item->setBackground(QBrush(QColor(240, 240, 240))); // Светло-серый фон
-                item->setData(Qt::UserRole, false); // Сохраняем статус
+            // Пропускаем текущего пользователя
+            if (username == currentUsername) {
+                continue;
             }
             
-            // Подсветка текущего пользователя
-            if (username == getCurrentUsername()) {
+            // Добавляем пользователей в соответствующие списки
+            if (isOnline) {
+                onlineUsers << userInfo;
+            } else {
+                offlineUsers << userInfo;
+            }
+        }
+    }
+    
+    //Добавляем текущего пользователя (если он есть в списке)
+    for (const QString &userInfo : users) {
+        QStringList parts = userInfo.split(":");
+        
+        if (parts.size() >= 2) {
+            QString username = parts[0];
+            bool isOnline = (parts[1] == "1");
+            
+            // Если это текущий пользователь, добавляем его первым
+            if (username == currentUsername) {
+                QListWidgetItem *item = new QListWidgetItem(username);
+                
+                // Устанавливаем фон в зависимости от статуса
+                if (isOnline) {
+                    item->setForeground(QBrush(QColor("black")));
+                    item->setBackground(QBrush(QColor(200, 255, 200))); // Светло-зеленый фон
+                    item->setData(Qt::UserRole, true); // Сохраняем статус
+                } else {
+                    item->setForeground(QBrush(QColor("gray")));
+                    item->setBackground(QBrush(QColor(240, 240, 240))); // Светло-серый фон
+                    item->setData(Qt::UserRole, false); // Сохраняем статус
+                }
+                
+                // Выделение текущего пользователя
                 QFont font = item->font();
                 font.setBold(true);
                 item->setFont(font);
+                
+                ui->userListWidget->addItem(item);
+                break;
             }
+        }
+    }
+    
+    //   Добавляем всех онлайн пользователей
+    for (const QString &userInfo : onlineUsers) {
+        QStringList parts = userInfo.split(":");
+        
+        if (parts.size() >= 2) {
+            QString username = parts[0];
+            
+            QListWidgetItem *item = new QListWidgetItem(username);
+            
+            // Устанавливаем фон для онлайн пользователя
+            item->setForeground(QBrush(QColor("black")));
+            item->setBackground(QBrush(QColor(200, 255, 200))); // Светло-зеленый фон
+            item->setData(Qt::UserRole, true); // Сохраняем статус
+            
+            ui->userListWidget->addItem(item);
+        }
+    }
+    
+    // Добавляем всех оффлайн пользователей
+    for (const QString &userInfo : offlineUsers) {
+        QStringList parts = userInfo.split(":");
+        
+        if (parts.size() >= 2) {
+            QString username = parts[0];
+            
+            QListWidgetItem *item = new QListWidgetItem(username);
+            
+            // Устанавливаем фон для оффлайн пользователя
+            item->setForeground(QBrush(QColor("gray")));
+            item->setBackground(QBrush(QColor(240, 240, 240))); // Светло-серый фон
+            item->setData(Qt::UserRole, false); // Сохраняем статус
             
             ui->userListWidget->addItem(item);
         }
@@ -203,6 +275,11 @@ void MainWindow::sendMessageToServer(const QString &message)
 
 void MainWindow::slotReadyRead()
 {
+    // Если получено сообщение, сбрасываем таймер
+    if (authTimeoutTimer->isActive()) {
+        authTimeoutTimer->stop();
+    }
+    
     QDataStream in(socket);
     in.setVersion(QDataStream::Qt_6_2);
     if (in.status() == QDataStream::Ok){
@@ -286,11 +363,23 @@ void MainWindow::slotReadyRead()
             }
             else if(str == "AUTH_FAILED") {
                 if (currentOperation == Auth || currentOperation == None) {
+                    // Прерываем попытки авторизации на случай дублирования
+                    currentOperation = None;
+                    
+                    // Временно отключаем сигналы/слоты для предотвращения удаления объекта
+                    disconnect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
+                    
                     QMessageBox::warning(this, "Authentication Error", "Invalid username or password!");
+                    
+                    // Переподключаемся
+                    connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
+                    
                     m_loginSuccesfull = false;
                     ui_Auth.LineClear();
-                    currentOperation = None;
                     ui_Auth.setButtonsEnabled(true);
+                    
+                    // Очищаем сокет чтобы избежать дублирования сообщений
+                    clearSocketBuffer();
                 }
             }
             else if(str == "REGISTER_SUCCESS") {
@@ -431,11 +520,30 @@ void MainWindow::display()
 // авторизация и регистрация пользователя
 void MainWindow::authorizeUser()
 {
-    clearSocketBuffer();
+    //  Предотвращение множественных запросов авторизации
+    if (currentOperation == Auth) {
+        qDebug() << "Authentication already in progress, ignoring request";
+        return;
+    }
+
+    // Отключаемся и подключаемся заново, чтобы обеспечить чистое состояние соединения
+    if(socket && socket->state() == QAbstractSocket::ConnectedState) {
+        clearSocketBuffer();
+    } else {
+        // Если сокет не подключен, переподключаемся
+        socket->abort();
+        socket->connectToHost("127.0.0.1", 5402);
+        if(!socket->waitForConnected(3000)) {
+            QMessageBox::critical(this, "Connection Error", "Could not connect to server");
+            ui_Auth.setButtonsEnabled(true); // Включаем кнопки пользователю
+            return;
+        }
+    }
+    
     currentOperation = Auth;
 
     m_username = ui_Auth.getLogin();
-    m_userpass = ui_Auth.getPass(); // Убираем дублирующее присваивание
+    m_userpass = ui_Auth.getPass();
 
     ui_Auth.setButtonsEnabled(false);
     QApplication::processEvents();
@@ -449,7 +557,13 @@ void MainWindow::authorizeUser()
     out.device()->seek(0);
     out << quint16(Data.size() - sizeof(quint16));
     socket->write(Data);
+    socket->flush();
     socket->waitForBytesWritten();
+    
+    // Если вдруг будем сервак ставить на хостинг то таймаут нужен, чтобы кнопки включить после 5 секунд отсутствия ответа от сервера
+    authTimeoutTimer->start(5000);
+    
+    qDebug() << "Sent authentication request:" << authString;
 }
 
 bool MainWindow::connectToServer()
@@ -464,7 +578,19 @@ bool MainWindow::connectToServer()
 
 void MainWindow::registerUser()
 {
-    clearSocketBuffer();
+    // Тоже самое что для авторизации
+    if(socket && socket->state() == QAbstractSocket::ConnectedState) {
+        clearSocketBuffer();
+    } else {
+        socket->abort();
+        socket->connectToHost("127.0.0.1", 5402);
+        if(!socket->waitForConnected(3000)) {
+            QMessageBox::critical(this, "Connection Error", "Could not connect to server");
+            ui_Reg.setButtonsEnabled(true);
+            return;
+        }
+    }
+    
     currentOperation = Register;
 
     if(!ui_Reg.checkPass()) {
@@ -488,7 +614,12 @@ void MainWindow::registerUser()
     out.device()->seek(0);
     out << quint16(Data.size() - sizeof(quint16));
     socket->write(Data);
+    socket->flush();
     socket->waitForBytesWritten();
+    
+    authTimeoutTimer->start(5000);
+    
+    qDebug() << "Sent registration request:" << regString;
 }
 
 void MainWindow::prepareForRegistration()
@@ -502,9 +633,15 @@ void MainWindow::prepareForRegistration()
 void MainWindow::clearSocketBuffer()
 {
     if (socket && socket->bytesAvailable() > 0) {
+        qDebug() << "Clearing socket buffer with " << socket->bytesAvailable() << " bytes available";
         socket->readAll();
+        socket->flush();
     }
     nextBlockSize = 0;
+    
+    if (currentOperation != Auth && currentOperation != Register) {
+        currentOperation = None;
+    }
 }
 
 void MainWindow::handlePrivateMessage(const QString &sender, const QString &message)
@@ -569,4 +706,68 @@ void MainWindow::requestPrivateMessageHistory(const QString &otherUser)
 {
     QString request = QString("GET_PRIVATE_HISTORY:%1").arg(otherUser);
     sendMessageToServer(request);
+}
+
+// Новые методы обработки отсутсвия ответа от сервера и ошибок сокета
+void MainWindow::handleAuthenticationTimeout()
+{
+    qDebug() << "Authentication/Registration timed out";
+    
+    if (currentOperation == Auth) {
+        QMessageBox::warning(this, "Authentication Error", 
+                          "Server did not respond in time. Please try again.");
+        ui_Auth.setButtonsEnabled(true);
+    } 
+    else if (currentOperation == Register) {
+        QMessageBox::warning(this, "Registration Error", 
+                          "Server did not respond in time. Please try again.");
+        ui_Reg.setButtonsEnabled(true);
+    }
+    
+    currentOperation = None;
+}
+
+// Ошибки сокета
+void MainWindow::handleSocketError(QAbstractSocket::SocketError socketError)
+{
+    QString errorMessage;
+    
+    switch (socketError) {
+        case QAbstractSocket::RemoteHostClosedError:
+            errorMessage = "The server closed the connection.";
+            break;
+        case QAbstractSocket::HostNotFoundError:
+            errorMessage = "The server was not found.";
+            break;
+        case QAbstractSocket::ConnectionRefusedError:
+            errorMessage = "The connection was refused by the server.";
+            break;
+        default:
+            errorMessage = "Socket error: " + socket->errorString();
+    }
+    
+    qDebug() << "Socket error:" << errorMessage;
+    
+    // Управление кнопками если произошла ошибка
+    if (currentOperation == Auth) {
+        QMessageBox::critical(this, "Connection Error", 
+                           "Error during authentication: " + errorMessage + "\nPlease try again.");
+        ui_Auth.setButtonsEnabled(true);
+    } 
+    else if (currentOperation == Register) {
+        QMessageBox::critical(this, "Connection Error", 
+                           "Error during registration: " + errorMessage + "\nPlease try again.");
+        ui_Reg.setButtonsEnabled(true);
+    }
+    else {
+        QMessageBox::critical(this, "Connection Error", 
+                           "Connection to server failed: " + errorMessage);
+    }
+    
+    // Сброс текущей операции
+    currentOperation = None;
+    
+    if (authTimeoutTimer->isActive()) {
+        authTimeoutTimer->stop();
+    }
 }

@@ -59,6 +59,11 @@ void Server::slotReadyRead()
     in.setVersion(QDataStream::Qt_6_2);
 
     if(in.status() == QDataStream::Ok){
+        qint64 bytesAvailable = socket->bytesAvailable();
+        if (bytesAvailable == 0) return;
+        
+        qDebug() << "Processing data with" << bytesAvailable << "bytes available";
+        
         while(socket->bytesAvailable() > 0){
             if(nextBlockSize == 0){
                 if(socket->bytesAvailable() < 2){
@@ -66,12 +71,33 @@ void Server::slotReadyRead()
                 }
                 in >> nextBlockSize;
             }
+            
             if(socket->bytesAvailable() < nextBlockSize){
+                qDebug() << "Not enough data available";
+                break;
+            }
+            
+            QString message;
+            in >> message;
+            
+            // Проверка на ошибки при чтении данных
+            if (in.status() != QDataStream::Ok) {
+                qDebug() << "Warning: Error reading data stream, status:" << in.status();
+                nextBlockSize = 0;
+                
+                // Отправка ошибки клиенту
+                Data.clear();
+                QDataStream out(&Data, QIODevice::WriteOnly);
+                out.setVersion(QDataStream::Qt_6_2);
+                out << quint16(0) << QString("ERROR:Failed to process request");
+                out.device()->seek(0);
+                out << quint16(Data.size() - sizeof(quint16));
+                socket->write(Data);
                 break;
             }
 
-            QString message;
-            in >> message;
+            qDebug() << "Processing message, size:" << nextBlockSize << "Message:" << message;
+            
             nextBlockSize = 0;
 
             qDebug() << "Received message from client:" << message;
