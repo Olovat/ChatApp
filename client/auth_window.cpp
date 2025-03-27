@@ -1,5 +1,5 @@
 #include "auth_window.h"
-#include "build\Desktop_Qt_6_8_2_MinGW_64_bit-Debug\ui_auth_window.h"
+#include "ui_auth_window.h"
 
 auth_window::auth_window(QWidget *parent) :
     QDialog(parent),

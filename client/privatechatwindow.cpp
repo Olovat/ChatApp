@@ -1,5 +1,5 @@
 #include "privatechatwindow.h"
-#include "build\Desktop_Qt_6_8_2_MinGW_64_bit-Debug\ui_privatechatwindow.h"
+#include "ui_privatechatwindow.h"
 #include "mainwindow.h"
 #include <QDebug>
 #include <QVBoxLayout>
