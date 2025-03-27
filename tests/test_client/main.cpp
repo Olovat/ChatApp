@@ -2,7 +2,7 @@
 #include <QTemporaryDir>
 #include <QSignalSpy>
 #include "mainwindow.h"
-#include "mockdatabase.h"
+#include "MockDatabase.h"
 
 class MainWindowTest : public ::testing::Test {
 protected:
