@@ -18,9 +18,11 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Network Sql Widgets Test)
 
+
 # Указываем пути к заголовочным файлам
 include_directories(${CMAKE_SOURCE_DIR}/server)
 include_directories(${CMAKE_SOURCE_DIR}/client)
+include_directories(${CMAKE_SOURCE_DIR}/tests)
 
 # Указываем файлы .ui
 set(UI_FILES
@@ -28,6 +30,8 @@ set(UI_FILES
     client/auth_window.ui
     client/reg_window.ui
     client/privatechatwindow.ui
+    client/groupchatwindow.ui
+    client/transitwindow.ui
 )
 
 # Обработка файлов .ui
@@ -48,6 +52,10 @@ add_executable(client
     client/reg_window.h
     client/privatechatwindow.cpp
     client/privatechatwindow.h
+    client/transitwindow.cpp
+    client/transitwindow.h
+    client/groupchatwindow.h
+    client/groupchatwindow.cpp
     ${UI_HEADERS}
 )
 target_link_libraries(client gtest gtest_main Qt6::Core Qt6::Network Qt6::Sql Qt6::Widgets Qt6::Test)
@@ -57,17 +65,26 @@ add_executable(test_server tests/test_server/main.cpp server/server.cpp server/s
 target_link_libraries(test_server gtest gtest_main Qt6::Core Qt6::Network Qt6::Sql gmock gmock_main)
 
 # Компилируем тесты для клиента
-add_executable(test_client
+    add_executable(test_client
     tests/test_client/main.cpp
     client/main.cpp
     client/mainwindow.cpp
-    client/mainwindow.h
     client/auth_window.cpp
-    client/auth_window.h
     client/reg_window.cpp
-    client/reg_window.h
     client/privatechatwindow.cpp
-    client/privatechatwindow.h
+    client/transitwindow.cpp
+    client/transitwindow.h
+    client/groupchatwindow.h
+    client/groupchatwindow.cpp
     ${UI_HEADERS}
+    tests/test_client/MockDatabase.h
 )
 target_link_libraries(test_client gtest gtest_main Qt6::Core Qt6::Network Qt6::Sql Qt6::Widgets Qt6::Test gmock gmock_main)
+
+
+# Добавляем определение для тестов
+target_compile_definitions(test_client PRIVATE TESTING=1)
+
+# Включаем тестирование
+enable_testing()
+add_test(NAME client_tests COMMAND test_client)

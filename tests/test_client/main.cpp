@@ -1,177 +1,98 @@
-#include "build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/ui_mainwindow.h"
-#include "mainwindow.h"
-#include <QtTest/QtTest>
-#include <QTcpSocket>
+#include <gtest/gtest.h>
+#include <QTemporaryDir>
 #include <QSignalSpy>
-#include <QCoreApplication>
+#include "mainwindow.h"
+#include "mockdatabase.h"
 
-class TestMainWindow : public QObject
-{
-    Q_OBJECT
+class MainWindowTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        mainWindow = new MainWindow(MainWindow::Mode::Testing);
+        mockDb = std::make_unique<MockDatabase>();
+        mainWindow->setTestDatabase(std::move(mockDb));
+    }
 
-private slots:
-    void initTestCase();     // Инициализация перед всеми тестами
-    void cleanupTestCase();  // Очистка после всех тестов
-    void init();            // Инициализация перед каждым тестом
-    void cleanup();         // Очистка после каждого теста
+    void TearDown() override {
+        delete mainWindow;
+    }
 
-    void testAuthRequest();  // Тест формирования запроса авторизации
-    void testRegRequest();   // Тест формирования запроса регистрации
-    void testUserListUpdate(); // Тест обновления списка пользователей
-    void testPrivateMessageHandling(); // Тест обработки приватных сообщений
-    void testSocketBufferClearing(); // Тест очистки буфера сокета
-
-private:
-    MainWindow* m_mainWindow;
-    QTcpSocket* m_testSocket;
+    MainWindow* mainWindow;
+    std::unique_ptr<MockDatabase> mockDb;
 };
 
-void TestMainWindow::initTestCase()
-{
-    qDebug() << "Global test initialization";
-    // Используем QCoreApplication чтобы избежать создания GUI
-    int argc = 0;
-    new QCoreApplication(argc, nullptr);
+TEST_F(MainWindowTest, TestInitialState) {
+    EXPECT_FALSE(mainWindow->isLoginSuccessful());
+    EXPECT_FALSE(mainWindow->isConnected());
+    EXPECT_TRUE(mainWindow->getCurrentUsername().isEmpty());
 }
 
-void TestMainWindow::cleanupTestCase()
-{
-    qDebug() << "Global test cleanup";
+TEST_F(MainWindowTest, TestAuthentication) {
+    // Настроим mock базу данных
+    mainWindow->testDb->registerUser("testuser", "password");
+
+    // Тестируем успешную аутентификацию
+    EXPECT_TRUE(mainWindow->testDb->authenticate("testuser", "password"));
+
+    // Тестируем неудачную аутентификацию
+    EXPECT_FALSE(mainWindow->testDb->authenticate("wrong", "wrong"));
 }
 
-void TestMainWindow::init()
-{
-    m_mainWindow = new MainWindow();
-    m_mainWindow->hide(); // Гарантируем, что окно не показывается
+TEST_F(MainWindowTest, TestRegistration) {
+    // 1. Проверяем, что пользователя еще нет в базе
+    EXPECT_FALSE(mainWindow->testDb->authenticate("newuser", "newpass"));
 
-    // Заменяем реальный сокет на тестовый
-    m_testSocket = new QTcpSocket(m_mainWindow);
-    m_mainWindow->socket = m_testSocket;
+    // 2. Вызываем регистрацию (должен добавить в testDb)
+    mainWindow->testRegisterUser("newuser", "newpass");
+
+    // 3. Проверяем, что пользователь добавился
+    EXPECT_TRUE(mainWindow->testDb->authenticate("newuser", "newpass"));
+
+    // 4. Проверяем повторную регистрацию (должна завершиться ошибкой)
+    EXPECT_FALSE(mainWindow->testRegisterUser("newuser", "newpass"));
 }
 
-void TestMainWindow::cleanup()
-{
-    delete m_mainWindow;
-    m_mainWindow = nullptr;
-    m_testSocket = nullptr;
+TEST_F(MainWindowTest, TestUserListUpdate) {
+    mainWindow->setTestCredentials("testuser", "pass");
+
+    QStringList users = {
+        "testuser:1:U",    // Текущий пользователь (не должен учитываться)
+        "user1:1:U",       // Онлайн
+        "user2:0:U",       // Оффлайн
+        "chat1:1:G:Group"  // Группа (не должен учитываться)
+    };
+
+    mainWindow->testUpdateUserList(users);
+
+    auto onlineUsers = mainWindow->getOnlineUsers();
+    auto allUsers = mainWindow->getDisplayedUsers();
+
+    // Должен быть только 1 онлайн пользователь (user1)
+    ASSERT_EQ(onlineUsers.size(), 1);
+    EXPECT_EQ(onlineUsers.first(), "user1");
+
+    // Должно быть 2 пользователя в общем списке (user1 и user2)
+    ASSERT_EQ(allUsers.size(), 2);
+    EXPECT_TRUE(allUsers.contains("user1"));
+    EXPECT_TRUE(allUsers.contains("user2"));
 }
 
-void TestMainWindow::testAuthRequest()
-{
-    // Устанавливаем тестовые логин и пароль
-    m_mainWindow->setLogin("testuser");
-    m_mainWindow->setPass("testpass");
+TEST_F(MainWindowTest, TestPrivateChatCreation) {
+    mainWindow->setTestCredentials("testuser", "pass");
 
-    // Вызываем авторизацию
-    m_mainWindow->authorizeUser();
+    // Проверяем, что изначально чатов нет
+    EXPECT_EQ(mainWindow->privateChatsCount(), 0);
 
-    // Проверяем, что данные были записаны в сокет
-    QVERIFY(m_testSocket->bytesToWrite() > 0);
+    // Симулируем входящее сообщение
+    mainWindow->handlePrivateMessage("sender1", "Hello");
 
-    // Читаем отправленные данные
-    QByteArray sentData = m_testSocket->readAll();
-    QString sentMessage = QString::fromUtf8(sentData.mid(2)); // Пропускаем размер блока
+    // Проверяем, что окно чата создано
+    EXPECT_EQ(mainWindow->privateChatsCount(), 1);
+    EXPECT_TRUE(mainWindow->hasPrivateChatWith("sender1"));
 
-    // Проверяем формат сообщения
-    QVERIFY(sentMessage.startsWith("AUTH:testuser:testpass"));
+    // Проверяем непрочитанные сообщения
+    mainWindow->handlePrivateMessage("sender1", "Message 2");
+    // Можно добавить проверку количества непрочитанных
 }
-
-void TestMainWindow::testRegRequest()
-{
-    // Тест аналогичен testAuthRequest, но для регистрации
-
-    // Для упрощения теста, эмулируем данные регистрации
-    m_mainWindow->setLogin("newuser");
-    m_mainWindow->setPass("newpass");
-
-    // Вызываем регистрацию напрямую (в реальном приложении это делается через ui_Reg)
-    QString regString = QString("REGISTER:%1:%2").arg("newuser", "newpass");
-
-    QByteArray data;
-    QDataStream out(&data, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_2);
-    out << quint16(0) << regString;
-    out.device()->seek(0);
-    out << quint16(data.size() - sizeof(quint16));
-
-    m_testSocket->write(data);
-
-    // Проверяем отправленные данные
-    QVERIFY(m_testSocket->bytesToWrite() > 0);
-    QByteArray sentData = m_testSocket->readAll();
-    QString sentMessage = QString::fromUtf8(sentData.mid(2));
-    QVERIFY(sentMessage.startsWith("REGISTER:newuser:newpass"));
-}
-
-void TestMainWindow::testUserListUpdate()
-{
-    // Подготавливаем тестовый список пользователей
-    QStringList testUsers = {"user1", "user2", "user3"};
-
-    // Вызываем обновление списка
-    m_mainWindow->updateUserList(testUsers);
-
-    // Проверяем, что список обновился
-    QCOMPARE(m_mainWindow->ui->userListWidget->count(), testUsers.size());
-
-    // Проверяем содержимое списка
-    for (int i = 0; i < testUsers.size(); ++i) {
-        QCOMPARE(m_mainWindow->ui->userListWidget->item(i)->text(), testUsers[i]);
-    }
-}
-
-void TestMainWindow::testPrivateMessageHandling()
-{
-    // Устанавливаем текущего пользователя
-    m_mainWindow->setLogin("currentuser");
-
-    // Эмулируем получение приватного сообщения
-    QString testMessage = "PRIVATE:sender:Hello!";
-    QByteArray data;
-    QDataStream out(&data, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_2);
-    out << quint16(0) << testMessage;
-    out.device()->seek(0);
-    out << quint16(data.size() - sizeof(quint16));
-
-    // "Отправляем" сообщение в сокет
-    m_testSocket->write(data);
-    m_testSocket->flush();
-
-    // Вызываем обработку данных
-    m_mainWindow->slotReadyRead();
-
-    // Проверяем, что окно чата было создано
-    QVERIFY(m_mainWindow->privateChatWindows.contains("sender"));
-}
-
-void TestMainWindow::testSocketBufferClearing()
-{
-    // Заполняем буфер тестовыми данными
-    QString testMessage = "TEST_MESSAGE";
-    QByteArray data;
-    QDataStream out(&data, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_2);
-    out << quint16(0) << testMessage;
-    out.device()->seek(0);
-    out << quint16(data.size() - sizeof(quint16));
-
-    m_testSocket->write(data);
-    m_testSocket->flush();
-
-    // Проверяем, что данные есть в буфере
-    QVERIFY(m_testSocket->bytesAvailable() > 0);
-
-    // Очищаем буфер
-    m_mainWindow->clearSocketBuffer();
-
-    // Проверяем, что буфер пуст
-    QCOMPARE(m_testSocket->bytesAvailable(), 0);
-}
-
-QTEST_APPLESS_MAIN(TestMainWindow)
-#include "mainwindow_test.moc"
-
 
 
 

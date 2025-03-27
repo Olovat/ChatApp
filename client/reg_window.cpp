@@ -23,6 +23,17 @@ void reg_window::on_Password_line_textEdited(const QString &arg1)
     reg_window::m_userPass = arg1;
 }
 
+void reg_window::setName(const QString& name) {
+    ui->Login_line->setText(name);
+}
+
+void reg_window::setPass(const QString& pass) {
+    ui->Password_line->setText(pass);
+}
+
+void reg_window::setConfirmPass(const QString& pass) {
+    ui->Confirm_line->setText(pass);
+}
 
 void reg_window::on_Confirm_line_textEdited(const QString &arg1)
 {
@@ -41,6 +52,11 @@ QString reg_window::getName()  //геттер логина
 QString reg_window::getPass() //геттер пароль
 {
     return m_userPass;
+}
+
+QString reg_window::getConfirmPass() //геттер пароль
+{
+    return m_confirmation;
 }
 
 // чек паролей

@@ -1,5 +1,5 @@
 #include "transitwindow.h"
-#include "ui_transitwindow.h"
+#include "build\Desktop_Qt_6_8_2_MinGW_64_bit-Debug\ui_transitwindow.h"
 #include "mainwindow.h"
 #include <QMessageBox>
 #include <QUuid>
