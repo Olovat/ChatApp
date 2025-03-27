@@ -231,6 +231,114 @@ void Server::slotReadyRead()
                 
                 sendPrivateMessageHistory(socket, currentUser, otherUser);
             }
+            else if (message.startsWith("CREATE_GROUP_CHAT:")) {
+                QStringList parts = message.split(":", Qt::SkipEmptyParts);
+                if (parts.size() >= 3) {
+                    QString chatName = parts[1];
+                    QString chatId = parts[2];
+                    
+                    // Определяем, кто создал чат
+                    QString creatorUsername = "Unknown";
+                    for (const AuthenticatedUser& user : authenticatedUsers) {
+                        if (user.socket == socket) {
+                            creatorUsername = user.username;
+                            break;
+                        }
+                    }
+                    
+                    bool success = createGroupChat(chatId, chatName, creatorUsername);
+                    if (success) {
+                        // Добавляем создателя как участника
+                        addUserToGroupChat(chatId, creatorUsername);
+                        
+                        // Отправляем подтверждение создания
+                        QString response = "GROUP_CHAT_CREATED:" + chatId + ":" + chatName;
+                        Data.clear();
+                        QDataStream out(&Data, QIODevice::WriteOnly);
+                        out.setVersion(QDataStream::Qt_6_2);
+                        out << quint16(0) << response;
+                        out.device()->seek(0);
+                        out << quint16(Data.size() - sizeof(quint16));
+                        socket->write(Data);
+                        
+                        qDebug() << "Group chat created:" << chatName << "with ID:" << chatId << "by user:" << creatorUsername;
+                    } else {
+                        QString response = "ERROR:Failed to create group chat";
+                        Data.clear();
+                        QDataStream out(&Data, QIODevice::WriteOnly);
+                        out.setVersion(QDataStream::Qt_6_2);
+                        out << quint16(0) << response;
+                        out.device()->seek(0);
+                        out << quint16(Data.size() - sizeof(quint16));
+                        socket->write(Data);
+                        
+                        qDebug() << "Failed to create group chat:" << chatName;
+                    }
+                }
+            }
+            else if (message.startsWith("JOIN_GROUP_CHAT:")) {
+                QStringList parts = message.split(":", Qt::SkipEmptyParts);
+                if (parts.size() >= 2) {
+                    QString chatId = parts[1];
+                    
+                    QString username = "Unknown";
+                    for (const AuthenticatedUser& user : authenticatedUsers) {
+                        if (user.socket == socket) {
+                            username = user.username;
+                            break;
+                        }
+                    }
+                    
+                    bool success = addUserToGroupChat(chatId, username);
+                    if (success) {
+                        // Отправляем информацию о чате
+                        sendGroupChatInfo(chatId, socket);
+                        
+                        // Оповещаем всех участников о новом пользователе
+                        sendGroupChatMessage(chatId, "SYSTEM", username + " присоединился к чату");
+                    } else {
+                        QString response = "ERROR:Failed to join group chat";
+                        Data.clear();
+                        QDataStream out(&Data, QIODevice::WriteOnly);
+                        out.setVersion(QDataStream::Qt_6_2);
+                        out << quint16(0) << response;
+                        out.device()->seek(0);
+                        out << quint16(Data.size() - sizeof(quint16));
+                        socket->write(Data);
+                    }
+                }
+            }
+            else if (message.startsWith("GROUP_MESSAGE:")) {
+                QStringList parts = message.split(":", Qt::SkipEmptyParts);
+                if (parts.size() >= 3) {
+                    QString chatId = parts[1];
+                    QString messageText = parts.mid(2).join(":");
+                    
+                    QString senderUsername = "Unknown";
+                    for (const AuthenticatedUser& user : authenticatedUsers) {
+                        if (user.socket == socket) {
+                            senderUsername = user.username;
+                            break;
+                        }
+                    }
+                    
+                    // Сохраняем и рассылаем сообщение всем участникам группы
+                    saveGroupChatMessage(chatId, senderUsername, messageText);
+                    sendGroupChatMessage(chatId, senderUsername, messageText);
+                }
+            }
+            else if (message.startsWith("GET_GROUP_CHATS")) {
+                // Отправка списка групповых чатов пользователю
+                QString username = "Unknown";
+                for (const AuthenticatedUser& user : authenticatedUsers) {
+                    if (user.socket == socket) {
+                        username = user.username;
+                        break;
+                    }
+                }
+                
+                sendUserGroupChats(username, socket);
+            }
             else if (message != "GET_USERLIST") { // Фильтрация системного сообщения
                 QString senderUsername = "Unknown";
                 for (const AuthenticatedUser& user : authenticatedUsers) {
@@ -301,37 +409,54 @@ bool Server::sendPrivateMessage(const QString &recipientUsername, const QString 
 // Новый метод для отправки списка пользователей всем клиентам
 void Server::broadcastUserList()
 {
-    QStringList users;
-    for (const AuthenticatedUser& user : authenticatedUsers) {
-        // Формат: username:status (1 - онлайн, 0 - оффлайн)
-        users.append(user.username + ":" + (user.isOnline ? "1" : "0"));
-    }
-
-    QString userList = "USERLIST:" + users.join(",");
-    Data.clear();
-    QDataStream out(&Data, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_2);
-    out << quint16(0) << userList;
-    out.device()->seek(0);
-    out << quint16(Data.size() - sizeof(quint16));
-
-    // Отправляем список всем онлайн пользователям
-    for (const AuthenticatedUser& user : authenticatedUsers) {
-        if (user.isOnline && user.socket) {
-            user.socket->write(Data);
+    // Для каждого онлайн-пользователя отправляем персонализированный список
+    for (const AuthenticatedUser& currentUser : authenticatedUsers) {
+        if (currentUser.isOnline && currentUser.socket) {
+            // Отправляем персонализированный список для этого пользователя
+            sendUserList(currentUser.socket);
         }
     }
 
-    qDebug() << "Broadcast user list to all clients:" << userList;
+    qDebug() << "Broadcast user lists to all online clients.";
 }
 
 // Метод для отправки списка пользователей конкретному клиенту
 void Server::sendUserList(QTcpSocket* clientSocket)
 {
+    // Определим текущего пользователя по сокету
+    QString currentUsername;
+    for (const AuthenticatedUser& user : authenticatedUsers) {
+        if (user.socket == clientSocket) {
+            currentUsername = user.username;
+            break;
+        }
+    }
+
+    // Список для хранения пользователей
     QStringList users;
     for (const AuthenticatedUser& user : authenticatedUsers) {
-        // Формат: username:status (1 - онлайн, 0 - оффлайн)
-        users.append(user.username + ":" + (user.isOnline ? "1" : "0"));
+        // Формат для пользователей: username:status:type (1 - онлайн, 0 - оффлайн, тип U - пользователь)
+        users.append(user.username + ":" + (user.isOnline ? "1" : "0") + ":U");
+    }
+
+    // Добавляем групповые чаты, в которых состоит текущий пользователь
+    if (!currentUsername.isEmpty()) {
+        QSqlQuery query(srv_db);
+        query.prepare("SELECT g.id, g.name FROM group_chats g "
+                    "INNER JOIN group_chat_members m ON g.id = m.chat_id "
+                    "WHERE m.username = :username");
+        query.bindValue(":username", currentUsername);
+        
+        if (query.exec()) {
+            while (query.next()) {
+                QString chatId = query.value("id").toString();
+                QString chatName = query.value("name").toString();
+                // Формат для групповых чатов: chatId:1:G:chatName (всегда онлайн, тип G - группа)
+                users.append(chatId + ":1:G:" + chatName);
+            }
+        } else {
+            qDebug() << "Failed to get group chats for user:" << query.lastError().text();
+        }
     }
 
     QString userList = "USERLIST:" + users.join(",");
@@ -387,6 +512,11 @@ bool Server::connectDB()
         return false;
     }
 
+    if (!initGroupChatTables()) {
+        qDebug() << "Failed to initialize group chat tables";
+        return false;
+    }
+
     return true;
 }
 
@@ -401,6 +531,45 @@ bool Server::initUserTable()
                       "ypos INTEGER DEFAULT 100, "
                       "width INTEGER DEFAULT 400, "
                       "length INTEGER DEFAULT 300)");
+}
+
+bool Server::initGroupChatTables()
+{
+    QSqlQuery query(srv_db);
+    bool success = query.exec("CREATE TABLE IF NOT EXISTS group_chats ("
+                             "id TEXT PRIMARY KEY, "  // UUID в виде строки
+                             "name TEXT NOT NULL, "
+                             "created_by VARCHAR(20), "
+                             "created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
+    
+    if (!success) {
+        qDebug() << "Failed to create group_chats table:" << query.lastError().text();
+        return false;
+    }
+    
+    success = query.exec("CREATE TABLE IF NOT EXISTS group_chat_members ("
+                        "chat_id TEXT, "
+                        "username VARCHAR(20), "
+                        "joined_at DATETIME DEFAULT CURRENT_TIMESTAMP, "
+                        "PRIMARY KEY (chat_id, username))");
+    
+    if (!success) {
+        qDebug() << "Failed to create group_chat_members table:" << query.lastError().text();
+        return false;
+    }
+    
+    success = query.exec("CREATE TABLE IF NOT EXISTS group_chat_messages ("
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                        "chat_id TEXT, "
+                        "sender VARCHAR(20), "
+                        "message TEXT, "
+                        "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)");
+    
+    if (!success) {
+        qDebug() << "Failed to create group_chat_messages table:" << query.lastError().text();
+    }
+    
+    return success;
 }
 
 bool Server::initMessageTable()
@@ -739,4 +908,213 @@ void Server::sendStoredOfflineMessages(const QString &username, QTcpSocket* sock
         
         qDebug() << "Sent stored offline message to" << username << "from" << sender << ":" << message;
     }
+}
+
+bool Server::createGroupChat(const QString &chatId, const QString &chatName, const QString &creator)
+{
+    QSqlQuery query(srv_db);
+    query.prepare("INSERT INTO group_chats (id, name, created_by) VALUES (:id, :name, :creator)");
+    query.bindValue(":id", chatId);
+    query.bindValue(":name", chatName);
+    query.bindValue(":creator", creator);
+    
+    bool success = query.exec();
+    if (!success) {
+        qDebug() << "Failed to create group chat:" << query.lastError().text();
+    }
+    return success;
+}
+
+bool Server::addUserToGroupChat(const QString &chatId, const QString &username)
+{
+    // Проверяем, есть ли уже пользователь в этом чате
+    QSqlQuery checkQuery(srv_db);
+    checkQuery.prepare("SELECT 1 FROM group_chat_members WHERE chat_id = :chat_id AND username = :username");
+    checkQuery.bindValue(":chat_id", chatId);
+    checkQuery.bindValue(":username", username);
+    
+    if (checkQuery.exec() && checkQuery.next()) {
+        // Пользователь уже в чате
+        return true;
+    }
+    
+    // Добавляем пользователя в чат
+    QSqlQuery query(srv_db);
+    query.prepare("INSERT INTO group_chat_members (chat_id, username) VALUES (:chat_id, :username)");
+    query.bindValue(":chat_id", chatId);
+    query.bindValue(":username", username);
+    
+    bool success = query.exec();
+    if (!success) {
+        qDebug() << "Failed to add user to group chat:" << query.lastError().text();
+    }
+    return success;
+}
+
+void Server::sendGroupChatInfo(const QString &chatId, QTcpSocket *socket)
+{
+    // Получаем информацию о чате
+    QSqlQuery chatQuery(srv_db);
+    chatQuery.prepare("SELECT name FROM group_chats WHERE id = :id");
+    chatQuery.bindValue(":id", chatId);
+    
+    if (chatQuery.exec() && chatQuery.next()) {
+        QString chatName = chatQuery.value("name").toString();
+        
+        // Получаем список участников
+        QStringList members;
+        QSqlQuery membersQuery(srv_db);
+        membersQuery.prepare("SELECT username FROM group_chat_members WHERE chat_id = :chat_id");
+        membersQuery.bindValue(":chat_id", chatId);
+        
+        if (membersQuery.exec()) {
+            while (membersQuery.next()) {
+                members.append(membersQuery.value("username").toString());
+            }
+        }
+        
+        // Формируем и отправляем ответ
+        QString response = "GROUP_CHAT_INFO:" + chatId + ":" + chatName + ":" + members.join(",");
+        
+        Data.clear();
+        QDataStream out(&Data, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_6_2);
+        out << quint16(0) << response;
+        out.device()->seek(0);
+        out << quint16(Data.size() - sizeof(quint16));
+        socket->write(Data);
+        
+        // Отправляем историю сообщений
+        sendGroupChatHistory(chatId, socket);
+    }
+}
+
+bool Server::saveGroupChatMessage(const QString &chatId, const QString &sender, const QString &message)
+{
+    QSqlQuery query(srv_db);
+    query.prepare("INSERT INTO group_chat_messages (chat_id, sender, message) VALUES (:chat_id, :sender, :message)");
+    query.bindValue(":chat_id", chatId);
+    query.bindValue(":sender", sender);
+    query.bindValue(":message", message);
+    
+    bool success = query.exec();
+    if (!success) {
+        qDebug() << "Failed to save group chat message:" << query.lastError().text();
+    }
+    return success;
+}
+
+void Server::sendGroupChatMessage(const QString &chatId, const QString &sender, const QString &message)
+{
+    // Получаем всех участников чата
+    QSqlQuery membersQuery(srv_db);
+    membersQuery.prepare("SELECT username FROM group_chat_members WHERE chat_id = :chat_id");
+    membersQuery.bindValue(":chat_id", chatId);
+    
+    if (membersQuery.exec()) {
+        // Формируем сообщение
+        QString formattedMessage = "GROUP_MESSAGE:" + chatId + ":" + sender + ":" + message;
+        
+        while (membersQuery.next()) {
+            QString memberUsername = membersQuery.value("username").toString();
+            
+            // Находим сокет пользователя
+            for (const AuthenticatedUser& user : authenticatedUsers) {
+                if (user.username == memberUsername && user.isOnline && user.socket) {
+                    // Отправляем сообщение
+                    Data.clear();
+                    QDataStream out(&Data, QIODevice::WriteOnly);
+                    out.setVersion(QDataStream::Qt_6_2);
+                    out << quint16(0) << formattedMessage;
+                    out.device()->seek(0);
+                    out << quint16(Data.size() - sizeof(quint16));
+                    user.socket->write(Data);
+                }
+            }
+        }
+    }
+}
+
+void Server::sendGroupChatHistory(const QString &chatId, QTcpSocket *socket)
+{
+    // Отправляем начало истории
+    {
+        QString beginMsg = "GROUP_HISTORY_BEGIN:" + chatId;
+        Data.clear();
+        QDataStream out(&Data, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_6_2);
+        out << quint16(0) << beginMsg;
+        out.device()->seek(0);
+        out << quint16(Data.size() - sizeof(quint16));
+        socket->write(Data);
+        QThread::msleep(10);
+    }
+    
+    // Отправляем сообщения истории
+    QSqlQuery query(srv_db);
+    query.prepare("SELECT sender, message, timestamp FROM group_chat_messages "
+                 "WHERE chat_id = :chat_id ORDER BY timestamp");
+    query.bindValue(":chat_id", chatId);
+    
+    if (query.exec()) {
+        while (query.next()) {
+            QString sender = query.value("sender").toString();
+            QString message = query.value("message").toString();
+            QString timestamp = query.value("timestamp").toString();
+            
+            QString historyMsg = "GROUP_HISTORY_MSG:" + chatId + ":" + timestamp + ":" + sender + ":" + message;
+            
+            Data.clear();
+            QDataStream out(&Data, QIODevice::WriteOnly);
+            out.setVersion(QDataStream::Qt_6_2);
+            out << quint16(0) << historyMsg;
+            out.device()->seek(0);
+            out << quint16(Data.size() - sizeof(quint16));
+            socket->write(Data);
+            QThread::msleep(10);
+        }
+    }
+    
+    // Отправляем конец истории
+    {
+        QString endMsg = "GROUP_HISTORY_END:" + chatId;
+        Data.clear();
+        QDataStream out(&Data, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_6_2);
+        out << quint16(0) << endMsg;
+        out.device()->seek(0);
+        out << quint16(Data.size() - sizeof(quint16));
+        socket->write(Data);
+    }
+}
+
+void Server::sendUserGroupChats(const QString &username, QTcpSocket *socket)
+{
+    // Получаем список групповых чатов пользователя
+    QSqlQuery query(srv_db);
+    query.prepare("SELECT g.id, g.name FROM group_chats g "
+                 "INNER JOIN group_chat_members m ON g.id = m.chat_id "
+                 "WHERE m.username = :username");
+    query.bindValue(":username", username);
+    
+    QStringList chats;
+    
+    if (query.exec()) {
+        while (query.next()) {
+            QString chatId = query.value("id").toString();
+            QString chatName = query.value("name").toString();
+            chats.append(chatId + ":" + chatName);
+        }
+    }
+    
+    // Формируем и отправляем ответ
+    QString response = "GROUP_CHATS_LIST:" + chats.join(",");
+    
+    Data.clear();
+    QDataStream out(&Data, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_2);
+    out << quint16(0) << response;
+    out.device()->seek(0);
+    out << quint16(Data.size() - sizeof(quint16));
+    socket->write(Data);
 }
