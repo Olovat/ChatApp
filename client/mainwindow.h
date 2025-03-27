@@ -8,6 +8,7 @@
 #include <QtSql/QtSql>
 #include "auth_window.h"
 #include "reg_window.h"
+#include "transitwindow.h"
 #include <QUuid>
 #include <QListWidgetItem>
 #include <QMap>
@@ -21,6 +22,7 @@ class MainWindow;
 QT_END_NAMESPACE
 
 class PrivateChatWindow;
+class TransitWindow;
 
 class MainWindow : public QMainWindow
 {
@@ -41,6 +43,9 @@ public:
     void handlePrivateMessage(const QString &sender, const QString &message); // Обработка приватных сообщений
     void sendPrivateMessage(const QString &recipient, const QString &message);
     void requestPrivateMessageHistory(const QString &otherUser);
+    
+    // Новый метод для работы с групповыми чатами
+    void createGroupChat(const QString &chatName, const QString &chatId);
 
 private slots:
     void authorizeUser(); // пользовательские слоты
@@ -52,6 +57,8 @@ private slots:
     void onUserSelected(QListWidgetItem *item);
     void handleAuthenticationTimeout();
     void handleSocketError(QAbstractSocket::SocketError socketError);
+
+    void on_pushButton_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -100,8 +107,8 @@ private:
     QMap<QString, QList<UnreadMessage>> unreadMessages;
 
     QTimer *authTimeoutTimer;
-
-public slots:
+    
+    public slots:
     void slotReadyRead();
 };
 #endif // MAINWINDOW_H

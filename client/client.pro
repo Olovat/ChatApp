@@ -13,19 +13,25 @@ SOURCES += \
     mainwindow.cpp \
     auth_window.cpp \
     privatechatwindow.cpp \
-    reg_window.cpp
+    reg_window.cpp \
+    transitwindow.cpp \
+    groupchatwindow.cpp
 
 HEADERS += \
     mainwindow.h \
     auth_window.h \
     privatechatwindow.h \
-    reg_window.h
+    reg_window.h \
+    transitwindow.h \
+    groupchatwindow.h
 
 FORMS += \
+    groupchatwindow.ui \
     mainwindow.ui \
     auth_window.ui \
     privatechatwindow.ui \
-    reg_window.ui
+    reg_window.ui \
+    transitwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
