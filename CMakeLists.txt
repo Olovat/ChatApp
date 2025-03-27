@@ -88,3 +88,8 @@ target_compile_definitions(test_client PRIVATE TESTING=1)
 # Включаем тестирование
 enable_testing()
 add_test(NAME client_tests COMMAND test_client)
+
+if (MSVC)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+endif()
