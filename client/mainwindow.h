@@ -15,7 +15,7 @@
 #include <QMap>
 #include <gtest/gtest.h>
 #include <QTimer>
-#include "build\Desktop_Qt_6_8_2_MinGW_64_bit-Debug\ui_mainwindow.h"
+#include "ui_mainwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {

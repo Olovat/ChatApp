@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "build\Desktop_Qt_6_8_2_MinGW_64_bit-Debug\ui_mainwindow.h"
+#include "ui_mainwindow.h"
 #include <QApplication>
 #include <QMessageBox>
 #include <QListWidgetItem>

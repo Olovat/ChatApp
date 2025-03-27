@@ -10,6 +10,11 @@ FetchContent_Declare(
     URL https://github.com/google/googletest/archive/refs/heads/main.zip
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
+
+# При сборке под Windows с флагом /MD, Google Test требует флаг /MD
+# Поэтому устанавливаем флаг gtest_force_shared_crt в ON
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
 FetchContent_MakeAvailable(googletest)
 
 # Подключаем Qt
@@ -18,11 +23,13 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Network Sql Widgets Test)
 
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/client)
 
 # Указываем пути к заголовочным файлам
 include_directories(${CMAKE_SOURCE_DIR}/server)
 include_directories(${CMAKE_SOURCE_DIR}/client)
 include_directories(${CMAKE_SOURCE_DIR}/tests)
+include_directories(${CMAKE_BINARY_DIR})
 
 # Указываем файлы .ui
 set(UI_FILES

@@ -1,5 +1,5 @@
 #include "reg_window.h"
-#include "build\Desktop_Qt_6_8_2_MinGW_64_bit-Debug\ui_reg_window.h"
+#include "ui_reg_window.h"
 
 
 reg_window::reg_window(QWidget *parent) :
