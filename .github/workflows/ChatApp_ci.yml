@@ -90,4 +90,4 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         cd build
-        ctest -C Release --output-on-failure
+        ctest -C Release -V --output-on-failure
