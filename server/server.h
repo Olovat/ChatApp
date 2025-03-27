@@ -9,6 +9,7 @@
 #include <QDir>      
 #include <QCoreApplication> 
 #include <QVector>
+#include <QList>
 
 class Server : public QTcpServer
 {
@@ -35,16 +36,35 @@ private:
     struct AuthenticatedUser {
         QString username;
         QTcpSocket* socket;
+        bool isOnline; // Флаг онлайн-статуса
     };
-    QVector<AuthenticatedUser> authenticatedUsers;
+    QList<AuthenticatedUser> authenticatedUsers;
     
     // Создание таблицы пользователей
     bool initUserTable();
+    bool initMessageTable();  
+    bool initHistoryTable();  // Новый метод для создания таблицы истории
+    bool logMessage(const QString &sender, const QString &recipient, const QString &message);
+    bool saveToHistory(const QString &sender, const QString &message);  // Новый метод для сохранения в историю
+    void sendMessageHistory(QTcpSocket* socket);  // Новый метод для отправки истории
+    void sendPrivateMessageHistory(QTcpSocket* socket, const QString &user1, const QString &user2);  // Новый метод для отправки истории личных сообщений
+
+    void broadcastUserList();
+
+    void sendUserList(QTcpSocket* clientSocket);
+    
+    // Метод для хранения сообщений, отправленных оффлайн-пользователям
+    void storeOfflineMessage(const QString &sender, const QString &recipient, const QString &message);
+    
+    // Метод для отправки сохраненных оффлайн-сообщений
+    void sendStoredOfflineMessages(const QString &username, QTcpSocket* socket);
 
 public slots:
     void incomingConnection(qintptr socketDescriptor); // обработчик новых подключений
     void slotReadyRead(); // слот для сигнала; обработчик полученных от клиента сообщений
     void clientDisconnected(); // обработчик отключения клиента
+    bool sendPrivateMessage(const QString &recipientUsername, const QString &message);
+
 };
 
 #endif // SERVER_H

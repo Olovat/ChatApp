@@ -12,16 +12,19 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     auth_window.cpp \
+    privatechatwindow.cpp \
     reg_window.cpp
 
 HEADERS += \
     mainwindow.h \
     auth_window.h \
+    privatechatwindow.h \
     reg_window.h
 
 FORMS += \
     mainwindow.ui \
     auth_window.ui \
+    privatechatwindow.ui \
     reg_window.ui
 
 # Default rules for deployment.

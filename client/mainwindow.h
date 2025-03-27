@@ -9,13 +9,17 @@
 #include "auth_window.h"
 #include "reg_window.h"
 #include <QUuid>
-
+#include <QListWidgetItem>
+#include <QMap>
+#include <QTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
 }
 QT_END_NAMESPACE
+
+class PrivateChatWindow;
 
 class MainWindow : public QMainWindow
 {
@@ -31,59 +35,70 @@ public:
     QString getUsername() const;
     QString getUserpass() const;
     bool connectToServer();
+    void sendMessageToServer(const QString &message); // Метод для отправки сообщения на сервер
+    void handlePrivateMessage(const QString &sender, const QString &message); // Обработка приватных сообщений
+    void sendPrivateMessage(const QString &recipient, const QString &message);
+    void requestPrivateMessageHistory(const QString &otherUser);
 
 private slots:
     void authorizeUser(); // пользовательские слоты
-
-    void registerWindowShow();
-
     void registerUser();
-
     void on_pushButton_2_clicked();
-
     void on_lineEdit_returnPressed();
-
-    void prepareForRegistration(); // Чтобы исправить баг при переходе с авторизации на регистрацию и множественном вызове окна регистрации
+    void prepareForRegistration(); // Чтобы исправить баг при переходе с авторизации на регистрацию
+    void updateUserList(const QStringList &users);
+    void onUserSelected(QListWidgetItem *item);
+    void handleAuthenticationTimeout();
+    void handleSocketError(QAbstractSocket::SocketError socketError);
 
 private:
     Ui::MainWindow *ui;
-
     QTcpSocket *socket;
-
     QByteArray Data;
-
     quint16 nextBlockSize;
-    //переменные для работы с окнами авторизации и регистрации
-    //----------------------------------------------
+    
+    // Переменные для работы с окнами авторизации и регистрации
     auth_window ui_Auth;
-
     reg_window ui_Reg;
-
     QString m_username;
-
     QString m_userpass;
-
     bool m_loginSuccesfull;
-    //----------------------------------------------
-    void SendToServer(QString str); //создаем блок для хранения
-
-    QString lastReceivedMessage;
-
+    
+    void SendToServer(QString str);
     QStringList recentSentMessages;
 
-    // создаем состояния операций
+    // Состояния операций
     enum OperationType {
         None,
         Auth,
         Register
     };
 
-    // очищаем буфер сокета
     void clearSocketBuffer();
     OperationType currentOperation;
 
-    QString lastAuthResponse; // Хранит последний ответ авторизации/регистрации
+    PrivateChatWindow* findOrCreatePrivateChatWindow(const QString &username);
     
+    QMap<QString, PrivateChatWindow*> privateChatWindows; // Map для хранения открытых приватных чатов
+
+    QString getCurrentUsername() const;
+
+    // Переменные для хранения истории сообщений
+    QString currentPrivateHistoryRecipient;
+    bool receivingPrivateHistory = false;
+
+    void updatePrivateChatStatuses(const QMap<QString, bool> &userStatusMap);
+
+    // Структура для хранения непрочитанных сообщений
+    struct UnreadMessage {
+        QString sender;
+        QString message;
+        QString timestamp;
+    };
+    QMap<QString, QList<UnreadMessage>> unreadMessages;
+
+    QTimer *authTimeoutTimer;
+
 public slots:
     void slotReadyRead();
 };
