@@ -491,8 +491,15 @@ void MainWindow::slotReadyRead()
             else if(str == "REGISTER_FAILED") {
                 if (currentOperation == Register || currentOperation == None) {
                     QMessageBox::warning(this, "Registration Error", "Username may already exist!");
+                    
+                    // Переход к окну авторизации после ошибки регистрации
+                    ui_Reg.hide();
+                    ui_Auth.show();
+                    ui_Auth.LineClear(); // Очищаем поля ввода для нового входа
+                    
                     currentOperation = None;
                     ui_Reg.setButtonsEnabled(true);
+                    ui_Auth.setButtonsEnabled(true);
                 }
             }
             else if(str.startsWith("PRIVATE:")) {

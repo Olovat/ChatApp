@@ -51,7 +51,7 @@ bool reg_window::checkPass()
 
 void reg_window::ConfirmClear()
 {
-    ui->Confirm_line->clear();
+    ui->Confirm_line_2->clear();
 }
 
 // Тоже самое, что и в auth_window.cpp
@@ -59,9 +59,9 @@ void reg_window::ConfirmClear()
 void reg_window::setButtonsEnabled(bool enabled)
 {
     
-    if (ui->Register_button) {
-        ui->Register_button->setEnabled(enabled);
-        ui->Register_button->repaint();
+    if (ui->Register_button_2) {
+        ui->Register_button_2->setEnabled(enabled);
+        ui->Register_button_2->repaint();
     }
 
     // Обновление UI тоже самое, что и в auth_window.cpp
