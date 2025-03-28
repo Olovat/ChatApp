@@ -10,14 +10,26 @@
 #include <QCoreApplication> 
 #include <QVector>
 #include <QList>
+#include <gtest/gtest.h>
+
 
 class Server : public QTcpServer
 {
     Q_OBJECT
+
 public:
     explicit Server();
     virtual ~Server();
     bool connectDB();
+    bool initializeDatabase();
+
+    QSqlDatabase& getDatabase();
+
+    bool testRegisterUser(const QString &username, const QString &password);
+    bool testAuthenticateUser(const QString &username, const QString &password);
+    void testSendToClient(const QString &str);
+    bool testLogMessage(const QString &sender, const QString &recipient, const QString &message);
+    bool testSaveToHistory(const QString &sender, const QString &message);
 
 private:
     QTcpSocket *socket;
@@ -44,6 +56,7 @@ private:
     bool initUserTable();
     bool initMessageTable();  
     bool initHistoryTable();  // Новый метод для создания таблицы истории
+    bool initGroupChatTables(); // Метод для создания таблиц групповых чатов
     bool logMessage(const QString &sender, const QString &recipient, const QString &message);
     bool saveToHistory(const QString &sender, const QString &message);  // Новый метод для сохранения в историю
     void sendMessageHistory(QTcpSocket* socket);  // Новый метод для отправки истории
@@ -58,6 +71,15 @@ private:
     
     // Метод для отправки сохраненных оффлайн-сообщений
     void sendStoredOfflineMessages(const QString &username, QTcpSocket* socket);
+
+    // Методы для работы с групповыми чатами
+    bool createGroupChat(const QString &chatId, const QString &chatName, const QString &creator);
+    bool addUserToGroupChat(const QString &chatId, const QString &username);
+    void sendGroupChatInfo(const QString &chatId, QTcpSocket *socket);
+    bool saveGroupChatMessage(const QString &chatId, const QString &sender, const QString &message);
+    void sendGroupChatMessage(const QString &chatId, const QString &sender, const QString &message);
+    void sendGroupChatHistory(const QString &chatId, QTcpSocket *socket);
+    void sendUserGroupChats(const QString &username, QTcpSocket *socket);
 
 public slots:
     void incomingConnection(qintptr socketDescriptor); // обработчик новых подключений

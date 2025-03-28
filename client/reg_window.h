@@ -18,9 +18,13 @@ public:
     ~reg_window();
     QString getName();
     QString getPass();
+    QString getConfirmPass();
     bool checkPass();
     void ConfirmClear();
     void setButtonsEnabled(bool enabled);
+    void setName(const QString& name);
+    void setPass(const QString& pass);
+    void setConfirmPass(const QString& pass);
 
 signals:
     void register_button_clicked2();
