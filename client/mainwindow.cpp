@@ -35,12 +35,14 @@ void MainWindow::initializeCommon()
     connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
             this, &MainWindow::handleSocketError);
 
-    // Инициализация таймера
+
+     // Создание таймера, чтобы клиент падал при падении сервера, а просто отключался через время.
     authTimeoutTimer = new QTimer(this);
     authTimeoutTimer->setSingleShot(true);
-    connect(authTimeoutTimer, &QTimer::timeout, this, &MainWindow::handleAuthenticationTimeout);
+    connect(authTimeoutTimer, &QTimer::timeout, this, &MainWindow::handleAuthenticationTimeout);    
+   
 
-    // Инициализация переменных
+
     nextBlockSize = 0;
     currentOperation = None;
     m_loginSuccesfull = false;
@@ -49,6 +51,10 @@ void MainWindow::initializeCommon()
     connect(&ui_Auth, &auth_window::login_button_clicked, this, &MainWindow::authorizeUser);
     connect(&ui_Auth, &auth_window::register_button_clicked, this, &MainWindow::prepareForRegistration);
     connect(&ui_Reg, &reg_window::register_button_clicked2, this, &MainWindow::registerUser);
+
+
+    this->hide();
+
     connect(ui->userListWidget, &QListWidget::itemClicked, this, &MainWindow::onUserSelected);
 
     this->hide();
@@ -78,6 +84,7 @@ void MainWindow::updateUserList(const QStringList &users)
     QStringList groupChats;
 
     // Разделяем пользователей на категории
+
     for (const QString &userInfo : users) {
         QStringList parts = userInfo.split(":");
 
@@ -117,19 +124,20 @@ void MainWindow::updateUserList(const QStringList &users)
 
     // Обновляем статусы в открытых окнах чатов
     updatePrivateChatStatuses(userStatusMap);
-
-    // Добавляем текущего пользователя (если он есть в списке)
+  
     for (const QString &userInfo : users) {
         QStringList parts = userInfo.split(":");
 
         if (parts.size() >= 3) {
             QString username = parts[0];
             bool isOnline = (parts[1] == "1");
+
             QString type = parts[2];
 
             // Только если это пользователь, не групповой чат
             if (type == "U" && username == currentUsername) {
                 QListWidgetItem *item = new QListWidgetItem(username + " (Вы)");
+
 
                 // Устанавливаем фон в зависимости от статуса
                 if (isOnline) {
@@ -144,17 +152,16 @@ void MainWindow::updateUserList(const QStringList &users)
                     item->setData(Qt::UserRole + 1, "U"); // Тип - пользователь
                 }
 
+
                 // Выделение текущего пользователя
                 QFont font = item->font();
                 font.setBold(true);
                 item->setFont(font);
-
                 ui->userListWidget->addItem(item);
                 break;
             }
         }
     }
-
     // Добавляем групповые чаты (с отличительным оформлением)
     for (const QString &chatInfo : groupChats) {
         QStringList parts = chatInfo.split(":");
@@ -472,6 +479,7 @@ void MainWindow::slotReadyRead()
                     ui_Auth.LineClear();
                     ui_Auth.setButtonsEnabled(true);
 
+
                     // Очищаем сокет чтобы избежать дублирования сообщений
                     clearSocketBuffer();
                 }
@@ -566,7 +574,9 @@ void MainWindow::slotReadyRead()
 
                 if (!isDuplicate) {
 
+
                         // ui->textBrowser->append(str);
+
                 }
             }
         }
@@ -794,7 +804,6 @@ bool MainWindow::connectToServer(const QString& host, quint16 port)
         qDebug() << "Failed to connect:" << socket->errorString();
         return false;
     }
-
     return true;
 }
 
@@ -812,7 +821,6 @@ void MainWindow::registerUser()
             return;
         }
     }
-
     currentOperation = Register;
 
     if(!ui_Reg.checkPass()) {
@@ -840,6 +848,7 @@ void MainWindow::registerUser()
     socket->waitForBytesWritten();
 
     authTimeoutTimer->start(5000);
+
 
     qDebug() << "Sent registration request:" << regString;
 }
@@ -930,6 +939,7 @@ void MainWindow::handleAuthenticationTimeout()
 {
     qDebug() << "Authentication/Registration timed out";
 
+
     if (currentOperation == Auth) {
         QMessageBox::warning(this, "Authentication Error",
                              "Server did not respond in time. Please try again.");
@@ -940,7 +950,6 @@ void MainWindow::handleAuthenticationTimeout()
                              "Server did not respond in time. Please try again.");
         ui_Reg.setButtonsEnabled(true);
     }
-
     currentOperation = None;
 }
 
@@ -999,3 +1008,4 @@ void MainWindow::createGroupChat(const QString &chatName, const QString &chatId)
     QMessageBox::information(this, "Создание чата",
                              "Запрос на создание группового чата \"" + chatName + "\" отправлен на сервер.");
 }
+
