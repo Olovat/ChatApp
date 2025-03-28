@@ -21,6 +21,7 @@ class MainWindow;
 QT_END_NAMESPACE
 
 class PrivateChatWindow;
+class GroupChatWindow;
 class TransitWindow;
 
 class MainWindow : public QMainWindow
@@ -44,6 +45,13 @@ public:
     
     // Новый метод для работы с групповыми чатами
     void createGroupChat(const QString &chatName, const QString &chatId);
+    void joinGroupChat(const QString &chatId);
+    
+    // Новый метод для установки режима добавления пользователя в групповой чат
+    void startAddUserToGroupMode(const QString &chatId);
+    
+    // Перемещаем из private в public
+    QString getCurrentUsername() const;
 
 private slots:
     void authorizeUser(); // пользовательские слоты
@@ -87,8 +95,7 @@ private:
     PrivateChatWindow* findOrCreatePrivateChatWindow(const QString &username);
     
     QMap<QString, PrivateChatWindow*> privateChatWindows; // Map для хранения открытых приватных чатов
-
-    QString getCurrentUsername() const;
+    QMap<QString, GroupChatWindow*> groupChatWindows; // Map для хранения открытых групповых чатов
 
     // Переменные для хранения истории сообщений
     QString currentPrivateHistoryRecipient;
@@ -106,6 +113,8 @@ private:
 
     QTimer *authTimeoutTimer;
     
+    QString pendingGroupChatId; // ID группового чата для добавления пользователя
+
     public slots:
     void slotReadyRead();
 };
