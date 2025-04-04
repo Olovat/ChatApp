@@ -52,9 +52,6 @@
     </item>
     <item row="0" column="0" colspan="2" alignment="Qt::AlignmentFlag::AlignHCenter">
      <widget class="QLabel" name="label_3">
-      <property name="text">
-       <string>Authentification</string>
-      </property>
      </widget>
     </item>
     <item row="6" column="1">

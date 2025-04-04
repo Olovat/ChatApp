@@ -6,41 +6,43 @@ reg_window::reg_window(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::reg_window)
 {
-    ui->setupUi(this);
+    ui->setupUi(this);    
 }
 
 reg_window::~reg_window()
 {
     delete ui;
 }
-void reg_window::on_Login_line_textEdited(const QString &arg1)
+
+void reg_window::on_Login_line_2_textEdited(const QString &arg1)
 {
     reg_window::m_userName = arg1;
 }
 
-void reg_window::on_Password_line_textEdited(const QString &arg1)
+void reg_window::on_Password_line_2_textEdited(const QString &arg1)
 {
     reg_window::m_userPass = arg1;
 }
 
+
 void reg_window::setName(const QString& name) {
-    ui->Login_line->setText(name);
+    ui->Login_line_2->setText(name);
 }
 
 void reg_window::setPass(const QString& pass) {
-    ui->Password_line->setText(pass);
+    ui->Password_line_2->setText(pass);
 }
 
 void reg_window::setConfirmPass(const QString& pass) {
-    ui->Confirm_line->setText(pass);
+    ui->Confirm_line_2->setText(pass);
 }
 
-void reg_window::on_Confirm_line_textEdited(const QString &arg1)
+void reg_window::on_Confirm_line_2_textEdited(const QString &arg1)
 {
     reg_window::m_confirmation = arg1;
 }
 
-void reg_window::on_Register_button_clicked() {
+void reg_window::on_Register_button_2_clicked() { 
     emit register_button_clicked2();
 }
 
@@ -67,7 +69,7 @@ bool reg_window::checkPass()
 
 void reg_window::ConfirmClear()
 {
-    ui->Confirm_line->clear();
+       ui->Confirm_line_2->clear();
 }
 
 // Тоже самое, что и в auth_window.cpp
@@ -75,9 +77,9 @@ void reg_window::ConfirmClear()
 void reg_window::setButtonsEnabled(bool enabled)
 {
     
-    if (ui->Register_button) {
-        ui->Register_button->setEnabled(enabled);
-        ui->Register_button->repaint();
+    if (ui->Register_button_2) {
+        ui->Register_button_2->setEnabled(enabled);
+        ui->Register_button_2->repaint();
     }
 
     // Обновление UI тоже самое, что и в auth_window.cpp

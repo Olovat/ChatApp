@@ -6,76 +6,108 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>500</width>
+    <height>207</height>
    </rect>
   </property>
   <property name="maximumSize">
    <size>
-    <width>400</width>
-    <height>300</height>
+    <width>600</width>
+    <height>500</height>
    </size>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Register yourself</string>
   </property>
-  <widget class="QWidget" name="gridLayoutWidget">
+  <widget class="QPushButton" name="Register_button_2">
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>401</width>
-     <height>301</height>
+     <x>80</x>
+     <y>160</y>
+     <width>402</width>
+     <height>32</height>
     </rect>
    </property>
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="3" column="0">
-     <widget class="QLabel" name="Password">
-      <property name="text">
-       <string>Password:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="5" column="1">
-     <widget class="QPushButton" name="Register_button">
-      <property name="text">
-       <string>Register</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="0">
-     <widget class="QLabel" name="Confirm">
-      <property name="text">
-       <string>Confirm:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1">
-     <widget class="QLineEdit" name="Login_line"/>
-    </item>
-    <item row="4" column="1">
-     <widget class="QLineEdit" name="Confirm_line"/>
-    </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="Login">
-      <property name="text">
-       <string>Login:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1">
-     <widget class="QLineEdit" name="Password_line"/>
-    </item>
-    <item row="1" column="1" alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
-     <widget class="QLabel" name="labe_Register">
-      <property name="text">
-       <string>Register yourself</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
+   <property name="text">
+    <string>Register</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="Login_line_2">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>73</y>
+     <width>402</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="Login_2">
+   <property name="geometry">
+    <rect>
+     <x>4</x>
+     <y>73</y>
+     <width>62</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Login:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="Confirm_2">
+   <property name="geometry">
+    <rect>
+     <x>4</x>
+     <y>135</y>
+     <width>62</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Confirm:</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="Confirm_line_2">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>135</y>
+     <width>402</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="Password_2">
+   <property name="geometry">
+    <rect>
+     <x>4</x>
+     <y>104</y>
+     <width>62</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Password:</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="Password_line_2">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>104</y>
+     <width>402</width>
+     <height>21</height>
+    </rect>
+   </property>
   </widget>
  </widget>
  <resources/>
  <connections/>
+ <tabstops>
+  <tabstop>Login_line_2</tabstop>
+  <tabstop>Password_line_2</tabstop>
+  <tabstop>Confirm_line_2</tabstop>
+  <tabstop>Register_button_2</tabstop>
+ </tabstops>
 </ui>

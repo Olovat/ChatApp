@@ -31,10 +31,10 @@ signals:
 
 private slots:
     // очень опасно, желательно никогда не трогать,сверял названия по буквам.
-    void on_Password_line_textEdited(const QString &arg1);
-    void on_Confirm_line_textEdited(const QString &arg1);
-    void on_Register_button_clicked();
-    void on_Login_line_textEdited(const QString &arg1);
+    void on_Password_line_2_textEdited(const QString &arg1);
+    void on_Confirm_line_2_textEdited(const QString &arg1);
+    void on_Register_button_2_clicked();
+    void on_Login_line_2_textEdited(const QString &arg1);
 
 private:
     Ui::reg_window *ui;

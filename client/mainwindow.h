@@ -25,6 +25,7 @@ class MainWindow;
 QT_END_NAMESPACE
 
 class PrivateChatWindow;
+class GroupChatWindow;
 class TransitWindow;
 
 class MainWindow : public QMainWindow
@@ -55,6 +56,9 @@ public:
     void requestPrivateMessageHistory(const QString &otherUser);
     // Новый метод для работы с групповыми чатами
     void createGroupChat(const QString &chatName, const QString &chatId);
+    void joinGroupChat(const QString &chatId);
+    // Новый метод для установки режима добавления пользователя в групповой чат
+    void startAddUserToGroupMode(const QString &chatId);
     void testAuthorizeUser(const QString& username, const QString& password);
     bool testRegisterUser(const QString& username, const QString& password);
     bool isLoginSuccessful() const;
@@ -95,6 +99,7 @@ public:
     Mode mode;
     std::unique_ptr<MockDatabase> testDb; // Mock база данных
 
+
 private:
     Ui::MainWindow *ui;
     QTcpSocket *socket;
@@ -121,6 +126,9 @@ private:
     PrivateChatWindow* findOrCreatePrivateChatWindow(const QString &username);
     QMap<QString, PrivateChatWindow*> privateChatWindows; // Map для хранения открытых приватных чатов
 
+    QMap<QString, GroupChatWindow*> groupChatWindows; // Map для хранения открытых групповых чатов
+
+
     // Переменные для хранения истории сообщений
     QString currentPrivateHistoryRecipient;
     bool receivingPrivateHistory = false;
@@ -133,7 +141,9 @@ private:
         QString timestamp;
     };
     QMap<QString, QList<UnreadMessage>> unreadMessages;
-    QTimer *authTimeoutTimer;
+    QTimer *authTimeoutTimer;    
+    QString pendingGroupChatId; // ID группового чата для добавления пользователя
+
     public slots:
 
     void slotReadyRead();

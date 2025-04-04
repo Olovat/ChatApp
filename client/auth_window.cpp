@@ -6,6 +6,7 @@ auth_window::auth_window(QWidget *parent) :
     ui(new Ui::auth_window)
 {
     ui->setupUi(this);
+    this->setWindowTitle("Authentification");
     connect(ui->Login_button, &QPushButton::clicked, this, &auth_window::login_button_clicked);
     connect(ui->Register_button, &QPushButton::clicked, this, &auth_window::register_button_clicked);
 }

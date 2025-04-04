@@ -6,6 +6,7 @@
 #include <QDataStream>
 #include <QDebug>
 #include "privatechatwindow.h"
+#include "groupchatwindow.h"
 #include "transitwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -59,6 +60,7 @@ void MainWindow::initializeCommon()
 
     this->hide();
 }
+    
 
 
 MainWindow::~MainWindow()
@@ -74,7 +76,7 @@ void MainWindow::updateUserList(const QStringList &users)
     // Создаем карту статусов для более удобного доступа
     QMap<QString, bool> userStatusMap;
     QString currentUsername = getCurrentUsername();
-
+    
     // Очищаем и заново заполняем список пользователей
     ui->userListWidget->clear();
 
@@ -83,11 +85,11 @@ void MainWindow::updateUserList(const QStringList &users)
     QStringList offlineUsers;
     QStringList groupChats;
 
+    
     // Разделяем пользователей на категории
-
     for (const QString &userInfo : users) {
         QStringList parts = userInfo.split(":");
-
+        
         // Для групповых чатов: chatId:1:G:chatName
         // Для пользователей: username:status:U
         if (parts.size() >= 3) {
@@ -121,24 +123,23 @@ void MainWindow::updateUserList(const QStringList &users)
             }
         }
     }
-
+    
     // Обновляем статусы в открытых окнах чатов
     updatePrivateChatStatuses(userStatusMap);
-  
+    
+    // Добавляем текущего пользователя (если он есть в списке)
     for (const QString &userInfo : users) {
         QStringList parts = userInfo.split(":");
-
+        
         if (parts.size() >= 3) {
             QString username = parts[0];
-            bool isOnline = (parts[1] == "1");
-
+            bool isOnline = parts[1] == "1";
             QString type = parts[2];
-
+            
             // Только если это пользователь, не групповой чат
             if (type == "U" && username == currentUsername) {
                 QListWidgetItem *item = new QListWidgetItem(username + " (Вы)");
-
-
+                
                 // Устанавливаем фон в зависимости от статуса
                 if (isOnline) {
                     item->setForeground(QBrush(QColor("black")));
@@ -162,6 +163,7 @@ void MainWindow::updateUserList(const QStringList &users)
             }
         }
     }
+
     // Добавляем групповые чаты (с отличительным оформлением)
     for (const QString &chatInfo : groupChats) {
         QStringList parts = chatInfo.split(":");
@@ -169,12 +171,13 @@ void MainWindow::updateUserList(const QStringList &users)
             QString chatId = parts[0];
             QString chatName = parts[3];
 
+            
             QListWidgetItem *item = new QListWidgetItem("Группа: " + chatName);
-
+            
             // Устанавливаем фон и стиль для группового чата
             item->setForeground(QBrush(QColor("blue")));
             item->setBackground(QBrush(QColor(200, 200, 255))); // Светло-голубой фон
-
+            
             // Сохраняем ID чата и другие данные
             item->setData(Qt::UserRole, true);   // Статус всегда онлайн
             item->setData(Qt::UserRole + 1, "G"); // Тип - группа
@@ -184,15 +187,15 @@ void MainWindow::updateUserList(const QStringList &users)
             // Выделяем жирным шрифтом
             QFont font = item->font();
             font.setBold(true);
-            item->setFont(font);
-
+            item->setFont(font);            
             ui->userListWidget->addItem(item);
         }
     }
-
+    
     // Добавляем всех онлайн пользователей
     for (const QString &userInfo : onlineUsers) {
         QStringList parts = userInfo.split(":");
+        
 
         if (parts.size() >= 3) {
             QString username = parts[0];
@@ -204,7 +207,6 @@ void MainWindow::updateUserList(const QStringList &users)
             item->setBackground(QBrush(QColor(200, 255, 200))); // Светло-зеленый фон
             item->setData(Qt::UserRole, true);  // Статус онлайн
             item->setData(Qt::UserRole + 1, "U"); // Тип - пользователь
-
             ui->userListWidget->addItem(item);
         }
     }
@@ -212,7 +214,6 @@ void MainWindow::updateUserList(const QStringList &users)
     // Добавляем всех оффлайн пользователей
     for (const QString &userInfo : offlineUsers) {
         QStringList parts = userInfo.split(":");
-
         if (parts.size() >= 3) {
             QString username = parts[0];
 
@@ -223,7 +224,6 @@ void MainWindow::updateUserList(const QStringList &users)
             item->setBackground(QBrush(QColor(240, 240, 240))); // Светло-серый фон
             item->setData(Qt::UserRole, false); // Статус оффлайн
             item->setData(Qt::UserRole + 1, "U"); // Тип - пользователь
-
             ui->userListWidget->addItem(item);
         }
     }
@@ -256,7 +256,7 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
     // Получаем тип выбранного элемента
     QString itemType = item->data(Qt::UserRole + 1).toString();
     bool isOnline = item->data(Qt::UserRole).toBool();
-
+    
     // Если выбран обычный пользователь
     if (itemType == "U") {
         QString selectedUser = item->text();
@@ -264,9 +264,44 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
         // Удаляем "(Вы)" из имени, если это текущий пользователь
         if (selectedUser.endsWith(" (Вы)")) {
             selectedUser = selectedUser.left(selectedUser.length() - 5);
-        }
-
+        }        
         qDebug() << "User selected:" << selectedUser << "(Online: " << (isOnline ? "yes" : "no") << ")";
+
+        // Проверяем, находимся ли мы в режиме добавления пользователя в групповой чат
+        if (!pendingGroupChatId.isEmpty()) {
+            qDebug() << "В режиме добавления пользователя в групповой чат. ID чата:" << pendingGroupChatId;
+            
+            // Проверяем, не пытается ли пользователь добавить самого себя
+            if (selectedUser == getCurrentUsername()) {
+                QMessageBox::warning(this, "Ошибка", "Вы уже являетесь участником этого чата");
+                pendingGroupChatId.clear(); // Очищаем режим добавления
+                return;
+            }
+            
+            // Отправляем запрос на добавление пользователя в групповой чат
+            QString addUserRequest = QString("GROUP_ADD_USER:%1:%2").arg(pendingGroupChatId, selectedUser);
+            qDebug() << "Отправляем запрос на добавление пользователя:" << addUserRequest;
+            sendMessageToServer(addUserRequest);
+            
+            // Показываем обратно окно группового чата
+            if (groupChatWindows.contains(pendingGroupChatId)) {
+                QMessageBox::information(this, "Добавление пользователя", 
+                                       "Запрос на добавление пользователя " + selectedUser + " отправлен");
+                
+                // Обновляем список пользователей в чате
+                sendMessageToServer(QString("GET_USERLIST"));
+                
+                // Запрашиваем обновление информации о чате
+                sendMessageToServer(QString("JOIN_GROUP_CHAT:%1").arg(pendingGroupChatId));
+                
+                groupChatWindows[pendingGroupChatId]->show();
+                groupChatWindows[pendingGroupChatId]->activateWindow();
+            }
+            
+            // Сбрасываем режим добавления пользователя
+            pendingGroupChatId.clear();
+            return;
+        }
 
         // Если окно чата с этим пользователем уже открыто
         if (privateChatWindows.contains(selectedUser)) {
@@ -275,14 +310,14 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
         } else {
             // Создаем новое окно чата с правильными параметрами
             PrivateChatWindow *chatWindow = new PrivateChatWindow(selectedUser, this, nullptr);
-
+            
             // Если пользователь оффлайн, показываем информацию об этом
             if (!isOnline) {
                 chatWindow->setOfflineStatus(true);
             }
-
+            
             privateChatWindows[selectedUser] = chatWindow;
-
+            
             // Отображаем все непрочитанные сообщения в новое окно чата
             if (unreadMessages.contains(selectedUser) && !unreadMessages[selectedUser].isEmpty()) {
                 for (const UnreadMessage &msg : unreadMessages[selectedUser]) {
@@ -299,35 +334,29 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
     else if (itemType == "G") {
         QString chatName = item->data(Qt::UserRole + 3).toString();
         QString chatId = item->data(Qt::UserRole + 2).toString();
-
         qDebug() << "Group chat selected: " << chatName << " (ID: " << chatId << ")";
+        
+        // Проверяем, не открыто ли уже окно для этого чата
+        if (groupChatWindows.contains(chatId)) {
+            groupChatWindows[chatId]->show();
+            groupChatWindows[chatId]->activateWindow();
+        } else {
+            // Создаем новое окно группового чата
+            GroupChatWindow *chatWindow = new GroupChatWindow(chatId, chatName, this);
+            groupChatWindows[chatId] = chatWindow;
+            
+            // Отправляем запрос на присоединение к групповому чату
+            QString joinRequest = QString("JOIN_GROUP_CHAT:%1").arg(chatId);
+            sendMessageToServer(joinRequest);
+            
+            chatWindow->show();
+        }
 
-        // Отправляем запрос на присоединение к групповому чату
-        QString joinRequest = QString("JOIN_GROUP_CHAT:%1").arg(chatId);
-        sendMessageToServer(joinRequest);
-
-        // Здесь будет открытие окна группового чата в будущем
-        QMessageBox::information(this, "Групповой чат",
-                                 "Подключение к групповому чату \"" + chatName + "\"\n\n" +
-                                     "Функциональность групповых чатов находится в разработке.");
     }
 }
 
 void MainWindow::SendToServer(QString str)
 {
-    /*
-    // Не отображать системные команды в чате пользователя
-    if (!str.startsWith("GET_") && !str.contains("USERLIST")) {
-        QString formattedMessage = m_username + ": " + str;
-        ui->textBrowser->append(formattedMessage);
-
-        recentSentMessages.append(formattedMessage);
-        while (recentSentMessages.size() > 20) {
-            recentSentMessages.removeFirst();
-        }
-    }
-    */
-
     Data.clear();
     QDataStream out(&Data, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_2);
@@ -339,9 +368,6 @@ void MainWindow::SendToServer(QString str)
         socket->write(Data);
         socket->flush();
     }
-
-    // убираем это, так как мы чат из Mainwindow удалили
-    // ui->lineEdit->clear();
 }
 
 void MainWindow::sendMessageToServer(const QString &message)
@@ -391,11 +417,6 @@ void MainWindow::slotReadyRead()
             // Обработка начала истории
             if (str == "HISTORY_CMD:BEGIN") {
                 qDebug() << "HISTORY_BEGIN received - starting history display";
-                /*
-                // Очищаем текстовый браузер перед отображением истории чтобы избежать дублирования
-                ui->textBrowser->clear();
-                ui->textBrowser->append(""); // просто отделение истории от новых сообщений
-                */
             }
             // Обработка сообщений истории
             else if (str.startsWith("HISTORY_MSG:")) {
@@ -421,15 +442,8 @@ void MainWindow::slotReadyRead()
                     QString formattedMessage = QString("[%1] %2: %3").arg(
                         timeOnly,
                         sender,
-                        message
-                        );
-
-                    // Может потом восстановим чат в главном окне, или нет...
-                    /*
-                    ui->textBrowser->setAlignment(Qt::AlignLeft);
-                    ui->textBrowser->append(formattedMessage);
-                    */
-
+                        message);
+                    
                     qDebug() << "Added history message:" << formattedMessage << "(UTC time:" << timestamp << ", local time:" << timeOnly << ")";
                 } else {
                     qDebug() << "Error: Invalid history format. Raw data:" << historyData;
@@ -498,8 +512,15 @@ void MainWindow::slotReadyRead()
             else if(str == "REGISTER_FAILED") {
                 if (currentOperation == Register || currentOperation == None) {
                     QMessageBox::warning(this, "Registration Error", "Username may already exist!");
+                    
+                    // Переход к окну авторизации после ошибки регистрации
+                    ui_Reg.hide();
+                    ui_Auth.show();
+                    ui_Auth.LineClear(); // Очищаем поля ввода для нового входа
+                    
                     currentOperation = None;
                     ui_Reg.setButtonsEnabled(true);
+                    ui_Auth.setButtonsEnabled(true);
                 }
             }
             else if(str.startsWith("PRIVATE:")) {
@@ -560,6 +581,124 @@ void MainWindow::slotReadyRead()
                 receivingPrivateHistory = false;
                 currentPrivateHistoryRecipient.clear();
             }
+            else if (str.startsWith("GROUP_CHAT_CREATED:")) {
+                // Получаем ID и имя созданного чата
+                QStringList parts = str.mid(QString("GROUP_CHAT_CREATED:").length()).split(":");
+                if (parts.size() >= 2) {
+                    QString chatId = parts[0];
+                    QString chatName = parts[1];
+                    qDebug() << "Group chat created: " << chatName << " (ID: " << chatId << ")";
+                    
+                    // Запрашиваем обновление списка пользователей и чатов
+                    sendMessageToServer("GET_USERLIST");
+                }
+            }
+            else if (str.startsWith("GROUP_MESSAGE:")) {
+                QStringList parts = str.split(":", Qt::SkipEmptyParts);
+                if (parts.size() >= 4) {
+                    QString chatId = parts[1];
+                    QString sender = parts[2];
+                    QString message = parts.mid(3).join(":");
+                    
+                    // Если окно этого чата открыто, отправляем сообщение туда
+                    if (groupChatWindows.contains(chatId)) {
+                        groupChatWindows[chatId]->receiveMessage(sender, message);
+                        groupChatWindows[chatId]->activateWindow();
+                    }
+                }
+            }
+            else if (str.startsWith("GROUP_CHAT_INFO:")) {
+                QStringList parts = str.split(":", Qt::SkipEmptyParts);
+                if (parts.size() >= 3) {
+                    QString chatId = parts[1];
+                    QString chatName = parts[2];
+                    QStringList members;
+                    
+                    // Если в сообщении есть список участников
+                    if (parts.size() >= 4) {
+                        members = parts[3].split(",");
+                    }
+                    
+                    // Если окно этого чата открыто, обновляем список участников
+                    if (groupChatWindows.contains(chatId)) {
+                        groupChatWindows[chatId]->updateMembersList(members);
+                    }
+                }
+            }
+            // Добавляем новую обработку для сообщения о создателе чата, которое приходит в формате "username: GROUP_GET_CREATOR:chatId"
+            else if (str.contains("GROUP_GET_CREATOR:")) {
+                QStringList messageParts = str.split("GROUP_GET_CREATOR:", Qt::SkipEmptyParts);
+                if (messageParts.size() >= 2) {
+                    QString chatId = messageParts[1].trimmed();
+                    // Получаем имя создателя из первой части сообщения
+                    QString creator = messageParts[0].split(":")[0].trimmed();
+                    
+                    qDebug() << "Обнаружен создатель чата:" << creator << "для чата ID:" << chatId;
+                    
+                    // Если окно этого чата открыто, устанавливаем создателя
+                    if (groupChatWindows.contains(chatId)) {
+                        groupChatWindows[chatId]->setCreator(creator);
+                        qDebug() << "Установлен создатель чата для ID:" << chatId;
+                    }
+                }
+            }
+            else if (str.startsWith("GROUP_CHAT_CREATOR:")) {
+                QStringList parts = str.split(":", Qt::SkipEmptyParts);
+                if (parts.size() >= 3) {
+                    QString chatId = parts[1];
+                    QString creatorName = parts[2];
+                    
+                    // Обновляем информацию о создателе в окне чата
+                    if (groupChatWindows.contains(chatId)) {
+                        groupChatWindows[chatId]->setCreator(creatorName);
+                    }
+                }
+            }
+            else if (str.startsWith("GROUP_HISTORY_BEGIN:")) {
+                QString chatId = str.mid(QString("GROUP_HISTORY_BEGIN:").length());
+                
+                if (groupChatWindows.contains(chatId)) {
+                    groupChatWindows[chatId]->beginHistoryDisplay();
+                }
+            }
+            else if (str.startsWith("GROUP_HISTORY_MSG:")) {
+                // Изменяем разделение строки - используем вертикальную черту вместо двоеточия
+                QString historyData = str.mid(QString("GROUP_HISTORY_MSG:").length());
+                QStringList parts = historyData.split("|", Qt::SkipEmptyParts);
+                
+                if (parts.size() >= 4) { // chatId|timestamp|sender|message
+                    QString chatId = parts[0];
+                    QString timestamp = parts[1];
+                    QString sender = parts[2];
+                    QString message = parts[3];
+                    
+                    if (groupChatWindows.contains(chatId)) {
+                        // Преобразование времени из UTC в локальное
+                        QDateTime utcTime = QDateTime::fromString(timestamp, "yyyy-MM-dd hh:mm:ss");
+                        utcTime.setTimeZone(QTimeZone::UTC);
+                        QDateTime localTime = utcTime.toLocalTime();
+                        
+                        // Форматируем только время для отображения
+                        QString timeOnly = localTime.toString("hh:mm");
+                        
+                        QString formattedMsg;
+                        if (sender == "SYSTEM") {
+                            formattedMsg = QString("<i>[%1] %2</i>").arg(timeOnly, message);
+                        } else {
+                            formattedMsg = QString("[%1] %2: %3").arg(timeOnly, sender, message);
+                        }
+                        
+                        groupChatWindows[chatId]->addHistoryMessage(formattedMsg);
+                    }
+                }
+            }
+            else if (str.startsWith("GROUP_HISTORY_END:")) {
+                QString chatId = str.mid(QString("GROUP_HISTORY_END:").length());
+                
+                if (groupChatWindows.contains(chatId)) {
+                    groupChatWindows[chatId]->endHistoryDisplay();
+                }
+            }
             else {
                 bool isDuplicate = false;
 
@@ -573,9 +712,6 @@ void MainWindow::slotReadyRead()
                 }
 
                 if (!isDuplicate) {
-
-
-                        // ui->textBrowser->append(str);
 
                 }
             }
@@ -656,38 +792,16 @@ QString MainWindow::getUsername() const {
 }
 
 
-void MainWindow::on_pushButton_2_clicked()
-{
-    /*
-    QString text = ui->lineEdit->text().trimmed();
-    if (!text.isEmpty()) {
-        SendToServer(text);
-    }
-    */
-}
-
 void MainWindow::on_pushButton_clicked()
 {
-
     // Создаем экземпляр окна создания группового чата
     TransitWindow *transitWindow = new TransitWindow(this);
     transitWindow->setModal(true);
     transitWindow->exec();
-
+    
     // TransitWindow удаляется автоматически после закрытия
     // благодаря установленному флагу Qt::WA_DeleteOnClose
     transitWindow->setAttribute(Qt::WA_DeleteOnClose);
-
-}
-
-void MainWindow::on_lineEdit_returnPressed()
-{
-    /*
-    QString text = ui->lineEdit->text().trimmed();
-    if (!text.isEmpty()) {
-        SendToServer(text);
-    }
-    */
 }
 
 void MainWindow::display()
@@ -1002,10 +1116,41 @@ void MainWindow::handleSocketError(QAbstractSocket::SocketError socketError)
 void MainWindow::createGroupChat(const QString &chatName, const QString &chatId)
 {
     // Отправляем запрос на сервер о создании группового чата
-    QString createChatMessage = QString("CREATE_GROUP_CHAT:%1:%2").arg(chatId, chatName);
+    // Меняем порядок параметров: сначала имя чата, потом ID
+    QString createChatMessage = QString("CREATE_GROUP_CHAT:%1:%2").arg(chatName, chatId);
     sendMessageToServer(createChatMessage);
-
-    QMessageBox::information(this, "Создание чата",
-                             "Запрос на создание группового чата \"" + chatName + "\" отправлен на сервер.");
+    
+    QMessageBox::information(this, "Создание чата", 
+        "Запрос на создание группового чата \"" + chatName + "\" отправлен на сервер.");
 }
 
+// Добавим метод для присоединения к групповому чату
+void MainWindow::joinGroupChat(const QString &chatId)
+{
+    QString joinRequest = QString("JOIN_GROUP_CHAT:%1").arg(chatId);
+    sendMessageToServer(joinRequest);
+}
+
+// Добавляем метод для установки режима добавления пользователя в групповой чат
+void MainWindow::startAddUserToGroupMode(const QString &chatId)
+{
+    pendingGroupChatId = chatId;
+    qDebug() << "Активирован режим добавления пользователя для группового чата с ID:" << chatId;
+    
+    // Обновляем список пользователей, чтобы быть уверенными, что он актуален
+    sendMessageToServer("GET_USERLIST");
+    
+    // Активируем главное окно, чтобы пользователь мог выбрать участника
+    this->activateWindow();
+    this->raise();
+}
+
+void MainWindow::on_pushButton_2_clicked()
+{
+    // Пустая реализация, но метод необходим для Qt auto-connection
+}
+
+void MainWindow::on_lineEdit_returnPressed()
+{
+    // Пустая реализация, но метод необходим для Qt auto-connection
+}

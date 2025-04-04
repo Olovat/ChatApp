@@ -75,6 +75,9 @@ private:
     // Методы для работы с групповыми чатами
     bool createGroupChat(const QString &chatId, const QString &chatName, const QString &creator);
     bool addUserToGroupChat(const QString &chatId, const QString &username);
+
+    bool removeUserFromGroupChat(const QString &chatId, const QString &username); // Новый метод для удаления пользователя
+
     void sendGroupChatInfo(const QString &chatId, QTcpSocket *socket);
     bool saveGroupChatMessage(const QString &chatId, const QString &sender, const QString &message);
     void sendGroupChatMessage(const QString &chatId, const QString &sender, const QString &message);
