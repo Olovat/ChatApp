@@ -10,14 +10,26 @@
 #include <QCoreApplication> 
 #include <QVector>
 #include <QList>
+#include <gtest/gtest.h>
+
 
 class Server : public QTcpServer
 {
     Q_OBJECT
+
 public:
     explicit Server();
     virtual ~Server();
     bool connectDB();
+    bool initializeDatabase();
+
+    QSqlDatabase& getDatabase();
+
+    bool testRegisterUser(const QString &username, const QString &password);
+    bool testAuthenticateUser(const QString &username, const QString &password);
+    void testSendToClient(const QString &str);
+    bool testLogMessage(const QString &sender, const QString &recipient, const QString &message);
+    bool testSaveToHistory(const QString &sender, const QString &message);
 
 private:
     QTcpSocket *socket;
@@ -63,7 +75,9 @@ private:
     // Методы для работы с групповыми чатами
     bool createGroupChat(const QString &chatId, const QString &chatName, const QString &creator);
     bool addUserToGroupChat(const QString &chatId, const QString &username);
+
     bool removeUserFromGroupChat(const QString &chatId, const QString &username); // Новый метод для удаления пользователя
+
     void sendGroupChatInfo(const QString &chatId, QTcpSocket *socket);
     bool saveGroupChatMessage(const QString &chatId, const QString &sender, const QString &message);
     void sendGroupChatMessage(const QString &chatId, const QString &sender, const QString &message);

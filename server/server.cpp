@@ -42,6 +42,27 @@ Server::~Server()
     qDebug() << "Server destroyed";
 }
 
+bool Server::initializeDatabase() {
+    if (!initUserTable()) {
+        qDebug() << "Failed to initialize user table.";
+        return false;
+    }
+    if (!initMessageTable()) {
+        qDebug() << "Failed to initialize message table.";
+        return false;
+    }
+    if (!initHistoryTable()) {
+        qDebug() << "Failed to initialize history table.";
+        return false;
+    }
+    qDebug() << "Database initialized successfully.";
+    return true;
+}
+
+QSqlDatabase& Server::getDatabase() {
+    return srv_db;
+}
+
 void Server::incomingConnection(qintptr socketDescriptor){
     socket = new QTcpSocket;
     socket->setSocketDescriptor(socketDescriptor);
@@ -289,6 +310,7 @@ void Server::slotReadyRead()
                         }
                     }
                     
+
                     // Проверяем, является ли пользователь уже участником чата
                     QSqlQuery checkMemberQuery(srv_db);
                     checkMemberQuery.prepare("SELECT 1 FROM group_chat_members WHERE chat_id = :chat_id AND username = :username");
@@ -296,7 +318,7 @@ void Server::slotReadyRead()
                     checkMemberQuery.bindValue(":username", username);
                     
                     bool isExistingMember = checkMemberQuery.exec() && checkMemberQuery.next();
-                    
+
                     bool success = addUserToGroupChat(chatId, username);
                     if (success) {
                         // Отправляем информацию о чате
@@ -309,6 +331,7 @@ void Server::slotReadyRead()
                         if (!isExistingMember) {
                             sendGroupChatMessage(chatId, "SYSTEM", username + " присоединился к чату");
                         }
+
                     } else {
                         QString response = "ERROR:Failed to join group chat";
                         Data.clear();
@@ -340,6 +363,7 @@ void Server::slotReadyRead()
                     sendGroupChatMessage(chatId, senderUsername, messageText);
                 }
             }
+
             else if (message.startsWith("GROUP_ADD_USER:")) {
                 QStringList parts = message.split(":", Qt::SkipEmptyParts);
                 if (parts.size() >= 3) {
@@ -413,6 +437,7 @@ void Server::slotReadyRead()
                     }
                 }
             }
+
             else if (message.startsWith("GET_GROUP_CHATS")) {
                 // Отправка списка групповых чатов пользователю
                 QString username = "Unknown";
@@ -561,38 +586,39 @@ bool Server::connectDB()
 {
     srv_db = QSqlDatabase::addDatabase("QSQLITE");
 
-    QDir appDir(QCoreApplication::applicationDirPath());
+        QDir appDir(QCoreApplication::applicationDirPath());
 
-    appDir.cdUp();
-    appDir.cdUp();
-    appDir.cdUp();
+        appDir.cdUp();
+        appDir.cdUp();
+        appDir.cdUp();
 
-    QString dataPath = appDir.absolutePath() + "/data";
-    QDir dataDir(dataPath);
-    if (!dataDir.exists()) {
-        dataDir.mkpath(".");
-    }
+        QString dataPath = appDir.absolutePath() + "/data";
+        QDir dataDir(dataPath);
+        if (!dataDir.exists()) {
+            dataDir.mkpath(".");
+        }
 
-    srv_db.setDatabaseName(dataPath + "/authorisation.db");
+        srv_db.setDatabaseName(dataPath + "/authorisation.db");
 
-    if(!srv_db.open())
-    {
-        qDebug() << "Cannot open database: " << srv_db.lastError();
-        return false;
-    }
+        if(!srv_db.open())
+        {
+            qDebug() << "Cannot open database: " << srv_db.lastError();
+            return false;
+        }
 
-    qDebug() << "Connected to database at: " << dataPath + "/authorisation.db";
+        qDebug() << "Connected to database at: " << dataPath + "/authorisation.db";
 
-    if (!initUserTable()) {
-        qDebug() << "Failed to initialize user table";
-        return false;
-    }
+        if (!initUserTable()) {
+            qDebug() << "Failed to initialize user table";
+            return false;
+        }
 
-    if (!initMessageTable()) {
-        qDebug() << "Failed to initialize message table";
-        return false;
-    }
+        if (!initMessageTable()) {
+            qDebug() << "Failed to initialize message table";
+            return false;
+        }
     
+
     if (!initHistoryTable()) {
         qDebug() << "Failed to initialize history table";
         return false;
@@ -789,6 +815,26 @@ void Server::sendMessageHistory(QTcpSocket* clientSocket)
         clientSocket->flush();
         qDebug() << "Sent history end marker";
     }
+}
+
+bool Server::testRegisterUser(const QString &username, const QString &password) {
+    return registerUser(username, password);
+}
+
+bool Server::testAuthenticateUser(const QString &username, const QString &password) {
+    return authenticateUser(username, password);
+}
+
+void Server::testSendToClient(const QString &str) {
+    SendToCllient(str);
+}
+
+bool Server::testLogMessage(const QString &sender, const QString &recipient, const QString &message) {
+    return logMessage(sender, recipient, message);
+}
+
+bool Server::testSaveToHistory(const QString &sender, const QString &message) {
+    return saveToHistory(sender, message);
 }
 
 void Server::sendPrivateMessageHistory(QTcpSocket* clientSocket, const QString &user1, const QString &user2)
@@ -1042,11 +1088,13 @@ void Server::sendGroupChatInfo(const QString &chatId, QTcpSocket *socket)
     // Получаем информацию о чате
     QSqlQuery chatQuery(srv_db);
     chatQuery.prepare("SELECT name, created_by FROM group_chats WHERE id = :id");
+
     chatQuery.bindValue(":id", chatId);
     
     if (chatQuery.exec() && chatQuery.next()) {
         QString chatName = chatQuery.value("name").toString();
         QString creator = chatQuery.value("created_by").toString();
+
         
         // Получаем список участников
         QStringList members;
@@ -1072,6 +1120,7 @@ void Server::sendGroupChatInfo(const QString &chatId, QTcpSocket *socket)
         socket->write(Data);
         
         // Отправляем информацию о создателе в отдельном сообщении
+
     }
 }
 
@@ -1142,6 +1191,7 @@ void Server::sendGroupChatHistory(const QString &chatId, QTcpSocket *socket)
                  "WHERE chat_id = :chat_id ORDER BY timestamp");
     query.bindValue(":chat_id", chatId);
     
+
     bool hasRecords = false;
     if (query.exec()) {
         hasRecords = query.next();
@@ -1164,12 +1214,15 @@ void Server::sendGroupChatHistory(const QString &chatId, QTcpSocket *socket)
     } else {
         // Отправляем историю сообщений
         do {
+
             QString sender = query.value("sender").toString();
             QString message = query.value("message").toString();
             QString timestamp = query.value("timestamp").toString();
             
+
             // Исправляем формат - используем вертикальную черту для разделения полей
             QString historyMsg = "GROUP_HISTORY_MSG:" + chatId + "|" + timestamp + "|" + sender + "|" + message;
+
             
             Data.clear();
             QDataStream out(&Data, QIODevice::WriteOnly);
@@ -1179,7 +1232,9 @@ void Server::sendGroupChatHistory(const QString &chatId, QTcpSocket *socket)
             out << quint16(Data.size() - sizeof(quint16));
             socket->write(Data);
             QThread::msleep(10);
+
         } while (query.next());
+
     }
     
     // Отправляем конец истории
@@ -1226,6 +1281,7 @@ void Server::sendUserGroupChats(const QString &username, QTcpSocket *socket)
     socket->write(Data);
 }
 
+
 bool Server::removeUserFromGroupChat(const QString &chatId, const QString &username)
 {
     // Проверяем, есть ли пользователь в чате
@@ -1254,3 +1310,4 @@ bool Server::removeUserFromGroupChat(const QString &chatId, const QString &usern
     }
     return success;
 }
+

@@ -2,7 +2,7 @@ name: ChatApp CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, UNIT-TEST ]
   pull_request:
     branches: [ main, master ]
 
@@ -69,7 +69,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake ../tests/test_client -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/gtest_install
+        cmake .. -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/gtest_install -DBUILD_CLIENT_TESTS=OFF
 
     - name: Build
       run: |
@@ -90,4 +90,4 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         cd build
-        ctest -C Release --output-on-failure
+        ctest -C Release -V --output-on-failure
