@@ -99,7 +99,6 @@ public:
     Mode mode;
     std::unique_ptr<MockDatabase> testDb; // Mock база данных
 
-    void on_pushButton_clicked();
 
 private:
     Ui::MainWindow *ui;
