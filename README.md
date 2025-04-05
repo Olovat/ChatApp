@@ -1,5 +1,5 @@
 # ChatApp
-
+[![build:](https://github.com/Olovat/ChatApp/actions/workflows/ChatApp_ci.yml/badge.svg)](https://github.com/Olovat/ChatApp/actions)
 Клиент-серверное чат-приложение, построенное с использованием фреймворка Qt, которое обеспечивает обмен сообщениями в реальном времени, личные и групповые чаты, с поддержкой доставки офлайн-сообщений.
 
 ## Функциональность
