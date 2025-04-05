@@ -70,3 +70,8 @@ Makefile*
 moc_*.cpp
 ui_*.h
 qrc_*.cpp
+
+#Cmake зависимости и.т.д
+CMakeFiles/
+_deps/
+CMakeCache.txt
