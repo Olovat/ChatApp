@@ -52,7 +52,10 @@ void MainWindow::initializeCommon()
     connect(&ui_Auth, &auth_window::login_button_clicked, this, &MainWindow::authorizeUser);
     connect(&ui_Auth, &auth_window::register_button_clicked, this, &MainWindow::prepareForRegistration);
     connect(&ui_Reg, &reg_window::register_button_clicked2, this, &MainWindow::registerUser);
-
+    connect(&ui_Reg, &reg_window::returnToAuth, this, [this]() {
+        ui_Reg.hide();
+        ui_Auth.show();
+    });
 
     this->hide();
 

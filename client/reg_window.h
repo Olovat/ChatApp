@@ -28,6 +28,7 @@ public:
 
 signals:
     void register_button_clicked2();
+    void returnToAuth();
 
 private slots:
     // очень опасно, желательно никогда не трогать,сверял названия по буквам.
@@ -41,6 +42,9 @@ private:
     QString m_userName;
     QString m_userPass;
     QString m_confirmation;
+
+protected:
+void closeEvent(QCloseEvent *event) override;
 };
 
 #endif // REG_WINDOW_H

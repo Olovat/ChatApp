@@ -1,5 +1,6 @@
 #include "reg_window.h"
 #include "ui_reg_window.h"
+#include <QCloseEvent>
 
 
 reg_window::reg_window(QWidget *parent) :
@@ -14,6 +15,13 @@ reg_window::~reg_window()
     delete ui;
 }
 
+void reg_window::closeEvent(QCloseEvent *event)
+{
+    emit returnToAuth();
+    this->hide();    
+    event->ignore();
+}
+
 void reg_window::on_Login_line_2_textEdited(const QString &arg1)
 {
     reg_window::m_userName = arg1;
@@ -24,8 +32,8 @@ void reg_window::on_Password_line_2_textEdited(const QString &arg1)
     reg_window::m_userPass = arg1;
 }
 
-
-void reg_window::setName(const QString& name) {
+void reg_window::setName(const QString& name) 
+{
     ui->Login_line_2->setText(name);
 }
 
