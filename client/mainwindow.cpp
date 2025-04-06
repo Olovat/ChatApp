@@ -260,11 +260,6 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
 
     if (!item) return;
 
-    // Проверяем, не является ли элемент "Избранное"
-    if (item->data(Qt::UserRole + 2).toBool()) {
-        qDebug() << "Selected favorite item, ignoring";
-        return;
-    }
     // Получаем тип выбранного элемента
     QString itemType = item->data(Qt::UserRole + 1).toString();
     bool isOnline = item->data(Qt::UserRole).toBool();
@@ -273,6 +268,10 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
     if (itemType == "U") {
         QString selectedUser = item->text();
 
+        // Для элемента "Избранное" используем текущего пользователя
+        if (item->data(Qt::UserRole + 2).toBool()) { // Если это "Избранное"
+            selectedUser = getCurrentUsername();
+        }
         // Удаляем "(Вы)" из имени, если это текущий пользователь
         if (selectedUser.endsWith(" (Вы)")) {
             selectedUser = selectedUser.left(selectedUser.length() - 5);
@@ -540,6 +539,13 @@ void MainWindow::slotReadyRead()
                 if (parts.size() >= 3) {
                     QString sender = parts[1];
                     QString privateMessage = parts.mid(2).join(":");
+                    handlePrivateMessage(sender, privateMessage);
+
+                    // Пропускаем сообщения, адресованные самому себе
+                    if (sender == getCurrentUsername()) {
+                        return;
+                    }
+
                     handlePrivateMessage(sender, privateMessage);
                 }
             }
@@ -1034,6 +1040,10 @@ void MainWindow::handlePrivateMessage(const QString &sender, const QString &mess
 // Замена метода processJsonMessage на обработку обычных сообщений
 void MainWindow::sendPrivateMessage(const QString &recipient, const QString &message)
 {
+    if (recipient == getCurrentUsername()) {
+        return;
+    }
+
     qDebug() << "MainWindow: Подготовка приватного сообщения для" << recipient << ":" << message;
 
     // Формируем строку в формате "PRIVATE:получатель:сообщение"
