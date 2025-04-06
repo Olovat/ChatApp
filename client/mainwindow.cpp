@@ -141,9 +141,9 @@ void MainWindow::updateUserList(const QStringList &users)
             
             // Только если это пользователь, не групповой чат
             if (type == "U" && username == currentUsername) {
-                QListWidgetItem *item = new QListWidgetItem(username + " (Вы)");
+                QListWidgetItem *item = new QListWidgetItem("Избранное");
                 
-                // Устанавливаем фон в зависимости от статуса
+                // Устанавливаем фон в зависимости от статусаs
                 if (isOnline) {
                     item->setForeground(QBrush(QColor("black")));
                     item->setBackground(QBrush(QColor(200, 255, 200))); // Светло-зеленый фон
