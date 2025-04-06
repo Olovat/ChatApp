@@ -64,29 +64,35 @@ TEST_F(MainWindowTest, TestRegistration) {
 
 // Тест обновления списка пользователей
 TEST_F(MainWindowTest, TestUserListUpdate) {
-    // Устанавливаем тестовые учетные данные
     mainWindow->setTestCredentials("testuser", "pass");
 
-    // Тестовые данные пользователей в формате "имя:статус:тип"
+    // Подготовка тестовых данных (имитация ответа сервера)
     QStringList users = {
-        "testuser:1:U",
-        "user1:1:U",
-        "user2:0:U",
-        "chat1:1:G:Group"
+        "testuser:1:U",         // Текущий пользователь (должен стать "Избранное")
+        "user1:1:U",            // Онлайн пользователь
+        "user2:0:U",            // Оффлайн пользователь
     };
 
-    // Обновляем список пользователей
+    // Вызываем метод обновления списка пользователей
     mainWindow->testUpdateUserList(users);
 
-    // Получаем списки пользователей
+    // Проверяем списки пользователей
     auto onlineUsers = mainWindow->getOnlineUsers();
     auto allUsers = mainWindow->getDisplayedUsers();
+    auto currentUsername = mainWindow->getCurrentUsername();
 
-    // Проверяем количество онлайн пользователей (должен быть только user1)
+    // Проверки
+    ASSERT_EQ(currentUsername, "testuser");
+
+    // Проверяем, что "Избранное" не попало в общие списки
+    EXPECT_FALSE(onlineUsers.contains("testuser"));
+    EXPECT_FALSE(allUsers.contains("testuser"));
+
+    // Проверяем онлайн пользователей
     ASSERT_EQ(onlineUsers.size(), 1);
     EXPECT_EQ(onlineUsers.first(), "user1");
 
-    // Проверяем общее количество отображаемых пользователей (user1 + user2)
+    // Проверяем общий список (без групповых чатов)
     ASSERT_EQ(allUsers.size(), 2);
     EXPECT_TRUE(allUsers.contains("user1"));
     EXPECT_TRUE(allUsers.contains("user2"));

@@ -156,6 +156,7 @@ void MainWindow::updateUserList(const QStringList &users)
                     item->setData(Qt::UserRole + 1, "U"); // Тип - пользователь
                 }
 
+                item->setData(Qt::UserRole + 2, true);
 
                 // Выделение текущего пользователя
                 QFont font = item->font();
@@ -256,6 +257,14 @@ void MainWindow::updatePrivateChatStatuses(const QMap<QString, bool> &userStatus
 // Обработчик для выбора пользователя из списка
 void MainWindow::onUserSelected(QListWidgetItem *item)
 {
+
+    if (!item) return;
+
+    // Проверяем, не является ли элемент "Избранное"
+    if (item->data(Qt::UserRole + 2).toBool()) {
+        qDebug() << "Selected favorite item, ignoring";
+        return;
+    }
     // Получаем тип выбранного элемента
     QString itemType = item->data(Qt::UserRole + 1).toString();
     bool isOnline = item->data(Qt::UserRole).toBool();
@@ -754,14 +763,17 @@ QStringList MainWindow::privateChatParticipants() const
 
 QStringList MainWindow::getOnlineUsers() const {
     QStringList onlineUsers;
-    QString currentUser = getCurrentUsername();
 
     for (int i = 0; i < ui->userListWidget->count(); ++i) {
         QListWidgetItem* item = ui->userListWidget->item(i);
-        if (item->data(Qt::UserRole).toBool() &&
-            item->data(Qt::UserRole + 1).toString() == "U" &&
-            !item->text().contains(currentUser)) { // Исключаем текущего пользователя
-            onlineUsers << item->text().replace(" (Вы)", ""); // Удаляем пометку "(Вы)"
+        if (!item) continue;
+
+        bool isOnline = item->data(Qt::UserRole).toBool();
+        QString type = item->data(Qt::UserRole + 1).toString();
+        bool isFavorite = item->data(Qt::UserRole + 2).toBool();
+
+        if (isOnline && type == "U" && !isFavorite) {
+            onlineUsers << item->text();
         }
     }
     return onlineUsers;
@@ -769,13 +781,16 @@ QStringList MainWindow::getOnlineUsers() const {
 
 QStringList MainWindow::getDisplayedUsers() const {
     QStringList users;
-    QString currentUser = getCurrentUsername();
 
     for (int i = 0; i < ui->userListWidget->count(); ++i) {
         QListWidgetItem* item = ui->userListWidget->item(i);
-        if (item->data(Qt::UserRole + 1).toString() == "U" &&
-            !item->text().contains(currentUser)) { // Исключаем текущего пользователя
-            users << item->text().replace(" (Вы)", "");
+        if (!item) continue;
+
+        QString type = item->data(Qt::UserRole + 1).toString();
+        bool isFavorite = item->data(Qt::UserRole + 2).toBool();
+
+        if (type == "U" && !isFavorite) {
+            users << item->text();
         }
     }
     return users;
