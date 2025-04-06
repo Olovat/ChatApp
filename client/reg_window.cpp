@@ -93,3 +93,23 @@ void reg_window::setButtonsEnabled(bool enabled)
     // Обновление UI тоже самое, что и в auth_window.cpp
     QApplication::processEvents();
 }
+
+void reg_window::on_return_auth_clicked()
+{
+    //Эмитируем сигнал для возврата к окну авторизации
+    emit returnToAuth();
+
+    //Скрываем текущее окно регистрации
+    this->hide();
+
+    // Очищаем поля ввода
+    ui->Login_line_2->clear();
+    ui->Password_line_2->clear();
+    ui->Confirm_line_2->clear();
+
+    // Сбрасываем внутренние переменные
+    m_userName.clear();
+    m_userPass.clear();
+    m_confirmation.clear();
+}
+

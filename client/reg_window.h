@@ -37,6 +37,8 @@ private slots:
     void on_Register_button_2_clicked();
     void on_Login_line_2_textEdited(const QString &arg1);
 
+    void on_return_auth_clicked();
+
 private:
     Ui::reg_window *ui;
     QString m_userName;

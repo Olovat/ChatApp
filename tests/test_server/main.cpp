@@ -1,87 +1,134 @@
-    #include <gtest/gtest.h>
-    #include "../../server/server.h"
-    #include <QCoreApplication>
-    #include <QSqlDatabase>
-    #include <QSqlQuery>
-    #include <QDir>
+#include <gtest/gtest.h>
+#include "../../server/server.h"
+#include <QCoreApplication>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QDir>
 
-    class ServerTest : public ::testing::Test {
-    protected:
-        void SetUp() override {
-            // Инициализация QApplication
-            int argc = 0;
-            char *argv[] = {nullptr};
-            app = new QCoreApplication(argc, argv); // Изменено на QApplication
-            server = new Server();
+// Тестовый класс для сервера
+class ServerTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Инициализация QCoreApplication (необходимо для работы Qt)
+        int argc = 0;
+        char *argv[] = {nullptr};
+        app = new QCoreApplication(argc, argv);
+        server = new Server();
+    }
 
+    void TearDown() override {
+        // Очистка после каждого теста
+        delete server;
+        delete app;
+
+        // Удаление тестовой базы данных
+        QFile::remove("test_database.db");
+    }
+
+    // Очистка тестовых данных из базы
+    void cleanDatabase() {
+        if (server->connectDB()) {
+            QSqlDatabase db = server->getDatabase();
+            QSqlQuery query(db);
+
+            // Очищаем все тестовые таблицы
+            query.exec("DELETE FROM users");
+            query.exec("DELETE FROM messages");
+            query.exec("DELETE FROM history");
         }
-
-        void TearDown() override {
-            delete server;
-            delete app;
-        }
-
-        QCoreApplication *app;
-        Server *server;
-    };
-
-    // Тест подключения к базе данных
-    TEST_F(ServerTest, ConnectDB) {
-        EXPECT_TRUE(server->connectDB());
     }
 
-    TEST_F(ServerTest, RegisterUser) {
-        QString username = "testuser";
-        QString password = "testpass";
+    QCoreApplication *app;
+    Server *server;
+};
 
-        EXPECT_TRUE(server->testRegisterUser(username, password));
-        EXPECT_FALSE(server->testRegisterUser(username, password));
-    }
+// Тест подключения к базе данных
+TEST_F(ServerTest, ConnectDB) {
+    EXPECT_TRUE(server->connectDB());
+}
 
-    TEST_F(ServerTest, AuthenticateUser) {
-        QString username = "testuser11";
-        QString password = "testpass11";
+// Тест регистрации пользователя
+TEST_F(ServerTest, RegisterUser) {
+    QString username = "testuser";
+    QString password = "testpass";
 
-        ASSERT_TRUE(server->testRegisterUser(username, password));
+    // Первая попытка регистрации должна быть успешной
+    EXPECT_TRUE(server->testRegisterUser(username, password));
 
-        EXPECT_TRUE(server->testAuthenticateUser(username, password));
-        EXPECT_FALSE(server->testAuthenticateUser(username, "wrongpass"));
-        EXPECT_FALSE(server->testAuthenticateUser("nonexistentuser", password));
-    }
+    // Вторая попытка с теми же данными должна вернуть false (пользователь уже существует)
+    EXPECT_FALSE(server->testRegisterUser(username, password));
 
-    TEST_F(ServerTest, SendToClient) {
-        server->testSendToClient("Hello, World!");
-        EXPECT_TRUE(true); // Проверяем, что метод вызывается без ошибок
-    }
+    // Очищаем тестовые данные
+    cleanDatabase();
+}
 
-    TEST_F(ServerTest, LogMessage) {
-        QString sender = "testuser";
-        QString recipient = "otheruser";
-        QString message = "Hello!";
+// Тест аутентификации пользователя
+TEST_F(ServerTest, AuthenticateUser) {
+    QString username = "testuser11";
+    QString password = "testpass11";
 
-        EXPECT_TRUE(server->testLogMessage(sender, recipient, message));
+    // Сначала регистрируем тестового пользователя
+    ASSERT_TRUE(server->testRegisterUser(username, password));
 
-        QSqlQuery query(server->getDatabase());
-        query.prepare("SELECT * FROM messages WHERE sender = :sender AND recipient = :recipient AND message = :message");
-        query.bindValue(":sender", sender);
-        query.bindValue(":recipient", recipient);
-        query.bindValue(":message", message);
+    // Проверяем успешную аутентификацию
+    EXPECT_TRUE(server->testAuthenticateUser(username, password));
 
-        EXPECT_TRUE(query.exec());
-        EXPECT_TRUE(query.next());
-    }
+    // Проверяем неправильный пароль
+    EXPECT_FALSE(server->testAuthenticateUser(username, "wrongpass"));
 
-    TEST_F(ServerTest, SaveToHistory) {
-        QString sender = "testuser";
-        QString message = "Hello, World!";
+    // Проверяем несуществующего пользователя
+    EXPECT_FALSE(server->testAuthenticateUser("nonexistentuser", password));
 
-        EXPECT_TRUE(server->testSaveToHistory(sender, message));
+    // Очищаем тестовые данные
+    cleanDatabase();
+}
 
-        QSqlQuery query(server->getDatabase());
-        query.prepare("SELECT * FROM history WHERE sender = :sender AND message = :message");
-        query.bindValue(":sender", sender);
-        query.bindValue(":message", message);
+// Тест отправки сообщения клиенту (заглушка)
+TEST_F(ServerTest, SendToClient) {
+    server->testSendToClient("Hello, World!");
+    EXPECT_TRUE(true); // Проверяем, что функция выполняется без ошибок
+}
 
-        EXPECT_TRUE(query.exec());
-        EXPECT_TRUE(query.next());
-    }
+// Тест логирования сообщений
+TEST_F(ServerTest, LogMessage) {
+    QString sender = "Ярик-начальник";
+    QString recipient = "otheruser";
+    QString message = "Hello!";
+
+    // Логируем сообщение
+    EXPECT_TRUE(server->testLogMessage(sender, recipient, message));
+
+    // Проверяем, что сообщение сохранилось в базе
+    QSqlQuery query(server->getDatabase());
+    query.prepare("SELECT * FROM messages WHERE sender = :sender AND recipient = :recipient AND message = :message");
+    query.bindValue(":sender", sender);
+    query.bindValue(":recipient", recipient);
+    query.bindValue(":message", message);
+
+    EXPECT_TRUE(query.exec());
+    EXPECT_TRUE(query.next());
+
+    // Очищаем тестовые данные
+    cleanDatabase();
+}
+
+// Тест сохранения в историю
+TEST_F(ServerTest, SaveToHistory) {
+    QString sender = "Ваня-хулиган";
+    QString message = "Hello, World!";
+
+    // Сохраняем сообщение в историю
+    EXPECT_TRUE(server->testSaveToHistory(sender, message));
+
+    // Проверяем, что сообщение сохранилось в базе
+    QSqlQuery query(server->getDatabase());
+    query.prepare("SELECT * FROM history WHERE sender = :sender AND message = :message");
+    query.bindValue(":sender", sender);
+    query.bindValue(":message", message);
+
+    EXPECT_TRUE(query.exec());
+    EXPECT_TRUE(query.next());
+
+    // Очищаем тестовые данные
+    cleanDatabase();
+}
