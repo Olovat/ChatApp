@@ -316,6 +316,14 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
 
         // Если окно чата с этим пользователем уже открыто
         if (privateChatWindows.contains(selectedUser)) {
+            // Добавляем отображение непрочитанных сообщений даже если окно уже существует
+            if (unreadMessages.contains(selectedUser) && !unreadMessages[selectedUser].isEmpty()) {
+                for (const UnreadMessage &msg : unreadMessages[selectedUser]) {
+                    privateChatWindows[selectedUser]->receiveMessage(msg.sender, msg.message, msg.timestamp);
+                }
+                // Очищаем непрочитанные сообщения после отображения
+                unreadMessages[selectedUser].clear();
+            }
             privateChatWindows[selectedUser]->show();
             privateChatWindows[selectedUser]->activateWindow();
         } else {

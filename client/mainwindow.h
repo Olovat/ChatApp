@@ -13,7 +13,7 @@
 #include <QUuid>
 #include <QListWidgetItem>
 #include <QMap>
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
 #include <QTimer>
 #include "ui_mainwindow.h"
 
