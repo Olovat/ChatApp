@@ -539,7 +539,6 @@ void MainWindow::slotReadyRead()
                 if (parts.size() >= 3) {
                     QString sender = parts[1];
                     QString privateMessage = parts.mid(2).join(":");
-                    handlePrivateMessage(sender, privateMessage);
 
                     // Пропускаем сообщения, адресованные самому себе
                     if (sender == getCurrentUsername()) {
