@@ -26,6 +26,9 @@ public:
     void addHistoryMessage(const QString &formattedMessage);
     void endHistoryDisplay();
 
+signals:
+    void historyDisplayCompleted(const QString &username); // New signal
+
 private slots:
     void on_sendButton_clicked();
 

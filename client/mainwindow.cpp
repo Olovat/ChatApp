@@ -330,6 +330,13 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
             // Создаем новое окно чата с правильными параметрами
             PrivateChatWindow *chatWindow = new PrivateChatWindow(selectedUser, this, nullptr);
             
+            connect(chatWindow, &PrivateChatWindow::historyDisplayCompleted, this, [this, selectedUser]() {
+                if (unreadMessages.contains(selectedUser)) {
+                    unreadMessages[selectedUser].clear();
+                    qDebug() << "Unread messages for" << selectedUser << "cleared after history display";
+                }
+            });
+            
             // Если пользователь оффлайн, показываем информацию об этом
             if (!isOnline) {
                 chatWindow->setOfflineStatus(true);
@@ -337,15 +344,7 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
             
             privateChatWindows[selectedUser] = chatWindow;
             
-            // Отображаем все непрочитанные сообщения в новое окно чата
-            if (unreadMessages.contains(selectedUser) && !unreadMessages[selectedUser].isEmpty()) {
-                for (const UnreadMessage &msg : unreadMessages[selectedUser]) {
-                    chatWindow->receiveMessage(msg.sender, msg.message, msg.timestamp);
-                }
-                // Очищаем непрочитанные сообщения после отображения
-                unreadMessages[selectedUser].clear();
-            }
-
+            
             chatWindow->show();
         }
     }
@@ -605,6 +604,10 @@ void MainWindow::slotReadyRead()
                     privateChatWindows.contains(currentPrivateHistoryRecipient)) {
 
                     privateChatWindows[currentPrivateHistoryRecipient]->endHistoryDisplay();
+                    
+                    if (unreadMessages.contains(currentPrivateHistoryRecipient)) {
+                        unreadMessages[currentPrivateHistoryRecipient].clear();
+                    }
                 }
 
                 receivingPrivateHistory = false;
@@ -1090,6 +1093,13 @@ PrivateChatWindow* MainWindow::findOrCreatePrivateChatWindow(const QString &user
     } else {
         // Исправляем создание окна с правильными параметрами
         PrivateChatWindow *chatWindow = new PrivateChatWindow(username, this, nullptr);
+        
+        connect(chatWindow, &PrivateChatWindow::historyDisplayCompleted, this, [this, username]() {
+            if (unreadMessages.contains(username)) {
+                unreadMessages[username].clear();
+            }
+        });
+        
         privateChatWindows[username] = chatWindow;
         chatWindow->show();
         return chatWindow;

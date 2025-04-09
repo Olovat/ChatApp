@@ -192,4 +192,6 @@ void PrivateChatWindow::endHistoryDisplay()
     if (statusMessagePending) {
         addStatusMessage();
     }
+    
+    emit historyDisplayCompleted(username);
 }
