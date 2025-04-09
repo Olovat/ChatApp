@@ -15,8 +15,7 @@ GroupChatWindow::GroupChatWindow(const QString &chatId, const QString &chatName,
     chatName(chatName),
     mainWindow(mainWindow),
     isCreator(false),  // Инициализируем переменную isCreator
-    historyDisplayed(false),  // Порядок должен соответствовать порядку объявления в классе
-    firstMessageSkipped(false) // Инициализируем переменную firstMessageSkipped
+    historyDisplayed(false)  // Порядок должен соответствовать порядку объявления в классе
 {
     ui->setupUi(this);
     
