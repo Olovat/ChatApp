@@ -15,9 +15,13 @@ GroupChatWindow::GroupChatWindow(const QString &chatId, const QString &chatName,
     chatName(chatName),
     mainWindow(mainWindow),
     isCreator(false),  // Инициализируем переменную isCreator
-    historyDisplayed(false)  // Порядок должен соответствовать порядку объявления в классе
+    historyDisplayed(false),  // Порядок должен соответствовать порядку объявления в классе
+    firstMessageSkipped(false) // Инициализируем переменную firstMessageSkipped
 {
     ui->setupUi(this);
+    
+    // Скрываем кнопку удаления по умолчанию
+    ui->pushButton_4->setVisible(false);
     
     // Устанавливаем заголовок окна
     updateWindowTitle();
@@ -107,28 +111,9 @@ void GroupChatWindow::receiveMessage(const QString &sender, const QString &messa
     }
 }
 
-// Метод для конвертации UTC времени в локальное
-QString GroupChatWindow::convertUtcToLocalTime(const QString &utcTimestamp)
-{
-    // Если строка времени содержит дату и время
-    if (utcTimestamp.contains("-") && utcTimestamp.contains(":")) {
-        QDateTime utcTime = QDateTime::fromString(utcTimestamp, "yyyy-MM-dd hh:mm:ss");
-        utcTime.setTimeZone(QTimeZone::UTC);
-        QDateTime localTime = utcTime.toLocalTime();
-        return localTime.toString("hh:mm");
-    }
-    // Если строка времени содержит только время (уже в локальном формате)
-    else if (utcTimestamp.contains(":")) {
-        return utcTimestamp;
-    }
-    // Возвращаем исходное значение, если формат неизвестен
-    return utcTimestamp;
-}
-
 void GroupChatWindow::beginHistoryDisplay()
 {
     historyDisplayed = false;
-    // Очищаем чат перед отображением истории
     ui->textBrowser->clear();
 }
 
@@ -163,15 +148,42 @@ void GroupChatWindow::setCreator(const QString &creator)
 {
     this->creator = creator;
     
-    // Сохраняем информацию о том, является ли текущий пользователь создателем
-    if (mainWindow) {
-        isCreator = (mainWindow->getCurrentUsername() == creator);
-        
-        // Не меняем состояние включенности кнопок, они всегда активны
-        // Но можем обновить подсказки или другую информацию
-        
-        qDebug() << "Статус создателя чата:" << isCreator << "для пользователя" << mainWindow->getCurrentUsername();
+    // Проверяем, является ли текущий пользователь создателем чата
+    bool isCurrentUserCreator = (mainWindow && mainWindow->getCurrentUsername() == creator);
+    this->isCreator = isCurrentUserCreator; // Сохраняем статус создателя
+    
+    // Делаем кнопку удаления видимой только для создателя
+    if (ui->pushButton_4) {
+        ui->pushButton_4->setVisible(isCurrentUserCreator);
     }
+    
+    // Обновляем список участников, чтобы отметить создателя
+    if (ui->userListWidget) {
+        for (int i = 0; i < ui->userListWidget->count(); i++) {
+            QListWidgetItem* item = ui->userListWidget->item(i);
+            if (item && item->text() == creator) {
+                // Добавляем метку "(создатель)" если её ещё нет
+                if (!item->text().endsWith(" (создатель)")) {
+                    item->setText(creator + " (создатель)");
+                    QFont font = item->font();
+                    font.setBold(true);
+                    item->setFont(font);
+                }
+                break;
+            }
+        }
+    }
+    
+    // Обновляем заголовок окна, чтобы показать, что пользователь - создатель
+    if (isCurrentUserCreator) {
+        setWindowTitle("Групповой чат: " + chatName + " (Вы создатель)");
+    } else {
+        setWindowTitle("Групповой чат: " + chatName);
+    }
+    
+    qDebug() << "Установлен создатель чата:" << creator << "Текущий пользователь:" 
+             << (mainWindow ? mainWindow->getCurrentUsername() : "unknown")
+             << "Кнопка удаления " << (isCurrentUserCreator ? "показана" : "скрыта");
 }
 
 // Обработчик кнопки добавления пользователя в чат
@@ -225,4 +237,53 @@ void GroupChatWindow::on_pushButton_3_clicked()
             mainWindow->sendMessageToServer(QString("GROUP_REMOVE_USER:%1:%2").arg(chatId, selectedUser));
         }
     }
+}
+
+void GroupChatWindow::on_pushButton_4_clicked()
+{
+    // Проверка безопасности - убедиться, что пользователь действительно создатель
+    if (!mainWindow || mainWindow->getCurrentUsername() != creator) {
+        QMessageBox::warning(this, "Ошибка", "У вас нет прав для удаления этого чата");
+        return;
+    }
+    
+    // Запрос подтверждения удаления
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this, 
+        "Подтверждение удаления", 
+        "Вы уверены, что хотите удалить групповой чат \"" + chatName + "\"?\n"
+        "Это действие нельзя отменить и чат будет удалён для всех участников.",
+        QMessageBox::Yes | QMessageBox::No
+    );
+    
+    if (reply == QMessageBox::Yes) {
+        // Отправляем запрос на удаление чата
+        if (mainWindow) {
+            mainWindow->sendMessageToServer(QString("DELETE_GROUP_CHAT:%1").arg(chatId));
+            
+            // Закрываем окно
+            close();
+            
+            // Запрашиваем обновление списка чатов
+            mainWindow->sendMessageToServer("GET_USERLIST");
+        }
+    }
+}
+
+// Метод для конвертации UTC времени в локальное
+QString GroupChatWindow::convertUtcToLocalTime(const QString &utcTimestamp)
+{
+    // Если строка времени содержит дату и время
+    if (utcTimestamp.contains("-") && utcTimestamp.contains(":")) {
+        QDateTime utcTime = QDateTime::fromString(utcTimestamp, "yyyy-MM-dd hh:mm:ss");
+        utcTime.setTimeZone(QTimeZone::UTC);
+        QDateTime localTime = utcTime.toLocalTime();
+        return localTime.toString("hh:mm");
+    }
+    // Если строка времени содержит только время (уже в локальном формате)
+    else if (utcTimestamp.contains(":")) {
+        return utcTimestamp;
+    }
+    // Возвращаем исходное значение, если формат неизвестен
+    return utcTimestamp;
 }

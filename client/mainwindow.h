@@ -144,7 +144,20 @@ private:
     QTimer *authTimeoutTimer;    
     QString pendingGroupChatId; // ID группового чата для добавления пользователя
 
-    public slots:
+    void updateWindowTitle() {
+        if (!m_username.isEmpty()) {
+            setWindowTitle("Текущий пользователь: " + m_username);
+        } else {
+            setWindowTitle("Тестовый режим");
+        }
+    }
+
+    QMap<QString, QString> lastPrivateChatTimestamps; 
+    QMap<QString, QString> lastGroupChatTimestamps;   
+    
+    bool isMessageDuplicate(const QString &chatId, const QString &timestamp, bool isGroup);
+
+public slots:
 
     void slotReadyRead();
 };

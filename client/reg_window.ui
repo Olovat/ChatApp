@@ -29,7 +29,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Register</string>
+    <string>Регистрация</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="Login_line_2">
@@ -52,7 +52,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Login:</string>
+    <string>Логин:</string>
    </property>
   </widget>
   <widget class="QLabel" name="Confirm_2">
@@ -61,11 +61,11 @@
      <x>1</x>
      <y>150</y>
      <width>50</width>
-     <height>24</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>Confirm:</string>
+    <string>Подтверждение</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="Confirm_line_2">
@@ -88,7 +88,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Password:</string>
+    <string>Пароль:</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="Password_line_2">
@@ -111,7 +111,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Authorization</string>
+    <string>Вернутсья</string>
    </property>
   </widget>
  </widget>

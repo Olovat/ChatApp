@@ -487,6 +487,10 @@ void MainWindow::slotReadyRead()
                     }
                     ui_Auth.close();
                     this->show();
+                    
+                    // Обновление имени окна как имя текущего пользователя
+                    updateWindowTitle();
+                    
                     currentOperation = None;
                     emit authSuccess();
 
@@ -547,7 +551,7 @@ void MainWindow::slotReadyRead()
                 if (parts.size() >= 3) {
                     QString sender = parts[1];
                     QString privateMessage = parts.mid(2).join(":");
-
+                    
                     // Пропускаем сообщения, адресованные самому себе
                     if (sender == getCurrentUsername()) {
                         return;
@@ -624,7 +628,7 @@ void MainWindow::slotReadyRead()
                     QString chatId = parts[1];
                     QString sender = parts[2];
                     QString message = parts.mid(3).join(":");
-                    
+                   
                     // Если окно этого чата открыто, отправляем сообщение туда
                     if (groupChatWindows.contains(chatId)) {
                         groupChatWindows[chatId]->receiveMessage(sender, message);
@@ -723,6 +727,21 @@ void MainWindow::slotReadyRead()
                 if (groupChatWindows.contains(chatId)) {
                     groupChatWindows[chatId]->endHistoryDisplay();
                 }
+            }
+            else if (str.startsWith("GROUP_CHAT_DELETED:")) {
+                QString chatId = str.mid(QString("GROUP_CHAT_DELETED:").length());
+                
+                // Если окно этого чата ещё открыто, закрываем его
+                if (groupChatWindows.contains(chatId)) {
+                    groupChatWindows[chatId]->close();
+                    groupChatWindows.remove(chatId); // Удаляем из списка окон
+                }
+                
+                // Обновляем список чатов
+                sendMessageToServer("GET_USERLIST");
+                
+                QMessageBox::information(this, "Чат удален", 
+                                       "Групповой чат был успешно удален.");
             }
             else {
                 bool isDuplicate = false;

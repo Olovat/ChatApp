@@ -34,6 +34,7 @@ private slots:
     void on_lineEdit_returnPressed(); // Обработка нажатия Enter в поле ввода
     void on_pushButton_clicked();  // Кнопка добавления пользователя в чат
     void on_pushButton_3_clicked(); // Кнопка удаления пользователя из чата
+    void on_pushButton_4_clicked(); // Кнопка удаления чата
 
 private:
     Ui::Form *ui;
