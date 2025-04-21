@@ -42,7 +42,9 @@ void MainWindow::initializeCommon()
     authTimeoutTimer->setSingleShot(true);
     connect(authTimeoutTimer, &QTimer::timeout, this, &MainWindow::handleAuthenticationTimeout);    
    
-
+    // Инициализация счетчиков непрочитанных сообщений
+    unreadPrivateMessageCounts = QMap<QString, int>();
+    unreadGroupMessageCounts = QMap<QString, int>();
 
     nextBlockSize = 0;
     currentOperation = None;
@@ -174,13 +176,23 @@ void MainWindow::updateUserList(const QStringList &users)
         if (parts.size() >= 4) {
             QString chatId = parts[0];
             QString chatName = parts[3];
-
             
-            QListWidgetItem *item = new QListWidgetItem("Группа: " + chatName);
+            // Формируем отображаемое имя с учетом непрочитанных сообщений
+            QString displayName = "Группа: " + chatName;
+            if (unreadGroupMessageCounts.contains(chatId) && unreadGroupMessageCounts[chatId] > 0) {
+                displayName = QString("Группа: %1 (%2)").arg(chatName).arg(unreadGroupMessageCounts[chatId]);
+            }
+            
+            QListWidgetItem *item = new QListWidgetItem(displayName);
             
             // Устанавливаем фон и стиль для группового чата
-            item->setForeground(QBrush(QColor("blue")));
-            item->setBackground(QBrush(QColor(200, 200, 255))); // Светло-голубой фон
+            if (unreadGroupMessageCounts.contains(chatId) && unreadGroupMessageCounts[chatId] > 0) {
+                item->setForeground(QBrush(QColor("black")));
+                item->setBackground(QBrush(QColor(255, 200, 100))); // Оранжевый фон для непрочитанных сообщений
+            } else {
+                item->setForeground(QBrush(QColor("blue")));
+                item->setBackground(QBrush(QColor(200, 200, 255))); // Светло-голубой фон
+            }
             
             // Сохраняем ID чата и другие данные
             item->setData(Qt::UserRole, true);   // Статус всегда онлайн
@@ -200,17 +212,29 @@ void MainWindow::updateUserList(const QStringList &users)
     for (const QString &userInfo : onlineUsers) {
         QStringList parts = userInfo.split(":");
         
-
         if (parts.size() >= 3) {
             QString username = parts[0];
+            
+            // Формируем отображаемое имя с учетом непрочитанных сообщений
+            QString displayName = username;
+            if (unreadPrivateMessageCounts.contains(username) && unreadPrivateMessageCounts[username] > 0) {
+                displayName = QString("%1 (%2)").arg(username).arg(unreadPrivateMessageCounts[username]);
+            }
 
-            QListWidgetItem *item = new QListWidgetItem(username);
+            QListWidgetItem *item = new QListWidgetItem(displayName);
 
             // Устанавливаем фон для онлайн пользователя
-            item->setForeground(QBrush(QColor("black")));
-            item->setBackground(QBrush(QColor(200, 255, 200))); // Светло-зеленый фон
+            if (unreadPrivateMessageCounts.contains(username) && unreadPrivateMessageCounts[username] > 0) {
+                item->setForeground(QBrush(QColor("black")));
+                item->setBackground(QBrush(QColor(255, 255, 150))); // Желтый фон для непрочитанных сообщений
+            } else {
+                item->setForeground(QBrush(QColor("black")));
+                item->setBackground(QBrush(QColor(200, 255, 200))); // Светло-зеленый фон
+            }
+            
             item->setData(Qt::UserRole, true);  // Статус онлайн
             item->setData(Qt::UserRole + 1, "U"); // Тип - пользователь
+            item->setData(Qt::UserRole + 4, username); // Сохраняем чистое имя пользователя без счетчика
             ui->userListWidget->addItem(item);
         }
     }
@@ -220,14 +244,27 @@ void MainWindow::updateUserList(const QStringList &users)
         QStringList parts = userInfo.split(":");
         if (parts.size() >= 3) {
             QString username = parts[0];
+            
+            // Формируем отображаемое имя с учетом непрочитанных сообщений
+            QString displayName = username;
+            if (unreadPrivateMessageCounts.contains(username) && unreadPrivateMessageCounts[username] > 0) {
+                displayName = QString("%1 (%2)").arg(username).arg(unreadPrivateMessageCounts[username]);
+            }
 
-            QListWidgetItem *item = new QListWidgetItem(username);
+            QListWidgetItem *item = new QListWidgetItem(displayName);
 
             // Устанавливаем фон для оффлайн пользователя
-            item->setForeground(QBrush(QColor("gray")));
-            item->setBackground(QBrush(QColor(240, 240, 240))); // Светло-серый фон
+            if (unreadPrivateMessageCounts.contains(username) && unreadPrivateMessageCounts[username] > 0) {
+                item->setForeground(QBrush(QColor("black")));
+                item->setBackground(QBrush(QColor(255, 255, 150))); // Желтый фон для непрочитанных сообщений
+            } else {
+                item->setForeground(QBrush(QColor("gray")));
+                item->setBackground(QBrush(QColor(240, 240, 240))); // Светло-серый фон
+            }
+            
             item->setData(Qt::UserRole, false); // Статус оффлайн
             item->setData(Qt::UserRole + 1, "U"); // Тип - пользователь
+            item->setData(Qt::UserRole + 4, username); // Сохраняем чистое имя пользователя без счетчика
             ui->userListWidget->addItem(item);
         }
     }
@@ -267,11 +304,27 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
     // Если выбран обычный пользователь
     if (itemType == "U") {
         QString selectedUser = item->text();
+        
+        // Удаляем счетчик непрочитанных сообщений из текста, если он есть
+        if (selectedUser.contains(" (")) {
+            selectedUser = selectedUser.left(selectedUser.indexOf(" ("));
+        }
 
         // Для элемента "Избранное" используем текущего пользователя
         if (item->data(Qt::UserRole + 2).toBool()) { // Если это "Избранное"
             selectedUser = getCurrentUsername();
+        } else if (item->data(Qt::UserRole + 4).toString().length() > 0) {
+            // Используем сохраненное чистое имя пользователя
+            selectedUser = item->data(Qt::UserRole + 4).toString();
         }
+
+        // Сбрасываем счетчик непрочитанных сообщений для этого пользователя
+        if (unreadPrivateMessageCounts.contains(selectedUser)) {
+            unreadPrivateMessageCounts[selectedUser] = 0;
+            // Обновляем список для отображения изменений
+            sendMessageToServer("GET_USERLIST");
+        }
+
         // Удаляем "(Вы)" из имени, если это текущий пользователь
         if (selectedUser.endsWith(" (Вы)")) {
             selectedUser = selectedUser.left(selectedUser.length() - 5);
@@ -352,6 +405,14 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
     else if (itemType == "G") {
         QString chatName = item->data(Qt::UserRole + 3).toString();
         QString chatId = item->data(Qt::UserRole + 2).toString();
+        
+        // Сбрасываем счетчик непрочитанных сообщений для этого чата
+        if (unreadGroupMessageCounts.contains(chatId)) {
+            unreadGroupMessageCounts[chatId] = 0;
+            // Обновляем список для отображения изменений
+            sendMessageToServer("GET_USERLIST");
+        }
+        
         qDebug() << "Group chat selected: " << chatName << " (ID: " << chatId << ")";
         
         // Проверяем, не открыто ли уже окно для этого чата
@@ -632,10 +693,31 @@ void MainWindow::slotReadyRead()
                     QString sender = parts[2];
                     QString message = parts.mid(3).join(":");
                    
-                    // Если окно этого чата открыто, отправляем сообщение туда
-                    if (groupChatWindows.contains(chatId)) {
+                    // Если окно этого чата открыто и активно, отправляем сообщение туда
+                    if (groupChatWindows.contains(chatId) && 
+                        groupChatWindows[chatId]->isVisible() && 
+                        groupChatWindows[chatId]->isActiveWindow()) {
                         groupChatWindows[chatId]->receiveMessage(sender, message);
                         groupChatWindows[chatId]->activateWindow();
+                    } else {
+                        // Проверяем, является ли это системным сообщением о добавлении пользователя
+                        bool isSystemServiceMessage = (sender == "SYSTEM" && 
+                                                     (message.contains("добавлен в чат") || 
+                                                      message.contains("присоединился к чату") || 
+                                                      message.contains("удален из чата")));
+                        
+                        // Увеличиваем счетчик непрочитанных сообщений только если это не системное сообщение
+                        if (!isSystemServiceMessage) {
+                            unreadGroupMessageCounts[chatId]++;
+                            
+                            // Обновляем список для отображения счетчика
+                            sendMessageToServer("GET_USERLIST");
+                        }
+                        
+                        // В любом случае, если окно существует, отправляем сообщение туда
+                        if (groupChatWindows.contains(chatId)) {
+                            groupChatWindows[chatId]->receiveMessage(sender, message);
+                        }
                     }
                 }
             }
@@ -1054,14 +1136,21 @@ void MainWindow::handlePrivateMessage(const QString &sender, const QString &mess
     }
 
     // Доставляем сообщение
-    if (privateChatWindows[sender]->isVisible()) {
+    if (privateChatWindows[sender]->isVisible() && privateChatWindows[sender]->isActiveWindow()) {
         privateChatWindows[sender]->receiveMessage(sender, message);
     } else {
+        // Если окно чата не видно или неактивно, увеличиваем счетчик непрочитанных сообщений
+        unreadPrivateMessageCounts[sender]++;
+        // Сохраняем непрочитанное сообщение
         UnreadMessage unread;
         unread.sender = sender;
         unread.message = message;
         unread.timestamp = timeStr;
         unreadMessages[sender].append(unread);
+        
+        // Обновляем список пользователей для отображения счетчика
+        sendMessageToServer("GET_USERLIST");
+        
         qDebug() << "Сохранено непрочитанное сообщение от" << sender << ":" << message;
     }
 }

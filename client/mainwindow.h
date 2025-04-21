@@ -13,7 +13,7 @@
 #include <QUuid>
 #include <QListWidgetItem>
 #include <QMap>
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
 #include <QTimer>
 #include "ui_mainwindow.h"
 
@@ -156,6 +156,10 @@ private:
     QMap<QString, QString> lastGroupChatTimestamps;   
     
     bool isMessageDuplicate(const QString &chatId, const QString &timestamp, bool isGroup);
+
+    // Счетчики непрочитанных сообщений
+    QMap<QString, int> unreadPrivateMessageCounts; // Ключ - имя пользователя, значение - количество непрочитанных сообщений
+    QMap<QString, int> unreadGroupMessageCounts;   // Ключ - ID группового чата, значение - количество непрочитанных сообщений
 
 public slots:
 
