@@ -57,6 +57,7 @@ private:
     bool initMessageTable();  
     bool initHistoryTable();  // Новый метод для создания таблицы истории
     bool initGroupChatTables(); // Метод для создания таблиц групповых чатов
+    bool initReadMessageTable(); // Метод для создания таблицы прочитанных сообщений
     bool logMessage(const QString &sender, const QString &recipient, const QString &message);
     bool saveToHistory(const QString &sender, const QString &message);  // Новый метод для сохранения в историю
     void sendMessageHistory(QTcpSocket* socket);  // Новый метод для отправки истории
@@ -83,6 +84,13 @@ private:
     void sendGroupChatMessage(const QString &chatId, const QString &sender, const QString &message);
     void sendGroupChatHistory(const QString &chatId, QTcpSocket *socket);
     void sendUserGroupChats(const QString &username, QTcpSocket *socket);
+
+    // Методы для отслеживания прочитанных сообщений
+    bool updateLastReadMessage(const QString &username, const QString &chatPartner, qint64 messageId);
+    qint64 getLastReadMessageId(const QString &username, const QString &chatPartner);
+    int getUnreadMessageCount(const QString &username, const QString &chatPartner);
+    bool markAllMessagesAsRead(const QString &username, const QString &chatPartner);
+    void sendUnreadMessagesCount(QTcpSocket* socket, const QString &username, const QString &chatPartner);
 
 public slots:
     void incomingConnection(qintptr socketDescriptor); // обработчик новых подключений

@@ -199,6 +199,7 @@ void Server::slotReadyRead()
             }
             else if (message == "GET_USERLIST") {
                 sendUserList(socket);
+                return;
             }
             else if (message.startsWith("PRIVATE:")) {
                 QStringList parts = message.split(":", Qt::SkipEmptyParts);
@@ -251,6 +252,7 @@ void Server::slotReadyRead()
                 }
                 
                 sendPrivateMessageHistory(socket, currentUser, otherUser);
+                return;
             }
             else if (message.startsWith("CREATE_GROUP_CHAT:")) {
                 QStringList parts = message.split(":", Qt::SkipEmptyParts);
@@ -557,7 +559,7 @@ void Server::slotReadyRead()
                 
                 sendUserGroupChats(username, socket);
             }
-            else if (message != "GET_USERLIST") { // Фильтрация системного сообщения
+            else if (message != "GET_USERLIST" && !message.startsWith("MARK_READ:")) { // Фильтрация системного сообщения
                 QString senderUsername = "Unknown";
                 for (const AuthenticatedUser& user : authenticatedUsers) {
                     if (user.socket == socket) {
@@ -575,6 +577,47 @@ void Server::slotReadyRead()
                 QString formattedMessage = senderUsername + ": " + message;
                 SendToCllient(formattedMessage);
                 qDebug() << "Broadcasting message to all clients:" << formattedMessage;
+            }
+            else if (message.startsWith("MARK_READ:")) {
+                QString chatPartner = message.mid(QString("MARK_READ:").length());
+                
+                QString currentUsername;
+                for (const AuthenticatedUser& user : authenticatedUsers) {
+                    if (user.socket == socket) {
+                        currentUsername = user.username;
+                        break;
+                    }
+                }
+                
+                if (!currentUsername.isEmpty()) {
+                    bool success = markAllMessagesAsRead(currentUsername, chatPartner);
+                    if (success) {
+                        qDebug() << "All messages from" << chatPartner << "marked as read for" << currentUsername;
+                    }
+                }
+                return;
+            }
+            else if (message.startsWith("GET_UNREAD_COUNT:")) {
+                QStringList parts = message.split(":", Qt::SkipEmptyParts);
+                if (parts.size() >= 2) {
+                    QString chatPartner = parts[1];
+                    QString lastReadTimestamp = parts.size() >= 3 ? parts[2] : "";
+                    
+                    // Определяем текущего пользователя по сокету
+                    QString currentUsername;
+                    for (const AuthenticatedUser& user : authenticatedUsers) {
+                        if (user.socket == socket) {
+                            currentUsername = user.username;
+                            break;
+                        }
+                    }
+                    
+                    if (!currentUsername.isEmpty()) {
+                        // Отправляем количество непрочитанных сообщений
+                        sendUnreadMessagesCount(socket, currentUsername, chatPartner);
+                    }
+                }
+                return;
             }
         }
     }
@@ -718,6 +761,10 @@ bool Server::connectDB()
     }
     if (!initGroupChatTables()) {
         qDebug() << "Failed to initialize group chat tables";
+        return false;
+    }
+    if (!initReadMessageTable()) {
+        qDebug() << "Failed to initialize read messages table";
         return false;
     }
     return true;
@@ -1095,7 +1142,10 @@ void Server::sendStoredOfflineMessages(const QString &username, QTcpSocket* sock
         qDebug() << "Failed to retrieve offline messages:" << query.lastError().text();
         return;
     }
+    
+    bool hasMessages = false;
     while (query.next()) {
+        hasMessages = true;
         QString sender = query.value("sender").toString();
         QString message = query.value("message").toString();
         // Формируем сообщение в правильном формате и отправляем
@@ -1107,7 +1157,15 @@ void Server::sendStoredOfflineMessages(const QString &username, QTcpSocket* sock
         out.device()->seek(0);
         out << quint16(Data.size() - sizeof(quint16));
         socket->write(Data);
+        socket->flush();
         qDebug() << "Sent stored offline message to" << username << "from" << sender << ":" << message;
+        
+        // Добавляем небольшую задержку между сообщениями для правильной обработки
+        QThread::msleep(10);
+    }
+    
+    for (const AuthenticatedUser& user : authenticatedUsers) {
+        sendUnreadMessagesCount(socket, username, user.username);
     }
 }
 
@@ -1374,5 +1432,135 @@ bool Server::removeUserFromGroupChat(const QString &chatId, const QString &usern
         qDebug() << "User" << username << "removed from chat" << chatId;
     }
     return success;
+}
+
+bool Server::initReadMessageTable()
+{
+    QSqlQuery query(srv_db);
+    return query.exec("CREATE TABLE IF NOT EXISTS read_messages ("
+                      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                      "username VARCHAR(20), "
+                      "chat_partner VARCHAR(20), "
+                      "last_read_id INTEGER, "
+                      "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, "
+                      "UNIQUE(username, chat_partner))");
+}
+
+// Обновляет ID последнего прочитанного сообщения
+bool Server::updateLastReadMessage(const QString &username, const QString &chatPartner, qint64 messageId)
+{
+    QSqlQuery query(srv_db);
+    query.prepare("INSERT OR REPLACE INTO read_messages (username, chat_partner, last_read_id, timestamp) "
+                 "VALUES (:username, :chat_partner, :message_id, CURRENT_TIMESTAMP)");
+    query.bindValue(":username", username);
+    query.bindValue(":chat_partner", chatPartner);
+    query.bindValue(":message_id", messageId);
+    
+    bool success = query.exec();
+    if (!success) {
+        qDebug() << "Failed to update last read message:" << query.lastError().text();
+    }
+    return success;
+}
+
+// Получает ID последнего прочитанного сообщения
+qint64 Server::getLastReadMessageId(const QString &username, const QString &chatPartner)
+{
+    QSqlQuery query(srv_db);
+    query.prepare("SELECT last_read_id FROM read_messages WHERE username = :username AND chat_partner = :chat_partner");
+    query.bindValue(":username", username);
+    query.bindValue(":chat_partner", chatPartner);
+    
+    if (query.exec() && query.next()) {
+        return query.value("last_read_id").toLongLong();
+    }
+    return -1; // Если записи нет, возвращаем -1
+}
+
+// Подсчитывает количество непрочитанных сообщений
+int Server::getUnreadMessageCount(const QString &username, const QString &chatPartner)
+{
+    qint64 lastReadId = getLastReadMessageId(username, chatPartner);
+    
+    QSqlQuery query(srv_db);
+    if (lastReadId < 0) {
+        query.prepare("SELECT COUNT(*), MAX(id) FROM messages WHERE sender = :chat_partner AND recipient = :username "
+                     "AND timestamp >= datetime('now', '-5 minutes')");
+        qDebug() << "No read record found, counting messages from last 5 minutes only";
+    } else {
+        query.prepare("SELECT COUNT(*), MAX(id) FROM messages WHERE sender = :chat_partner AND recipient = :username "
+                     "AND id > :last_read_id");
+        query.bindValue(":last_read_id", lastReadId);
+        qDebug() << "Counting messages with ID >" << lastReadId;
+    }
+    
+    query.bindValue(":username", username);
+    query.bindValue(":chat_partner", chatPartner);
+    
+    int count = 0;
+    qint64 maxId = -1;
+    
+    if (query.exec() && query.next()) {
+        count = query.value(0).toInt();
+        maxId = query.value(1).toLongLong();
+        
+        // Если есть новые сообщения, обновляем информацию о последнем сообщении для отладки
+        if (count > 0) {
+            QSqlQuery detailQuery(srv_db);
+            detailQuery.prepare("SELECT id, message, timestamp FROM messages WHERE sender = :chat_partner "
+                               "AND recipient = :username ORDER BY id DESC LIMIT 3");
+            detailQuery.bindValue(":chat_partner", chatPartner);
+            detailQuery.bindValue(":username", username);
+            
+            if (detailQuery.exec()) {
+                qDebug() << "Last 3 messages details:";
+                while (detailQuery.next()) {
+                    qint64 msgId = detailQuery.value("id").toLongLong();
+                    QString msgText = detailQuery.value("message").toString();
+                    QString timestamp = detailQuery.value("timestamp").toString();
+                    qDebug() << "ID:" << msgId << "Time:" << timestamp << "Text:" << msgText;
+                }
+            }
+        }
+    }
+    
+    
+    return count;
+}
+
+// Помечает все сообщения как прочитанные
+bool Server::markAllMessagesAsRead(const QString &username, const QString &chatPartner)
+{
+    // Находим ID последнего сообщения в чате
+    QSqlQuery lastMsgQuery(srv_db);
+    lastMsgQuery.prepare("SELECT MAX(id) FROM messages WHERE "
+                         "((sender = :username AND recipient = :chat_partner) OR "
+                         "(sender = :chat_partner AND recipient = :username))");
+    lastMsgQuery.bindValue(":username", username);
+    lastMsgQuery.bindValue(":chat_partner", chatPartner);
+    
+    if (lastMsgQuery.exec() && lastMsgQuery.next()) {
+        qint64 lastMessageId = lastMsgQuery.value(0).toLongLong();
+        if (lastMessageId > 0) {
+            return updateLastReadMessage(username, chatPartner, lastMessageId);
+        }
+    }
+    return false;
+}
+
+// Отправляет количество непрочитанных сообщений
+void Server::sendUnreadMessagesCount(QTcpSocket* socket, const QString &username, const QString &chatPartner)
+{
+    int unreadCount = getUnreadMessageCount(username, chatPartner);
+    
+    QString response = QString("UNREAD_COUNT:%1:%2").arg(chatPartner).arg(unreadCount);
+    Data.clear();
+    QDataStream out(&Data, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_2);
+    out << quint16(0) << response;
+    out.device()->seek(0);
+    out << quint16(Data.size() - sizeof(quint16));
+    socket->write(Data);
+    socket->flush();    
 }
 

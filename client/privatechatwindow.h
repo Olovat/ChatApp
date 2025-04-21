@@ -25,6 +25,8 @@ public:
     void beginHistoryDisplay();
     void addHistoryMessage(const QString &formattedMessage);
     void endHistoryDisplay();
+    
+    void markMessagesAsRead();
 
 signals:
     void historyDisplayCompleted(const QString &username); // New signal

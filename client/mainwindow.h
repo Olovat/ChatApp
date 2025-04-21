@@ -79,6 +79,8 @@ public:
     void initializeCommon();
     QStringList getDisplayedUsers() const;
 
+    void requestUnreadCounts();
+
 signals:
     void authSuccess();
     void registerSuccess();

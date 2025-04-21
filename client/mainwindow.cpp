@@ -294,7 +294,6 @@ void MainWindow::updatePrivateChatStatuses(const QMap<QString, bool> &userStatus
 // Обработчик для выбора пользователя из списка
 void MainWindow::onUserSelected(QListWidgetItem *item)
 {
-
     if (!item) return;
 
     // Получаем тип выбранного элемента
@@ -379,6 +378,9 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
             }
             privateChatWindows[selectedUser]->show();
             privateChatWindows[selectedUser]->activateWindow();
+            
+            // Помечаем сообщения как прочитанные
+            privateChatWindows[selectedUser]->markMessagesAsRead();
         } else {
             // Создаем новое окно чата с правильными параметрами
             PrivateChatWindow *chatWindow = new PrivateChatWindow(selectedUser, this, nullptr);
@@ -388,6 +390,11 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
                     unreadMessages[selectedUser].clear();
                     qDebug() << "Unread messages for" << selectedUser << "cleared after history display";
                 }
+                
+                // Помечаем сообщения как прочитанные после завершения отображения истории
+                if (privateChatWindows.contains(selectedUser)) {
+                    privateChatWindows[selectedUser]->markMessagesAsRead();
+                }
             });
             
             // Если пользователь оффлайн, показываем информацию об этом
@@ -396,8 +403,6 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
             }
             
             privateChatWindows[selectedUser] = chatWindow;
-            
-            
             chatWindow->show();
         }
     }
@@ -537,6 +542,10 @@ void MainWindow::slotReadyRead()
                 QStringList users = str.mid(QString("USERLIST:").length()).split(",");
                 qDebug() << "User list received:" << users;
                 updateUserList(users);
+                
+                // После получения списка пользователей запрашиваем 
+                // количество непрочитанных сообщений для каждого из них
+                QTimer::singleShot(100, this, &MainWindow::requestUnreadCounts);
             }
             else if(str.startsWith("AUTH_SUCCESS")) {  // Изменено на startsWith
                 if (currentOperation == Auth || currentOperation == None) {
@@ -556,6 +565,9 @@ void MainWindow::slotReadyRead()
 
                     // Отправляем запрос на получение списка пользователей без отображения в чате
                     sendMessageToServer("GET_USERLIST");
+                    
+                    // Запрашиваем количество непрочитанных сообщений
+                    QTimer::singleShot(500, this, &MainWindow::requestUnreadCounts);
                 }
                 ui_Auth.setButtonsEnabled(true);
             }
@@ -827,6 +839,21 @@ void MainWindow::slotReadyRead()
                 
                 QMessageBox::information(this, "Чат удален", 
                                        "Групповой чат был успешно удален.");
+            }
+            else if (str.startsWith("UNREAD_COUNT:")) {
+                QStringList parts = str.mid(QString("UNREAD_COUNT:").length()).split(":");
+                if (parts.size() >= 2) {
+                    QString chatPartner = parts[0];
+                    int unreadCount = parts[1].toInt();
+                    
+                    // Обновляем счетчик непрочитанных сообщений
+                    unreadPrivateMessageCounts[chatPartner] = unreadCount;
+                    
+                    // Обновляем список пользователей, чтобы показать изменения
+                    sendMessageToServer("GET_USERLIST");
+                    
+                    qDebug() << "Got counter of unread messanges from" << chatPartner << ":" << unreadCount;
+                }
             }
             else {
                 bool isDuplicate = false;
@@ -1306,4 +1333,30 @@ void MainWindow::on_pushButton_2_clicked()
 void MainWindow::on_lineEdit_returnPressed()
 {
     // Пустая реализация, но метод необходим для Qt auto-connection
+}
+
+// Метод для запроса количества непрочитанных сообщений
+void MainWindow::requestUnreadCounts()
+{
+    // Отправляем запросы на получение непрочитанных сообщений для всех пользователей
+    for (int i = 0; i < ui->userListWidget->count(); ++i) {
+        QListWidgetItem* item = ui->userListWidget->item(i);
+        if (item && item->data(Qt::UserRole + 1).toString() == "U") {
+            QString username = item->text();
+            
+            if (username.contains(" (")) {
+                username = username.left(username.indexOf(" ("));
+            }
+            
+            if (item->data(Qt::UserRole + 2).toBool()) {
+                continue;
+            }
+            
+            if (item->data(Qt::UserRole + 4).toString().length() > 0) {
+                username = item->data(Qt::UserRole + 4).toString();
+            }
+            
+            sendMessageToServer(QString("GET_UNREAD_COUNT:%1").arg(username));
+        }
+    }
 }

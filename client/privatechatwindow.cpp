@@ -195,3 +195,13 @@ void PrivateChatWindow::endHistoryDisplay()
     
     emit historyDisplayCompleted(username);
 }
+
+// Метод для пометки сообщений как прочитанных
+void PrivateChatWindow::markMessagesAsRead()
+{
+    if (mainWindow) {
+        // Отправляем запрос на пометку всех сообщений как прочитанных
+        mainWindow->sendMessageToServer(QString("MARK_READ:%1").arg(username));
+        qDebug() << "Отправлен запрос на пометку всех сообщений от" << username << "как прочитанных";
+    }
+}
