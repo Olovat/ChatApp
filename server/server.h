@@ -31,6 +31,13 @@ public:
     bool testLogMessage(const QString &sender, const QString &recipient, const QString &message);
     bool testSaveToHistory(const QString &sender, const QString &message);
 
+    void searchUsers(const QString &query, QTcpSocket* socket);
+    bool addFriend(const QString &username, const QString &friendName);
+    bool removeFriend(const QString &username, const QString &friendName);
+    QStringList getUserFriends(const QString &username);
+    bool isFriend(const QString &username, const QString &friendName);
+    bool initFriendshipsTable();
+
 private:
     QTcpSocket *socket;
     QSqlDatabase srv_db;
@@ -84,6 +91,9 @@ private:
     void sendGroupChatHistory(const QString &chatId, QTcpSocket *socket);
     void sendUserGroupChats(const QString &username, QTcpSocket *socket);
 
+    // Отправка информации о чате всем его участникам
+    void broadcastGroupChatInfo(const QString &chatId);
+
     // Методы для отслеживания прочитанных сообщений
     bool updateLastReadMessage(const QString &username, const QString &chatPartner, qint64 messageId);
     qint64 getLastReadMessageId(const QString &username, const QString &chatPartner);
@@ -96,7 +106,6 @@ public slots:
     void slotReadyRead(); // слот для сигнала; обработчик полученных от клиента сообщений
     void clientDisconnected(); // обработчик отключения клиента
     bool sendPrivateMessage(const QString &recipientUsername, const QString &message);
-
 };
 
 #endif // SERVER_H

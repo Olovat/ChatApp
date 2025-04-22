@@ -97,6 +97,12 @@ private slots:
     void handleSocketError(QAbstractSocket::SocketError socketError);
     void on_pushButton_clicked();
 
+    // Функции для поиска пользователей
+    void searchUsers();
+    void showSearchResults(const QStringList &users);
+    void onSearchItemSelected(QListWidgetItem *item);
+    void addUserToFriends(const QString &username);
+
 public:
     Mode mode;
     std::unique_ptr<MockDatabase> testDb; // Mock база данных
@@ -130,6 +136,13 @@ private:
 
     QMap<QString, GroupChatWindow*> groupChatWindows; // Map для хранения открытых групповых чатов
 
+    // Таблица друзей пользователя
+    QMap<QString, bool> userFriends; // имя пользователя -> флаг онлайн
+    
+    // Результаты поиска
+    QStringList searchResults;
+    QDialog* searchDialog;
+    QListWidget* searchListWidget;
 
     // Переменные для хранения истории сообщений
     QString currentPrivateHistoryRecipient;
