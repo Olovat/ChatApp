@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>565</width>
+    <width>576</width>
     <height>245</height>
    </rect>
   </property>
@@ -47,7 +47,7 @@
     <rect>
      <x>1</x>
      <y>90</y>
-     <width>50</width>
+     <width>51</width>
      <height>24</height>
     </rect>
    </property>
@@ -55,35 +55,12 @@
     <string>Логин:</string>
    </property>
   </widget>
-  <widget class="QLabel" name="Confirm_2">
-   <property name="geometry">
-    <rect>
-     <x>1</x>
-     <y>150</y>
-     <width>50</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Подтверждение</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="Confirm_line_2">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>150</y>
-     <width>503</width>
-     <height>24</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QLabel" name="Password_2">
    <property name="geometry">
     <rect>
      <x>1</x>
      <y>120</y>
-     <width>50</width>
+     <width>61</width>
      <height>24</height>
     </rect>
    </property>
@@ -118,7 +95,6 @@
  <tabstops>
   <tabstop>Login_line_2</tabstop>
   <tabstop>Password_line_2</tabstop>
-  <tabstop>Confirm_line_2</tabstop>
   <tabstop>Register_button_2</tabstop>
  </tabstops>
  <resources/>

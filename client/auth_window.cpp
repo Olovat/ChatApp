@@ -1,5 +1,6 @@
 #include "auth_window.h"
 #include "ui_auth_window.h"
+#include <QMessageBox>
 
 auth_window::auth_window(QWidget *parent) :
     QDialog(parent),
@@ -7,6 +8,10 @@ auth_window::auth_window(QWidget *parent) :
 {
     ui->setupUi(this);
     this->setWindowTitle("Authentification");
+    
+    // Маска на пароль
+    ui->lineEdit_2->setEchoMode(QLineEdit::Password);
+    
     connect(ui->Login_button, &QPushButton::clicked, this, &auth_window::login_button_clicked);
     connect(ui->Register_button, &QPushButton::clicked, this, &auth_window::register_button_clicked);
 }

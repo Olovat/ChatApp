@@ -18,13 +18,9 @@ public:
     ~reg_window();
     QString getName();
     QString getPass();
-    QString getConfirmPass();
-    bool checkPass();
-    void ConfirmClear();
     void setButtonsEnabled(bool enabled);
     void setName(const QString& name);
     void setPass(const QString& pass);
-    void setConfirmPass(const QString& pass);
 
 signals:
     void register_button_clicked2();
@@ -33,17 +29,14 @@ signals:
 private slots:
     // очень опасно, желательно никогда не трогать,сверял названия по буквам.
     void on_Password_line_2_textEdited(const QString &arg1);
-    void on_Confirm_line_2_textEdited(const QString &arg1);
     void on_Register_button_2_clicked();
     void on_Login_line_2_textEdited(const QString &arg1);
-
     void on_return_auth_clicked();
 
 private:
     Ui::reg_window *ui;
     QString m_userName;
     QString m_userPass;
-    QString m_confirmation;
 
 protected:
 void closeEvent(QCloseEvent *event) override;

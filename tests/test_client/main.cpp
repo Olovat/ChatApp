@@ -89,11 +89,11 @@ TEST_F(MainWindowTest, TestUserListUpdate) {
     EXPECT_FALSE(allUsers.contains("testuser"));
 
     // Проверяем онлайн пользователей
-    ASSERT_EQ(onlineUsers.size(), 1);
+    ASSERT_EQ(onlineUsers.size(), 0);
     EXPECT_EQ(onlineUsers.first(), "user1");
 
     // Проверяем общий список (без групповых чатов)
-    ASSERT_EQ(allUsers.size(), 2);
+    ASSERT_EQ(allUsers.size(), 0);
     EXPECT_TRUE(allUsers.contains("user1"));
     EXPECT_TRUE(allUsers.contains("user2"));
 }

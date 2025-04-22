@@ -1,13 +1,14 @@
 #include "reg_window.h"
 #include "ui_reg_window.h"
 #include <QCloseEvent>
+#include <QMessageBox>
 
 
 reg_window::reg_window(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::reg_window)
 {
-    ui->setupUi(this);    
+    ui->setupUi(this);
 }
 
 reg_window::~reg_window()
@@ -41,16 +42,12 @@ void reg_window::setPass(const QString& pass) {
     ui->Password_line_2->setText(pass);
 }
 
-void reg_window::setConfirmPass(const QString& pass) {
-    ui->Confirm_line_2->setText(pass);
-}
-
-void reg_window::on_Confirm_line_2_textEdited(const QString &arg1)
-{
-    reg_window::m_confirmation = arg1;
-}
-
 void reg_window::on_Register_button_2_clicked() { 
+    // Проверка длины, когда показывать будем, можно закоментить это.
+    if (m_userPass.length() < 8) {
+        QMessageBox::warning(this, "Ошибка", "Пароль должен содержать минимум 8 символов");
+        return;
+    }
     emit register_button_clicked2();
 }
 
@@ -64,27 +61,11 @@ QString reg_window::getPass() //геттер пароль
     return m_userPass;
 }
 
-QString reg_window::getConfirmPass() //геттер пароль
-{
-    return m_confirmation;
-}
-
-// чек паролей
-bool reg_window::checkPass()
-{
-    return (m_confirmation == m_userPass);
-}
-
-void reg_window::ConfirmClear()
-{
-       ui->Confirm_line_2->clear();
-}
-
 // Тоже самое, что и в auth_window.cpp
 
 void reg_window::setButtonsEnabled(bool enabled)
 {
-    
+
     if (ui->Register_button_2) {
         ui->Register_button_2->setEnabled(enabled);
         ui->Register_button_2->repaint();
@@ -105,11 +86,9 @@ void reg_window::on_return_auth_clicked()
     // Очищаем поля ввода
     ui->Login_line_2->clear();
     ui->Password_line_2->clear();
-    ui->Confirm_line_2->clear();
 
     // Сбрасываем внутренние переменные
     m_userName.clear();
     m_userPass.clear();
-    m_confirmation.clear();
 }
 
