@@ -68,7 +68,7 @@ private:
     void sendUserList(QTcpSocket* clientSocket);
     
     // Метод для хранения сообщений, отправленных оффлайн-пользователям
-    void storeOfflineMessage(const QString &sender, const QString &recipient, const QString &message);
+    bool storeOfflineMessage(const QString &sender, const QString &recipient, const QString &message);
     
     // Метод для отправки сохраненных оффлайн-сообщений
     void sendStoredOfflineMessages(const QString &username, QTcpSocket* socket);
@@ -76,7 +76,6 @@ private:
     // Методы для работы с групповыми чатами
     bool createGroupChat(const QString &chatId, const QString &chatName, const QString &creator);
     bool addUserToGroupChat(const QString &chatId, const QString &username);
-
     bool removeUserFromGroupChat(const QString &chatId, const QString &username); // Новый метод для удаления пользователя
 
     void sendGroupChatInfo(const QString &chatId, QTcpSocket *socket);

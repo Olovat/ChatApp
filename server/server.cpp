@@ -1118,8 +1118,23 @@ void Server::clientDisconnected()
 }
 
 // Метод для хранения сообщений, отправленных оффлайн-пользователям
-void Server::storeOfflineMessage(const QString &sender, const QString &recipient, const QString &message)
+bool Server::storeOfflineMessage(const QString &sender, const QString &recipient, const QString &message)
 {
+    // Проверяем, существует ли уже такое сообщение
+    QSqlQuery checkQuery(srv_db);
+    checkQuery.prepare("SELECT COUNT(*) FROM messages WHERE sender = :sender "
+                      "AND recipient = :recipient AND message = :message "
+                      "AND timestamp >= datetime('now', '-1 minute')");
+    checkQuery.bindValue(":sender", sender);
+    checkQuery.bindValue(":recipient", recipient);
+    checkQuery.bindValue(":message", message);
+    
+    if (checkQuery.exec() && checkQuery.next() && checkQuery.value(0).toInt() > 0) {
+        qDebug() << "Duplicate message detected, not storing again";
+        return false;
+    }
+    
+    // Если не дубликат, сохраняем сообщение
     QSqlQuery query(srv_db);
     query.prepare("INSERT INTO messages (sender, recipient, message) VALUES (:sender, :recipient, :message)");
     query.bindValue(":sender", sender);
@@ -1127,8 +1142,10 @@ void Server::storeOfflineMessage(const QString &sender, const QString &recipient
     query.bindValue(":message", message);
     if (!query.exec()) {
         qDebug() << "Failed to store offline message:" << query.lastError().text();
+        return false;
     } else {
         qDebug() << "Offline message stored for" << recipient << "from" << sender;
+        return true;
     }
 }
 
