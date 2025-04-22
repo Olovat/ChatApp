@@ -386,8 +386,8 @@ void Server::slotReadyRead()
                         // Оповещаем всех участников о новом пользователе
                         sendGroupChatMessage(chatId, "SYSTEM", userToAdd + " добавлен в чат пользователем " + senderUsername);
                         
-                        // Отправляем обновленную информацию о чате
-                        sendGroupChatInfo(chatId, socket);
+                        // Отправляем обновленную информацию о чате всем участникам
+                        broadcastGroupChatInfo(chatId);
                         
                         // Обновляем список пользователей для всех
                         broadcastUserList();
@@ -559,6 +559,68 @@ void Server::slotReadyRead()
                 
                 sendUserGroupChats(username, socket);
             }
+            else if (message.startsWith("SEARCH_USERS:")) {
+                QString query = message.mid(QString("SEARCH_USERS:").length());
+                searchUsers(query, socket);
+            }
+            else if (message.startsWith("ADD_FRIEND:")) {
+                QString friendName = message.mid(QString("ADD_FRIEND:").length());
+                
+                // Находим имя пользователя, отправившего запрос
+                QString username = "Unknown";
+                for (const AuthenticatedUser& user : authenticatedUsers) {
+                    if (user.socket == socket) {
+                        username = user.username;
+                        break;
+                    }
+                }
+                
+                bool success = addFriend(username, friendName);
+                if (success) {
+                    // Отправляем подтверждение
+                    QString response = "FRIEND_ADDED:" + friendName;
+                    QByteArray data;
+                    QDataStream out(&data, QIODevice::WriteOnly);
+                    out.setVersion(QDataStream::Qt_6_2);
+                    out << quint16(0) << response;
+                    out.device()->seek(0);
+                    out << quint16(data.size() - sizeof(quint16));
+                    socket->write(data);
+                    socket->flush();
+                    
+                    // Обновляем список пользователей
+                    sendUserList(socket);
+                }
+            }
+            else if (message.startsWith("REMOVE_FRIEND:")) {
+                QString friendName = message.mid(QString("REMOVE_FRIEND:").length());
+                
+                // Находим имя пользователя, отправившего запрос
+                QString username = "Unknown";
+                for (const AuthenticatedUser& user : authenticatedUsers) {
+                    if (user.socket == socket) {
+                        username = user.username;
+                        break;
+                    }
+                }
+                
+                bool success = removeFriend(username, friendName);
+                if (success) {
+                    // Отправляем подтверждение
+                    QString response = "FRIEND_REMOVED:" + friendName;
+                    QByteArray data;
+                    QDataStream out(&data, QIODevice::WriteOnly);
+                    out.setVersion(QDataStream::Qt_6_2);
+                    out << quint16(0) << response;
+                    out.device()->seek(0);
+                    out << quint16(data.size() - sizeof(quint16));
+                    socket->write(data);
+                    socket->flush();
+                    
+                    // Обновляем список пользователей
+                    sendUserList(socket);
+                }
+            }
             else if (message != "GET_USERLIST" && !message.startsWith("MARK_READ:")) { // Фильтрация системного сообщения
                 QString senderUsername = "Unknown";
                 for (const AuthenticatedUser& user : authenticatedUsers) {
@@ -693,9 +755,37 @@ void Server::sendUserList(QTcpSocket* clientSocket)
 
     // Список для хранения пользователей
     QStringList users;
+    
+    // Получаем список друзей текущего пользователя
+    QStringList friends = getUserFriends(currentUsername);
+    
+    qDebug() << "Sending userlist for" << currentUsername << "friends:" << friends;
+    
+    // Добавляем всех пользователей, но помечаем друзей
     for (const AuthenticatedUser& user : authenticatedUsers) {
-        // Формат для пользователей: username:status:type (1 - онлайн, 0 - оффлайн, тип U - пользователь)
-        users.append(user.username + ":" + (user.isOnline ? "1" : "0") + ":U");
+        bool isFriend = friends.contains(user.username);
+        
+        // Всегда включаем самого себя и друзей
+        if (user.username == currentUsername || isFriend) {
+            // Формат: username:status:U:F (F - признак друга)
+            users.append(user.username + ":" + (user.isOnline ? "1" : "0") + ":U:" + (isFriend ? "F" : ""));
+        }
+    }
+
+    // Также нужно добавить друзей, которые не в сети (не в authenticatedUsers)
+    for (const QString& friendName : friends) {
+        bool alreadyAdded = false;
+        for (const AuthenticatedUser& user : authenticatedUsers) {
+            if (user.username == friendName) {
+                alreadyAdded = true;
+                break;
+            }
+        }
+        
+        // Если друг не был добавлен ранее (он не в сети)
+        if (!alreadyAdded) {
+            users.append(friendName + ":0:U:F");
+        }
     }
 
     // Добавляем групповые чаты, в которых состоит текущий пользователь
@@ -718,13 +808,13 @@ void Server::sendUserList(QTcpSocket* clientSocket)
     }
 
     QString userList = "USERLIST:" + users.join(",");
-    Data.clear();
-    QDataStream out(&Data, QIODevice::WriteOnly);
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_2);
     out << quint16(0) << userList;
     out.device()->seek(0);
-    out << quint16(Data.size() - sizeof(quint16));
-    clientSocket->write(Data);
+    out << quint16(data.size() - sizeof(quint16));
+    clientSocket->write(data);
     qDebug() << "Sent user list to client:" << userList;
 }
 
@@ -765,6 +855,10 @@ bool Server::connectDB()
     }
     if (!initReadMessageTable()) {
         qDebug() << "Failed to initialize read messages table";
+        return false;
+    }
+    if (!initFriendshipsTable()) {
+        qDebug() << "Failed to initialize friendships table";
         return false;
     }
     return true;
@@ -1579,5 +1673,169 @@ void Server::sendUnreadMessagesCount(QTcpSocket* socket, const QString &username
     out << quint16(Data.size() - sizeof(quint16));
     socket->write(Data);
     socket->flush();    
+}
+
+bool Server::initFriendshipsTable()
+{
+    QSqlQuery query(srv_db);
+    bool success = query.exec(
+        "CREATE TABLE IF NOT EXISTS friendships ("
+        "user_id TEXT, "
+        "friend_id TEXT, "
+        "PRIMARY KEY (user_id, friend_id)"
+        ")"
+    );
+    
+    if (!success) {
+        qDebug() << "Failed to create friendships table:" << query.lastError().text();
+    }
+    return success;
+}
+
+void Server::searchUsers(const QString &query, QTcpSocket* socket)
+{
+    QSqlQuery sqlQuery(srv_db);
+    // Исправленный запрос - используем правильные имена таблицы и поля
+    QString queryStr = "SELECT name FROM userlist WHERE name LIKE :query AND name != :current_user";
+    sqlQuery.prepare(queryStr);
+    sqlQuery.bindValue(":query", "%" + query + "%");
+    
+    // Определяем имя текущего пользователя
+    QString currentUsername;
+    for (const AuthenticatedUser& user : authenticatedUsers) {
+        if (user.socket == socket) {
+            currentUsername = user.username;
+            break;
+        }
+    }
+    
+    sqlQuery.bindValue(":current_user", currentUsername);
+    
+    qDebug() << "Searching for:" << query << ", current user:" << currentUsername;
+    
+    QStringList results;
+    if (sqlQuery.exec()) {
+        qDebug() << "SQL query executed successfully";
+        while (sqlQuery.next()) {
+            // Здесь тоже изменение - используем "name" вместо "username"
+            QString username = sqlQuery.value("name").toString();
+            results << username;
+            qDebug() << "Found user:" << username;
+        }
+    } else {
+        qDebug() << "Search query failed:" << sqlQuery.lastError().text();
+    }
+    
+    qDebug() << "Search results:" << results;
+    
+    qDebug() << "Поисковый запрос выполняется к таблице [userlist], колонка [name]";
+    // Вывод всех найденных пользователей для отладки
+    QSqlQuery allUsersQuery(srv_db);
+    allUsersQuery.prepare("SELECT name FROM userlist");
+    if (allUsersQuery.exec()) {
+        qDebug() << "Все пользователи в базе:";
+        while (allUsersQuery.next()) {
+            qDebug() << " - " << allUsersQuery.value("name").toString();
+        }
+    }
+    
+    // Отправляем результаты клиенту
+    QString response = "SEARCH_RESULTS:" + results.join(",");
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_2);
+    out << quint16(0) << response;
+    out.device()->seek(0);
+    out << quint16(data.size() - sizeof(quint16));
+    socket->write(data);
+    socket->flush();
+}
+
+bool Server::addFriend(const QString &username, const QString &friendName)
+{
+    // Проверяем существование пользователя
+    QSqlQuery checkQuery(srv_db);
+    checkQuery.prepare("SELECT 1 FROM userlist WHERE name = :friend");
+    checkQuery.bindValue(":friend", friendName);
+    if (!(checkQuery.exec() && checkQuery.next())) {
+        qDebug() << "Пользователь для добавления в друзья не найден:" << friendName;
+        return false; // Пользователь не найден
+    }
+    
+    // Добавляем дружескую связь
+    QSqlQuery query(srv_db);
+    query.prepare("INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (:user, :friend)");
+    query.bindValue(":user", username);
+    query.bindValue(":friend", friendName);
+    
+    bool success = query.exec();
+    if (!success) {
+        qDebug() << "Failed to add friend:" << query.lastError().text();
+    }
+    return success;
+}
+
+bool Server::removeFriend(const QString &username, const QString &friendName)
+{
+    QSqlQuery query(srv_db);
+    query.prepare("DELETE FROM friendships WHERE user_id = :user AND friend_id = :friend");
+    query.bindValue(":user", username);
+    query.bindValue(":friend", friendName);
+    
+    bool success = query.exec();
+    if (!success) {
+        qDebug() << "Failed to remove friend:" << query.lastError().text();
+    }
+    return success;
+}
+
+QStringList Server::getUserFriends(const QString &username)
+{
+    QStringList friends;
+    QSqlQuery query(srv_db);
+    query.prepare("SELECT friend_id FROM friendships WHERE user_id = :user");
+    query.bindValue(":user", username);
+    
+    if (query.exec()) {
+        while (query.next()) {
+            friends << query.value(0).toString();
+        }
+    } else {
+        qDebug() << "Failed to get user friends:" << query.lastError().text();
+    }
+    
+    return friends;
+}
+
+bool Server::isFriend(const QString &username, const QString &friendName)
+{
+    QSqlQuery query(srv_db);
+    query.prepare("SELECT 1 FROM friendships WHERE user_id = :user AND friend_id = :friend");
+    query.bindValue(":user", username);
+    query.bindValue(":friend", friendName);
+    
+    return query.exec() && query.next();
+}
+
+void Server::broadcastGroupChatInfo(const QString &chatId)
+{
+    // Получаем всех участников чата
+    QSqlQuery membersQuery(srv_db);
+    membersQuery.prepare("SELECT username FROM group_chat_members WHERE chat_id = :chat_id");
+    membersQuery.bindValue(":chat_id", chatId);
+    
+    if (membersQuery.exec()) {
+        while (membersQuery.next()) {
+            QString memberUsername = membersQuery.value("username").toString();
+            
+            // Находим сокет пользователя
+            for (const AuthenticatedUser& user : authenticatedUsers) {
+                if (user.username == memberUsername && user.isOnline && user.socket) {
+                    // Отправляем обновленную информацию о чате
+                    sendGroupChatInfo(chatId, user.socket);
+                }
+            }
+        }
+    }
 }
 
