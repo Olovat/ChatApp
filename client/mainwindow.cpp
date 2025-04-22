@@ -1122,13 +1122,6 @@ void MainWindow::registerUser()
         }
     }
     currentOperation = Register;
-
-    if(!ui_Reg.checkPass()) {
-        QMessageBox::warning(this, "Registration Error", "Passwords don't match!");
-        ui_Reg.ConfirmClear();
-        return;
-    }
-
     m_username = ui_Reg.getName();
     m_userpass = ui_Reg.getPass();
 
