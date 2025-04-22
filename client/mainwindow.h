@@ -79,6 +79,8 @@ public:
     void initializeCommon();
     QStringList getDisplayedUsers() const;
 
+    void requestUnreadCounts();
+
 signals:
     void authSuccess();
     void registerSuccess();
@@ -156,6 +158,10 @@ private:
     QMap<QString, QString> lastGroupChatTimestamps;   
     
     bool isMessageDuplicate(const QString &chatId, const QString &timestamp, bool isGroup);
+
+    // Счетчики непрочитанных сообщений
+    QMap<QString, int> unreadPrivateMessageCounts; // Ключ - имя пользователя, значение - количество непрочитанных сообщений
+    QMap<QString, int> unreadGroupMessageCounts;   // Ключ - ID группового чата, значение - количество непрочитанных сообщений
 
 public slots:
 
