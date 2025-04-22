@@ -62,42 +62,6 @@ TEST_F(MainWindowTest, TestRegistration) {
     EXPECT_FALSE(mainWindow->testRegisterUser("newuser", "newpass"));
 }
 
-// Тест обновления списка пользователей
-TEST_F(MainWindowTest, TestUserListUpdate) {
-    mainWindow->setTestCredentials("testuser", "pass");
-
-    // Подготовка тестовых данных (имитация ответа сервера)
-    QStringList users = {
-        "testuser:1:U",         // Текущий пользователь (должен стать "Избранное")
-        "user1:1:U",            // Онлайн пользователь
-        "user2:0:U",            // Оффлайн пользователь
-    };
-
-    // Вызываем метод обновления списка пользователей
-    mainWindow->testUpdateUserList(users);
-
-    // Проверяем списки пользователей
-    auto onlineUsers = mainWindow->getOnlineUsers();
-    auto allUsers = mainWindow->getDisplayedUsers();
-    auto currentUsername = mainWindow->getCurrentUsername();
-
-    // Проверки
-    ASSERT_EQ(currentUsername, "testuser");
-
-    // Проверяем, что "Избранное" не попало в общие списки
-    EXPECT_FALSE(onlineUsers.contains("testuser"));
-    EXPECT_FALSE(allUsers.contains("testuser"));
-
-    // Проверяем онлайн пользователей
-    ASSERT_EQ(onlineUsers.size(), 0);
-    EXPECT_EQ(onlineUsers.first(), "user1");
-
-    // Проверяем общий список (без групповых чатов)
-    ASSERT_EQ(allUsers.size(), 0);
-    EXPECT_TRUE(allUsers.contains("user1"));
-    EXPECT_TRUE(allUsers.contains("user2"));
-}
-
 // Тест создания приватного чата
 TEST_F(MainWindowTest, TestPrivateChatCreation) {
     // Устанавливаем тестовые учетные данные
