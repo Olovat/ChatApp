@@ -5,22 +5,25 @@
 #include <QListWidgetItem>
 #include <QDataStream>
 #include <QDebug>
+#include <QVBoxLayout>  // Добавлено для QVBoxLayout
+#include <QShortcut>    // Добавлено для QShortcut
+#include <QKeySequence> // Добавлено для QKeySequence
 #include "privatechatwindow.h"
 #include "groupchatwindow.h"
 #include "transitwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    mode(Mode::Production) // По умолчанию Production режим
+    mode(Mode::Production), // По умолчанию Production режим
+    ui(new Ui::MainWindow)  // Изменен порядок инициализации
 {
     initializeCommon(); // Вынесем общую инициализацию в отдельный метод
 }
 
 MainWindow::MainWindow(Mode mode, QWidget *parent)
     : QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    mode(mode)
+    mode(mode),           // Изменен порядок инициализации
+    ui(new Ui::MainWindow)
 {
     initializeCommon(); // Используем ту же функцию инициализации
 }
@@ -35,7 +38,13 @@ void MainWindow::initializeCommon()
     connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
     connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
             this, &MainWindow::handleSocketError);
-
+    
+    // Добавляем явное подключение для поля поиска
+    connect(ui->lineEdit, &QLineEdit::returnPressed, this, &MainWindow::on_lineEdit_returnPressed);
+    
+    // Инициализация переменных для поиска
+    searchDialog = nullptr;
+    searchListWidget = nullptr;
 
      // Создание таймера, чтобы клиент падал при падении сервера, а просто отключался через время.
     authTimeoutTimer = new QTimer(this);
@@ -78,6 +87,9 @@ void MainWindow::updateUserList(const QStringList &users)
 {
     qDebug() << "Updating user list with users:" << users;
 
+    // Обновляем карту друзей
+    userFriends.clear();
+
     // Создаем карту статусов для более удобного доступа
     QMap<QString, bool> userStatusMap;
     QString currentUsername = getCurrentUsername();
@@ -90,40 +102,36 @@ void MainWindow::updateUserList(const QStringList &users)
     QStringList offlineUsers;
     QStringList groupChats;
 
-    
     // Разделяем пользователей на категории
     for (const QString &userInfo : users) {
         QStringList parts = userInfo.split(":");
         
         // Для групповых чатов: chatId:1:G:chatName
-        // Для пользователей: username:status:U
-        if (parts.size() >= 3) {
+        if (parts.size() >= 4) {
+            // Для пользователей: username:status:U:isFriend
             QString id = parts[0];
             bool isOnline = (parts[1] == "1");
             QString type = parts[2];
+            bool isFriend = (parts.size() >= 4 && parts[3] == "F"); // Новый флаг друга
 
             // Если это групповой чат
-            if (type == "G" && parts.size() >= 4) {
-                // Групповые чаты помещаем в отдельный список
+            if (type == "G") {
                 groupChats << userInfo;
                 continue;
             }
 
-            // Обычные пользователи
-            if (type == "U") {
-                // Сохраняем статус в карту для обновления приватных окон чата
+            // Только друзья и текущий пользователь
+            if (type == "U" && (isFriend || id == currentUsername)) {
                 userStatusMap[id] = isOnline;
+                userFriends[id] = isOnline; // Добавляем в карту друзей
 
-                // Пропускаем текущего пользователя для списков онлайн/оффлайн
-                if (id == currentUsername) {
-                    continue;
-                }
-
-                // Добавляем пользователей в соответствующие списки
-                if (isOnline) {
-                    onlineUsers << userInfo;
-                } else {
-                    offlineUsers << userInfo;
+                // Текущий пользователь отображается отдельно как "Избранное"
+                if (id != currentUsername) {
+                    if (isOnline) {
+                        onlineUsers << userInfo;
+                    } else {
+                        offlineUsers << userInfo;
+                    }
                 }
             }
         }
@@ -855,6 +863,22 @@ void MainWindow::slotReadyRead()
                     qDebug() << "Got counter of unread messanges from" << chatPartner << ":" << unreadCount;
                 }
             }
+            else if (str.startsWith("SEARCH_RESULTS:")) {
+                QStringList users = str.mid(QString("SEARCH_RESULTS:").length()).split(",", Qt::SkipEmptyParts);
+                qDebug() << "Получены результаты поиска:" << users;
+                showSearchResults(users);
+            }
+            else if (str.startsWith("FRIEND_ADDED:")) {
+                QString friendName = str.mid(QString("FRIEND_ADDED:").length());
+                qDebug() << "Пользователь добавлен в друзья:" << friendName;
+                userFriends[friendName] = true; // По умолчанию считаем онлайн
+                sendMessageToServer("GET_USERLIST"); // Обновляем список друзей
+            }
+            else if (str.startsWith("FRIEND_REMOVED:")) {
+                QString friendName = str.mid(QString("FRIEND_REMOVED:").length());
+                userFriends.remove(friendName);
+                sendMessageToServer("GET_USERLIST"); // Обновляем список друзей
+            }
             else {
                 bool isDuplicate = false;
 
@@ -1155,6 +1179,15 @@ void MainWindow::handlePrivateMessage(const QString &sender, const QString &mess
     QTime currentTime = QTime::currentTime();
     QString timeStr = currentTime.toString("hh:mm");
 
+    // Автоматически добавляем отправителя в список друзей, если его там ещё нет
+    if (!userFriends.contains(sender)) {
+        qDebug() << "Автоматическое добавление в друзья пользователя:" << sender;
+        userFriends[sender] = true;
+        
+        // Отправляем запрос на сервер для сохранения этой "дружбы"
+        sendMessageToServer("ADD_FRIEND:" + sender);
+    }
+
     // Создаем окно чата, если его нет
     if (!privateChatWindows.contains(sender)) {
         PrivateChatWindow *chatWindow = new PrivateChatWindow(sender, this, nullptr);
@@ -1332,7 +1365,137 @@ void MainWindow::on_pushButton_2_clicked()
 
 void MainWindow::on_lineEdit_returnPressed()
 {
-    // Пустая реализация, но метод необходим для Qt auto-connection
+    searchUsers();
+}
+
+void MainWindow::searchUsers()
+{
+    QString searchQuery = ui->lineEdit->text().trimmed();
+    if (searchQuery.isEmpty()) {
+        qDebug() << "Поисковый запрос пустой, поиск не выполняется";
+        return;
+    }
+
+    // Отправляем запрос на поиск пользователей
+    QString requestMessage = "SEARCH_USERS:" + searchQuery;
+    sendMessageToServer(requestMessage);
+    qDebug() << "Отправлен запрос на поиск пользователей:" << requestMessage;
+    
+    // Сбрасываем поле поиска
+    ui->lineEdit->clear();
+}
+
+void MainWindow::showSearchResults(const QStringList &users)
+{
+    qDebug() << "Отображение результатов поиска, найдено пользователей:" << users.size();
+    
+    // Если сервер вернул пустой список
+    if (users.isEmpty()) {
+        QMessageBox::information(this, "Поиск пользователей", "Пользователи не найдены");
+        return;
+    }
+    
+    // Создаем список пользователей, которых нет в друзьях
+    QStringList filteredUsers;
+    for (const QString &user : users) {
+        if (user != getCurrentUsername() && !userFriends.contains(user)) {
+            filteredUsers.append(user);
+        }
+    }
+    
+    // Если после фильтрации список пуст
+    if (filteredUsers.isEmpty()) {
+        QMessageBox::information(this, "Поиск пользователей", 
+                               "Все найденные пользователи уже в вашем списке друзей");
+        return;
+    }
+    
+    // Создаем диалог поиска каждый раз заново
+    if (searchDialog) {
+        delete searchDialog;
+        searchDialog = nullptr;
+    }
+    
+    if (searchListWidget) {
+        delete searchListWidget;
+        searchListWidget = nullptr;
+    }
+    
+    searchDialog = new QDialog(this);
+    searchDialog->setWindowTitle("Результаты поиска");
+    searchDialog->setMinimumSize(300, 400);
+    
+    QVBoxLayout *layout = new QVBoxLayout(searchDialog);
+    
+    searchListWidget = new QListWidget(searchDialog);
+    layout->addWidget(searchListWidget);
+    
+    QLabel *helpLabel = new QLabel("Выберите пользователя и нажмите Enter, чтобы добавить его в друзья", searchDialog);
+    helpLabel->setWordWrap(true);
+    layout->addWidget(helpLabel);
+    
+    QPushButton *closeButton = new QPushButton("Закрыть", searchDialog);
+    layout->addWidget(closeButton);
+    
+    connect(closeButton, &QPushButton::clicked, searchDialog, &QDialog::close);
+    connect(searchListWidget, &QListWidget::itemDoubleClicked, this, &MainWindow::onSearchItemSelected);
+    
+    // Добавляем обработчик нажатия Enter
+    QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Return), searchListWidget);
+    connect(shortcut, &QShortcut::activated, [this]() {
+        if (searchListWidget && searchListWidget->currentItem()) {
+            onSearchItemSelected(searchListWidget->currentItem());
+        }
+    });
+    
+    // Очищаем и заполняем список результатов
+    searchListWidget->clear();
+    for (const QString &user : filteredUsers) {
+        searchListWidget->addItem(new QListWidgetItem(user));
+    }
+    
+    // Подключаем сигнал finished для безопасного удаления диалога
+    connect(searchDialog, &QDialog::finished, [this]() {
+        searchDialog = nullptr;
+        searchListWidget = nullptr;
+    });
+    
+    searchDialog->show();
+    searchDialog->raise();
+    searchDialog->activateWindow();
+}
+
+void MainWindow::onSearchItemSelected(QListWidgetItem *item)
+{
+    if (!item || !searchListWidget || !searchDialog)
+        return;
+    
+    QString username = item->text();
+    qDebug() << "Выбран пользователь для добавления в друзья:" << username;
+    
+    // Добавляем пользователя в друзья
+    addUserToFriends(username);
+    
+    // Безопасно закрываем диалог
+    searchDialog->accept();
+}
+
+void MainWindow::addUserToFriends(const QString &username)
+{
+    // Отправляем запрос на добавление пользователя в друзья
+    sendMessageToServer("ADD_FRIEND:" + username);
+    qDebug() << "Отправлен запрос на добавление в друзья:" << username;
+    
+    // Немедленно добавляем пользователя в локальный список друзей
+    // (не дожидаясь ответа от сервера)
+    userFriends[username] = true;
+    
+    // Показываем всплывающее сообщение
+    QMessageBox::information(this, "Добавление друга", 
+                           "Пользователь " + username + " добавлен в список друзей");
+                            
+    // Запрашиваем обновление списка пользователей
+    sendMessageToServer("GET_USERLIST");
 }
 
 // Метод для запроса количества непрочитанных сообщений
