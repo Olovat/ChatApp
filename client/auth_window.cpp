@@ -7,7 +7,7 @@ auth_window::auth_window(QWidget *parent) :
     ui(new Ui::auth_window)
 {
     ui->setupUi(this);
-    this->setWindowTitle("Authentification");
+    this->setWindowTitle("Авторизируйтесь");
     
     // Маска на пароль
     ui->lineEdit_2->setEchoMode(QLineEdit::Password);
