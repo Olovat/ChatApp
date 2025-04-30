@@ -17,7 +17,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Зарегестрируйтесь</string>
+   <string>Зарегистрируйтесь</string>
   </property>
   <widget class="QPushButton" name="Register_button_2">
    <property name="geometry">
@@ -88,7 +88,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Вернутсья</string>
+    <string>Вернуться</string>
    </property>
   </widget>
  </widget>
