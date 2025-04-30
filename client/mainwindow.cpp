@@ -102,6 +102,9 @@ void MainWindow::updateUserList(const QStringList &users)
     QStringList offlineUsers;
     QStringList groupChats;
 
+    // Сохраняем список всех пользователей (для поиска не-друзей с непрочитанными сообщениями)
+    QSet<QString> allUserNames;
+
     // Разделяем пользователей на категории
     for (const QString &userInfo : users) {
         QStringList parts = userInfo.split(":");
@@ -113,6 +116,11 @@ void MainWindow::updateUserList(const QStringList &users)
             bool isOnline = (parts[1] == "1");
             QString type = parts[2];
             bool isFriend = (parts.size() >= 4 && parts[3] == "F"); // Новый флаг друга
+
+            // Сохраняем имя пользователя, если это пользователь
+            if (type == "U") {
+                allUserNames.insert(id);
+            }
 
             // Если это групповой чат
             if (type == "G") {
@@ -137,45 +145,111 @@ void MainWindow::updateUserList(const QStringList &users)
         }
     }
     
-    // Обновляем статусы в открытых окнах чатов
-    updatePrivateChatStatuses(userStatusMap);
-    
-    // Добавляем текущего пользователя (если он есть в списке)
-    for (const QString &userInfo : users) {
-        QStringList parts = userInfo.split(":");
+    // Добавляем пользователей с непрочитанными сообщениями или с историей чата, если они не в списке друзей
+    for (auto it = unreadPrivateMessageCounts.begin(); it != unreadPrivateMessageCounts.end(); ++it) {
+        QString username = it.key();
+        int count = it.value();
         
-        if (parts.size() >= 3) {
-            QString username = parts[0];
-            bool isOnline = parts[1] == "1";
-            QString type = parts[2];
+        // Если есть непрочитанные сообщения и пользователь не друг
+        if (count > 0 && !userFriends.contains(username) && username != currentUsername) {
+            // Добавляем пользователя в список тех, с кем был чат
+            recentChatPartners.insert(username);
             
-            // Только если это пользователь, не групповой чат
-            if (type == "U" && username == currentUsername) {
-                QListWidgetItem *item = new QListWidgetItem("Избранное");
-                
-                // Устанавливаем фон в зависимости от статусаs
-                if (isOnline) {
-                    item->setForeground(QBrush(QColor("black")));
-                    item->setBackground(QBrush(QColor(200, 255, 200))); // Светло-зеленый фон
-                    item->setData(Qt::UserRole, true);  // Статус онлайн
-                    item->setData(Qt::UserRole + 1, "U"); // Тип - пользователь
-                } else {
-                    item->setForeground(QBrush(QColor("gray")));
-                    item->setBackground(QBrush(QColor(240, 240, 240))); // Светло-серый фон
-                    item->setData(Qt::UserRole, false); // Статус оффлайн
-                    item->setData(Qt::UserRole + 1, "U"); // Тип - пользователь
+            // Проверяем, есть ли информация о пользователе в исходных данных сервера
+            bool isOnline = false;
+            
+            // Ищем пользователя в оригинальном списке
+            for (const QString &userInfo : users) {
+                QStringList parts = userInfo.split(":");
+                if (parts.size() >= 3 && parts[0] == username && parts[2] == "U") {
+                    isOnline = (parts[1] == "1");
+                    break;
                 }
-
-                item->setData(Qt::UserRole + 2, true);
-
-                // Выделение текущего пользователя
-                QFont font = item->font();
-                font.setBold(true);
-                item->setFont(font);
-                ui->userListWidget->addItem(item);
-                break;
             }
+            
+            // Создаем строку информации о пользователе с правильным статусом
+            QString userInfo = username + ":" + (isOnline ? "1" : "0") + ":U:";
+            
+            // Добавляем в соответствующий список
+            if (isOnline) {
+                onlineUsers << userInfo;
+            } else {
+                offlineUsers << userInfo;
+            }
+            
+            // Сохраняем статус для обновления окон чата
+            userStatusMap[username] = isOnline;
+            
+            // Добавляем в список всех известных пользователей
+            allUserNames.insert(username);
+            
+            qDebug() << "Добавлен не-друг с непрочитанными сообщениями:" << username << "(" << count << ") (Онлайн: " << (isOnline ? "да" : "нет") << ")";
         }
+    }
+
+    // Добавляем не-друзей, с которыми уже был чат, но нет непрочитанных сообщений
+    for (const QString &username : recentChatPartners) {
+        // Если пользователь ещё не добавлен как друг и у него нет непрочитанных сообщений
+        if (!userFriends.contains(username) && username != currentUsername && 
+            (!unreadPrivateMessageCounts.contains(username) || unreadPrivateMessageCounts[username] == 0)) {
+            
+            // Проверяем, есть ли информация о пользователе в исходных данных сервера
+            bool isOnline = false;
+            
+            // Ищем пользователя в оригинальном списке, чтобы узнать его реальный статус
+            for (const QString &userInfo : users) {
+                QStringList parts = userInfo.split(":");
+                if (parts.size() >= 3 && parts[0] == username && parts[2] == "U") {
+                    isOnline = (parts[1] == "1");
+                    break;
+                }
+            }
+            
+            // Создаем строку информации о пользователе с учетом его реального статуса
+            QString userInfo = username + ":" + (isOnline ? "1" : "0") + ":U:";
+            
+            // Добавляем в соответствующий список (онлайн или оффлайн)
+            if (isOnline) {
+                onlineUsers << userInfo;
+            } else {
+                offlineUsers << userInfo;
+            }
+            
+            // Сохраняем статус для обновления окон чата
+            userStatusMap[username] = isOnline;
+            
+            // Добавляем в список всех известных пользователей
+            allUserNames.insert(username);
+            
+            qDebug() << "Добавлен не-друг без непрочитанных сообщений:" << username << "(Онлайн: " << (isOnline ? "да" : "нет") << ")";
+        }
+    }
+    
+    // Добавляем текущего пользователя (Избранное)
+    if (!currentUsername.isEmpty()) {
+        QString displayName = currentUsername + " (Вы)";
+        QListWidgetItem *item = new QListWidgetItem(displayName);
+        
+        bool isOnline = true; // Текущий пользователь всегда считается онлайн
+        if (isOnline) {
+            item->setForeground(QBrush(QColor("black")));
+            item->setBackground(QBrush(QColor(200, 255, 200))); // Светло-зеленый фон
+            item->setData(Qt::UserRole, true);  // Статус онлайн
+            item->setData(Qt::UserRole + 1, "U"); // Тип - пользователь
+        } else {
+            item->setForeground(QBrush(QColor("gray")));
+            item->setBackground(QBrush(QColor(240, 240, 240))); // Светло-серый фон
+            item->setData(Qt::UserRole, false); // Статус оффлайн
+            item->setData(Qt::UserRole + 1, "U"); // Тип - пользователь
+        }
+
+        item->setData(Qt::UserRole + 2, true);
+
+        // Выделение текущего пользователя
+        QFont font = item->font();
+        font.setBold(true);
+        item->setFont(font);
+        ui->userListWidget->addItem(item);
     }
 
     // Добавляем групповые чаты (с отличительным оформлением)
@@ -276,6 +350,9 @@ void MainWindow::updateUserList(const QStringList &users)
             ui->userListWidget->addItem(item);
         }
     }
+    
+    // Обновляем статусы в окнах приватных чатов
+    updatePrivateChatStatuses(userStatusMap);
 }
 
 // Новый метод для обновления статусов в окнах приватных чатов
@@ -1170,6 +1247,23 @@ void MainWindow::clearSocketBuffer()
 
 void MainWindow::handlePrivateMessage(const QString &sender, const QString &message)
 {
+    // Добавляем отправителя в список пользователей, с которыми было общение
+    recentChatPartners.insert(sender);
+    
+    // Если отправитель не является другом, автоматически добавляем его в список друзей
+    if (!userFriends.contains(sender)) {
+        qDebug() << "Автоматически добавляем отправителя" << sender << "в список друзей";
+        
+        // Добавляем в локальный список друзей немедленно
+        userFriends[sender] = true;
+        
+        // Отправляем запрос на сервер для добавления пользователя в список друзей
+        sendMessageToServer("ADD_FRIEND:" + sender);
+        
+        // Запрашиваем обновление списка пользователей
+        sendMessageToServer("GET_USERLIST");
+    }
+    
     QTime currentTime = QTime::currentTime();
     QString timeStr = currentTime.toString("hh:mm");
     
@@ -1199,6 +1293,7 @@ void MainWindow::handlePrivateMessage(const QString &sender, const QString &mess
     unread.timestamp = timeStr;
     unreadMessages[sender].append(unread);
     
+    // Обновляем список пользователей для отображения счетчика, даже если отправитель не в списке друзей
     sendMessageToServer("GET_USERLIST");
 }
 
@@ -1208,6 +1303,9 @@ void MainWindow::sendPrivateMessage(const QString &recipient, const QString &mes
     if (recipient == getCurrentUsername()) {
         return;
     }
+    
+    // Добавляем получателя в список пользователей, с которыми было общение
+    recentChatPartners.insert(recipient);
 
     qDebug() << "MainWindow: Подготовка приватного сообщения для" << recipient << ":" << message;
 
@@ -1522,6 +1620,11 @@ void MainWindow::onPrivateChatClosed()
             QString username = chatWindow->property("username").toString();
             if (!username.isEmpty() && privateChatWindows.contains(username)) {
                 privateChatWindows.remove(username);
+                
+                // Запрашиваем обновленный список пользователей, чтобы получить актуальные статусы
+                QTimer::singleShot(100, this, [this]() {
+                    sendMessageToServer("GET_USERLIST");
+                });
             }
         }
     }

@@ -2,7 +2,7 @@
 #include <QApplication>
 #include <QScreen>
 #include <QStyleFactory>
-//#include <gtest/gtest.h>
+#include <gtest/gtest.h>
 
 #ifndef TESTING
 int main(int argc, char *argv[]) {

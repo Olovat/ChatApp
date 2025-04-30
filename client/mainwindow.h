@@ -13,7 +13,7 @@
 #include <QUuid>
 #include <QListWidgetItem>
 #include <QMap>
-//#include <gtest/gtest.h>
+#include <gtest/gtest.h>
 #include <QTimer>
 #include "ui_mainwindow.h"
 
@@ -176,6 +176,8 @@ private:
     // Счетчики непрочитанных сообщений
     QMap<QString, int> unreadPrivateMessageCounts; // Ключ - имя пользователя, значение - количество непрочитанных сообщений
     QMap<QString, int> unreadGroupMessageCounts;   // Ключ - ID группового чата, значение - количество непрочитанных сообщений
+
+    QSet<QString> recentChatPartners; // Хранит пользователей, с которыми было общение
 
 public slots:
 
