@@ -1168,44 +1168,38 @@ void MainWindow::clearSocketBuffer()
     }
 }
 
-void MainWindow::handlePrivateMessage(const QString &sender, const QString &message) {
+void MainWindow::handlePrivateMessage(const QString &sender, const QString &message)
+{
     QTime currentTime = QTime::currentTime();
     QString timeStr = currentTime.toString("hh:mm");
-
-    // Автоматически добавляем отправителя в список друзей, если его там ещё нет
-    if (!userFriends.contains(sender)) {
-        qDebug() << "Автоматическое добавление в друзья пользователя:" << sender;
-        userFriends[sender] = true;
-        
-        // Отправляем запрос на сервер для сохранения этой "дружбы"
-        sendMessageToServer("ADD_FRIEND:" + sender);
-    }
-
-    // Создаем окно чата, если его нет
+    
+    // Создаём окно чата если его ещё нет
     if (!privateChatWindows.contains(sender)) {
-        PrivateChatWindow *chatWindow = new PrivateChatWindow(sender, this, nullptr);
+        PrivateChatWindow *chatWindow = new PrivateChatWindow(sender, this);
+        connect(chatWindow, SIGNAL(destroyed()), this, SLOT(onPrivateChatClosed()));
         privateChatWindows[sender] = chatWindow;
-        qDebug() << "Создано новое окно чата с" << sender;
     }
-
-    // Доставляем сообщение
-    if (privateChatWindows[sender]->isVisible() && privateChatWindows[sender]->isActiveWindow()) {
+    
+    // Проверяем, просто видимо ли окно чата - убираем проверку на isActiveWindow()
+    if (privateChatWindows[sender]->isVisible()) {
+        // Окно видимо - сразу показываем сообщение и НЕ увеличиваем счётчик
         privateChatWindows[sender]->receiveMessage(sender, message);
-    } else {
-        // Если окно чата не видно или неактивно, увеличиваем счетчик непрочитанных сообщений
-        unreadPrivateMessageCounts[sender]++;
-        // Сохраняем непрочитанное сообщение
-        UnreadMessage unread;
-        unread.sender = sender;
-        unread.message = message;
-        unread.timestamp = timeStr;
-        unreadMessages[sender].append(unread);
         
-        // Обновляем список пользователей для отображения счетчика
-        sendMessageToServer("GET_USERLIST");
-        
-        qDebug() << "Сохранено непрочитанное сообщение от" << sender << ":" << message;
+        // Отметить сообщения как прочитанные на сервере
+        privateChatWindows[sender]->markMessagesAsRead();
+        return; // Важно: прекращаем обработку, чтобы не увеличивать счётчик
     }
+    
+    // Если окно не активно, увеличиваем счётчик и сохраняем сообщение
+    unreadPrivateMessageCounts[sender]++;
+    
+    UnreadMessage unread;
+    unread.sender = sender;
+    unread.message = message;
+    unread.timestamp = timeStr;
+    unreadMessages[sender].append(unread);
+    
+    sendMessageToServer("GET_USERLIST");
 }
 
 // Замена метода processJsonMessage на обработку обычных сообщений
@@ -1513,6 +1507,22 @@ void MainWindow::requestUnreadCounts()
             }
             
             sendMessageToServer(QString("GET_UNREAD_COUNT:%1").arg(username));
+        }
+    }
+}
+
+void MainWindow::onPrivateChatClosed()
+{
+    // Находим указатель на отправителя сигнала
+    QObject* senderObj = sender();
+    if (senderObj) {
+        PrivateChatWindow* chatWindow = qobject_cast<PrivateChatWindow*>(senderObj);
+        if (chatWindow) {
+            // Получаем имя пользователя, с которым был чат
+            QString username = chatWindow->property("username").toString();
+            if (!username.isEmpty() && privateChatWindows.contains(username)) {
+                privateChatWindows.remove(username);
+            }
         }
     }
 }

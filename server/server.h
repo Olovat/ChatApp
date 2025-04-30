@@ -10,7 +10,7 @@
 #include <QCoreApplication> 
 #include <QVector>
 #include <QList>
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
 
 
 class Server : public QTcpServer

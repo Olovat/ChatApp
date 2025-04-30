@@ -13,7 +13,7 @@
 #include <QUuid>
 #include <QListWidgetItem>
 #include <QMap>
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
 #include <QTimer>
 #include "ui_mainwindow.h"
 
@@ -96,6 +96,7 @@ private slots:
     void handleAuthenticationTimeout();
     void handleSocketError(QAbstractSocket::SocketError socketError);
     void on_pushButton_clicked();
+    void onPrivateChatClosed();
 
     // Функции для поиска пользователей
     void searchUsers();
