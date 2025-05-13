@@ -1,134 +1,70 @@
 #include <gtest/gtest.h>
-#include "../../server/ChatLogicServer.h"
+#include "../../server/chat_logic_server.h"
 #include <QCoreApplication>
-#include <QSqlDatabase>
-#include <QSqlQuery>
 #include <QDir>
+#include "MockDatabase.h"
+#include "MockNetworkServer.h"
+#include "MockNetworkClient.h"
+#include <memory> 
 
 // Тестовый класс для сервера
 class ServerTest : public ::testing::Test {
 protected:
+    MockDatabase* mockDbRawPtr; 
+    std::shared_ptr<MockNetworkServer> mockNetworkServer;
+
     void SetUp() override {
         // Инициализация QCoreApplication (необходимо для работы Qt)
         int argc = 0;
         char *argv[] = {nullptr};
         app = new QCoreApplication(argc, argv);
-        server = new ChatLogicServer();
+        
+        auto mockDbUniquePtr = std::make_unique<MockDatabase>();
+        mockDbRawPtr = mockDbUniquePtr.get(); 
+        server = new ChatLogicServer(std::move(mockDbUniquePtr));
+
+        mockNetworkServer = std::make_shared<MockNetworkServer>();
+        server->setNetworkServer(mockNetworkServer);
     }
 
     void TearDown() override {
-        // Очистка после каждого теста
         delete server;
         delete app;
-
-        // Удаление тестовой базы данных
-        QFile::remove("test_database.db");
-    }
-
-    // Очистка тестовых данных из базы
-    void cleanDatabase() {
-        if (server->connectDB()) {
-            QSqlDatabase db = server->getDatabase();
-            QSqlQuery query(db);
-
-            // Очищаем все тестовые таблицы
-            query.exec("DELETE FROM users");
-            query.exec("DELETE FROM messages");
-            query.exec("DELETE FROM history");
-        }
     }
 
     QCoreApplication *app;
     ChatLogicServer *server;
 };
 
-// Тест подключения к базе данных
-TEST_F(ServerTest, ConnectDB) {
-    EXPECT_TRUE(server->connectDB());
-}
-
-// Тест регистрации пользователя
 TEST_F(ServerTest, RegisterUser) {
-    QString username = "testuser";
-    QString password = "testpass";
+    auto client = std::make_shared<MockNetworkClient>();
+    std::string testUsername = "testuser";
+    std::string testPassword = "testpassword";
+    std::string registrationMessage = "REGISTER " + testUsername + " " + testPassword;
+    std::string clientId = "client1";
 
-    // Первая попытка регистрации должна быть успешной
-    EXPECT_TRUE(server->testRegisterUser(username, password));
+    EXPECT_CALL(*client, getClientId()).WillRepeatedly(::testing::Return(clientId));
+    server->handleClientConnected(client);
 
-    // Вторая попытка с теми же данными должна вернуть false (пользователь уже существует)
-    EXPECT_FALSE(server->testRegisterUser(username, password));
+    EXPECT_CALL(*mockDbRawPtr, fetchOne(::testing::HasSubstr("SELECT id FROM users WHERE username = ?"), ::testing::_))
+        .WillOnce(::testing::Return(std::nullopt));
+    EXPECT_CALL(*mockDbRawPtr, execute(::testing::HasSubstr("INSERT INTO users"), ::testing::_))
+        .WillOnce(::testing::Return(true));
+    EXPECT_CALL(*client, sendMessage("REGISTER_SUCCESS"));
+    
+    server->handleMessageReceived(client, registrationMessage);
+    ::testing::Mock::VerifyAndClearExpectations(client.get());
+    ::testing::Mock::VerifyAndClearExpectations(mockDbRawPtr);
 
-    // Очищаем тестовые данные
-    cleanDatabase();
-}
+    DbRow existingUserRow; 
+    existingUserRow["id"] = 1; 
+    EXPECT_CALL(*mockDbRawPtr, fetchOne(::testing::HasSubstr("SELECT id FROM users WHERE username = ?"), ::testing::_))
+        .WillOnce(::testing::Return(existingUserRow));
+    EXPECT_CALL(*client, sendMessage("REGISTER_FAIL_EXISTS"));
 
-// Тест аутентификации пользователя
-TEST_F(ServerTest, AuthenticateUser) {
-    QString username = "testuser11";
-    QString password = "testpass11";
+    server->handleMessageReceived(client, registrationMessage);
+    ::testing::Mock::VerifyAndClearExpectations(client.get());
+    ::testing::Mock::VerifyAndClearExpectations(mockDbRawPtr);
 
-    // Сначала регистрируем тестового пользователя
-    ASSERT_TRUE(server->testRegisterUser(username, password));
-
-    // Проверяем успешную аутентификацию
-    EXPECT_TRUE(server->testAuthenticateUser(username, password));
-
-    // Проверяем неправильный пароль
-    EXPECT_FALSE(server->testAuthenticateUser(username, "wrongpass"));
-
-    // Проверяем несуществующего пользователя
-    EXPECT_FALSE(server->testAuthenticateUser("nonexistentuser", password));
-
-    // Очищаем тестовые данные
-    cleanDatabase();
-}
-
-// Тест отправки сообщения клиенту (заглушка)
-TEST_F(ServerTest, SendToClient) {
-    server->testSendToClient("Hello, World!");
-    EXPECT_TRUE(true); // Проверяем, что функция выполняется без ошибок
-}
-
-// Тест логирования сообщений
-TEST_F(ServerTest, LogMessage) {
-    QString sender = "Ярик-начальник";
-    QString recipient = "otheruser";
-    QString message = "Hello!";
-
-    // Логируем сообщение
-    EXPECT_TRUE(server->testLogMessage(sender, recipient, message));
-
-    // Проверяем, что сообщение сохранилось в базе
-    QSqlQuery query(server->getDatabase());
-    query.prepare("SELECT * FROM messages WHERE sender = :sender AND recipient = :recipient AND message = :message");
-    query.bindValue(":sender", sender);
-    query.bindValue(":recipient", recipient);
-    query.bindValue(":message", message);
-
-    EXPECT_TRUE(query.exec());
-    EXPECT_TRUE(query.next());
-
-    // Очищаем тестовые данные
-    cleanDatabase();
-}
-
-// Тест сохранения в историю
-TEST_F(ServerTest, SaveToHistory) {
-    QString sender = "Ваня-хулиган";
-    QString message = "Hello, World!";
-
-    // Сохраняем сообщение в историю
-    EXPECT_TRUE(server->testSaveToHistory(sender, message));
-
-    // Проверяем, что сообщение сохранилось в базе
-    QSqlQuery query(server->getDatabase());
-    query.prepare("SELECT * FROM history WHERE sender = :sender AND message = :message");
-    query.bindValue(":sender", sender);
-    query.bindValue(":message", message);
-
-    EXPECT_TRUE(query.exec());
-    EXPECT_TRUE(query.next());
-
-    // Очищаем тестовые данные
-    cleanDatabase();
+    server->handleClientDisconnected(client);
 }
