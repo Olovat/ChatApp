@@ -45,8 +45,14 @@ set(UI_FILES
 qt6_wrap_ui(UI_HEADERS ${UI_FILES})
 
 # Компилируем сервер
-add_executable(server server/main.cpp server/server.cpp server/server.h)
-target_link_libraries(server gtest gtest_main Qt6::Core Qt6::Network Qt6::Sql)
+add_executable(server
+    server/main.cpp
+    server/ChatLogicServer.cpp
+    server/qt_database_adapter.cpp
+    server/qt_network_adapter.cpp
+)
+# Сервер не должен линковаться с gtest/gmock
+target_link_libraries(server Qt6::Core Qt6::Network Qt6::Sql)
 
 # Компилируем клиент
 add_executable(client
@@ -68,11 +74,16 @@ add_executable(client
 target_link_libraries(client gtest gtest_main Qt6::Core Qt6::Network Qt6::Sql Qt6::Widgets Qt6::Test)
 
 # Компилируем тесты для сервера
-add_executable(test_server tests/test_server/main.cpp server/server.cpp server/server.h)
+add_executable(test_server
+    tests/test_server/main.cpp
+    tests/test_server/tst_authentication.cpp
+    tests/test_server/tst_registration.cpp
+    server/ChatLogicServer.cpp
+)
 target_link_libraries(test_server gtest gtest_main Qt6::Core Qt6::Network Qt6::Sql gmock gmock_main)
 
 # Компилируем тесты для клиента
-    add_executable(test_client
+add_executable(test_client
     tests/test_client/main.cpp
     client/main.cpp
     client/mainwindow.cpp
@@ -87,7 +98,6 @@ target_link_libraries(test_server gtest gtest_main Qt6::Core Qt6::Network Qt6::S
     tests/test_client/MockDatabase.h
 )
 target_link_libraries(test_client gtest gtest_main Qt6::Core Qt6::Network Qt6::Sql Qt6::Widgets Qt6::Test gmock gmock_main)
-
 
 # Добавляем определение для тестов
 target_compile_definitions(test_client PRIVATE TESTING=1)
