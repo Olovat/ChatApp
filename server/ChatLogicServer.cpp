@@ -142,8 +142,8 @@ void ChatLogicServer::handleMessageReceived(std::shared_ptr<INetworkClient> clie
         if (!senderUsername.empty()) {
             std::string recipientUsername = parts[1];
             std::string msgText;
-            for (size_t i = 2; i < parts.size(); ++i) {
-                msgText += parts[i] + (i == parts.size() - 1 ? "" : ":");
+            for (int i = 2; i < static_cast<int>(parts.size()); ++i) {
+                msgText += parts[i] + (i == static_cast<int>(parts.size()) - 1 ? "" : ":");
             }
             // Логируем и отправляем.
             logMessage(senderUsername, recipientUsername, msgText);
@@ -155,8 +155,8 @@ void ChatLogicServer::handleMessageReceived(std::shared_ptr<INetworkClient> clie
          if (!senderUsername.empty()) {
             std::string recipientUsername = parts[1];
             std::string msgText;
-            for (size_t i = 2; i < parts.size(); ++i) {
-                msgText += parts[i] + (i == parts.size() - 1 ? "" : ":");
+            for (int i = 2; i < static_cast<int>(parts.size()); ++i) {
+                msgText += parts[i] + (i == static_cast<int>(parts.size()) - 1 ? "" : ":");
             }
             logMessage(senderUsername, recipientUsername, msgText);
             sendPrivateMessageToUser(recipientUsername, msgText, senderUsername);

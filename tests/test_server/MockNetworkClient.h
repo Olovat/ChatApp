@@ -7,8 +7,10 @@
 
 class MockNetworkClient : public INetworkClient {
 public:
-    MOCK_METHOD(void, send, (const std::string& message), (override));
-    MOCK_METHOD(std::string, getIdentifier, (), (const, override));
+    MOCK_METHOD(void, sendMessage, (const std::string& message), (override));
+    MOCK_METHOD(std::string, getClientId, (), (const, override));
+    MOCK_METHOD(bool, isConnected, (), (const, override));
+    MOCK_METHOD(void, disconnectClient, (), (override));
 };
 
 #endif // MOCK_NETWORK_CLIENT_H

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../../server/server.h"
+#include "../../server/ChatLogicServer.h"
 #include <QCoreApplication>
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -13,7 +13,7 @@ protected:
         int argc = 0;
         char *argv[] = {nullptr};
         app = new QCoreApplication(argc, argv);
-        server = new Server();
+        server = new ChatLogicServer();
     }
 
     void TearDown() override {
@@ -39,7 +39,7 @@ protected:
     }
 
     QCoreApplication *app;
-    Server *server;
+    ChatLogicServer *server;
 };
 
 // Тест подключения к базе данных
