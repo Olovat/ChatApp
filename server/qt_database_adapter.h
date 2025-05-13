@@ -22,6 +22,19 @@ public:
     std::optional<DbRow> fetchOne(const std::string& query) override;
     std::optional<DbRow> fetchOne(const std::string& query, const std::vector<std::any>& params) override;
     std::string lastError() const override;
+
+    // ДЛЯ ТЕСТОВ
+    bool initTables() override;
+    bool userExists(const std::string& username) override;
+    bool addUser(const std::string& username, const std::string& password) override;
+    bool verifyPassword(const std::string& username, const std::string& password) override;
+    long long getUserId(const std::string& username) override;
+    std::vector<std::string> getAllUsernames() override;
+    std::vector<std::string> getAllGroupChatIds() override;
+    std::vector<std::string> getUserFriends(const std::string& username) override;
+    std::vector<std::pair<std::string, std::string>> getUserGroupChats(const std::string& username) override;
+    std::vector<std::tuple<std::string, std::string, std::string, std::string>> getOfflineMessages(const std::string& username) override;
+
 private:
     QSqlDatabase m_db;
     std::string m_lastErrorText;
