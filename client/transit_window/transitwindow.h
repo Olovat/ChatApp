@@ -7,14 +7,14 @@ namespace Ui {
 class TransitWindow;
 }
 
-class MainWindow;
+class QtMainWindow;
 
 class TransitWindow : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit TransitWindow(MainWindow *mainWindow, QWidget *parent = nullptr);
+    explicit TransitWindow(QtMainWindow *mainWindow, QWidget *parent = nullptr);
     ~TransitWindow();
 
 private slots:
@@ -23,7 +23,7 @@ private slots:
 
 private:
     Ui::TransitWindow *ui;
-    MainWindow *mainWindow;
+    QtMainWindow *mainWindow;
 };
 
 #endif // TRANSITWINDOW_H

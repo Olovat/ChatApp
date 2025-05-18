@@ -38,10 +38,10 @@ void MainWindow::initializeCommon()
     connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
     connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
             this, &MainWindow::handleSocketError);
-    
+
     // Добавляем явное подключение для поля поиска
     connect(ui->lineEdit, &QLineEdit::returnPressed, this, &MainWindow::on_lineEdit_returnPressed);
-    
+
     // Инициализация переменных для поиска
     searchDialog = nullptr;
     searchListWidget = nullptr;
@@ -49,8 +49,8 @@ void MainWindow::initializeCommon()
      // Создание таймера, чтобы клиент падал при падении сервера, а просто отключался через время.
     authTimeoutTimer = new QTimer(this);
     authTimeoutTimer->setSingleShot(true);
-    connect(authTimeoutTimer, &QTimer::timeout, this, &MainWindow::handleAuthenticationTimeout);    
-   
+    connect(authTimeoutTimer, &QTimer::timeout, this, &MainWindow::handleAuthenticationTimeout);
+
     // Инициализация счетчиков непрочитанных сообщений
     unreadPrivateMessageCounts = QMap<QString, int>();
     unreadGroupMessageCounts = QMap<QString, int>();

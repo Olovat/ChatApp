@@ -6,7 +6,7 @@
 #include <QTcpSocket>
 #include <QString>
 #include <QtSql/QtSql>
-#include "auth_window.h"
+#include "../auth_window/qt_auth_window.h".h"
 #include "reg_window.h"
 #include "transitwindow.h"
 #include "../tests/test_client/MockDatabase.h"
@@ -33,7 +33,6 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    enum class Mode { Production, Testing };
 
     explicit MainWindow(QWidget *parent = nullptr);
     explicit MainWindow(Mode mode, QWidget *parent = nullptr); // Новый конструктор
@@ -84,7 +83,7 @@ public:
 signals:
     void authSuccess();
     void registerSuccess();
-    void userListUpdated();;
+    void userListUpdated();
 private slots:
     void authorizeUser(); // пользовательские слоты
     void registerUser();

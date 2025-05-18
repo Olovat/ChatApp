@@ -1,11 +1,11 @@
 #include "transitwindow.h"
 #include "ui_transitwindow.h"
-#include "mainwindow.h"
+#include "./mainwindow/qt_main_window.h"
 #include <QMessageBox>
 #include <QUuid>
 #include <QDateTime>
 
-TransitWindow::TransitWindow(MainWindow *mainWindow, QWidget *parent) :
+TransitWindow::TransitWindow(QtMainWindow *mainWindow, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::TransitWindow),
     mainWindow(mainWindow)
@@ -36,7 +36,7 @@ void TransitWindow::on_createButton_clicked()
     if (mainWindow) {
         // Генерируем уникальный идентификатор для чата (UUID)
         QString chatId = QUuid::createUuid().toString(QUuid::WithoutBraces);
-        mainWindow->createGroupChat(chatName, chatId);
+        mainWindow->createGroupChat(chatName.toStdString(), chatId.toStdString());
         
         // Закрываем окно после успешного создания
         accept();

@@ -1,8 +1,8 @@
-#include "mainwindow.h"
+#include "mainwindow/qt_main_window.h"
 #include <QApplication>
 #include <QScreen>
 #include <QStyleFactory>
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
 
 #ifndef TESTING
 int main(int argc, char *argv[]) {
@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     lightPalette.setColor(QPalette::HighlightedText, Qt::white);
     qApp->setPalette(lightPalette);
     
-    MainWindow w;
+    QtMainWindow w;
     w.display();
     return a.exec();
 }
