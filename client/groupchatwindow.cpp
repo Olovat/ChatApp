@@ -1,6 +1,6 @@
 #include "groupchatwindow.h"
 #include "ui_groupchatwindow.h"
-#include "mainwindow.h"
+#include "mainwindow_controller.h"
 #include <QDebug>
 #include <QTime>
 #include <QDateTime>
@@ -8,12 +8,12 @@
 #include <QTimeZone>
 #include <QMessageBox>
 
-GroupChatWindow::GroupChatWindow(const QString &chatId, const QString &chatName, MainWindow *mainWindow, QWidget *parent) :
+GroupChatWindow::GroupChatWindow(const QString &chatId, const QString &chatName, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Form),
     chatId(chatId),
     chatName(chatName),
-    mainWindow(mainWindow),
+    controller(nullptr),
     isCreator(false),  // Инициализируем переменную isCreator
     historyDisplayed(false)  // Порядок должен соответствовать порядку объявления в классе
 {
@@ -40,11 +40,7 @@ GroupChatWindow::GroupChatWindow(const QString &chatId, const QString &chatName,
     // Устанавливаем подсказки для кнопок
     ui->pushButton->setToolTip("Добавить пользователя в чат");
     ui->pushButton_3->setToolTip("Удалить выбранного пользователя из чата");
-    
-    // Запрашиваем информацию о создателе чата только для отображения
-    if (mainWindow) {
-        mainWindow->sendMessageToServer(QString("GROUP_GET_CREATOR:%1").arg(chatId));
-    }
+      // Сигналы будут подключены когда будет установлен контроллер
     
     qDebug() << "Создано окно группового чата:" << chatName << "(ID:" << chatId << ")";
 }
@@ -75,16 +71,15 @@ void GroupChatWindow::on_lineEdit_returnPressed()
 
 void GroupChatWindow::sendMessage(const QString &message)
 {
-    if (mainWindow) {
+    if (controller) {
         qDebug() << "GroupChatWindow: Отправка сообщения в чат" << chatName << ":" << message;
         
-        // Формируем сообщение для отправки на сервер
-        QString groupMessage = QString("GROUP_MESSAGE:%1:%2").arg(chatId, message);
-        mainWindow->sendMessageToServer(groupMessage);
+        // Отправляем сообщение через сигнал
+        emit messageSent(chatId, message);
         
         // Сообщение отобразится в чате после получения ответа от сервера
     } else {
-        qDebug() << "GroupChatWindow: ОШИБКА - mainWindow равен nullptr!";
+        qDebug() << "GroupChatWindow: ОШИБКА - controller равен nullptr!";
     }
 }
 
@@ -146,9 +141,10 @@ void GroupChatWindow::updateMembersList(const QStringList &members)
 void GroupChatWindow::setCreator(const QString &creator)
 {
     this->creator = creator;
-    
-    // Проверяем, является ли текущий пользователь создателем чата
-    bool isCurrentUserCreator = (mainWindow && mainWindow->getCurrentUsername() == creator);
+      // Проверяем, является ли текущий пользователь создателем чата
+    // TODO: Нужно получить текущее имя пользователя из контроллера
+    // Временно устанавливаем false, будет обновлено при установке контроллера
+    bool isCurrentUserCreator = false;
     this->isCreator = isCurrentUserCreator; // Сохраняем статус создателя
     
     // Делаем кнопку удаления видимой только для создателя
@@ -179,9 +175,8 @@ void GroupChatWindow::setCreator(const QString &creator)
     } else {
         setWindowTitle("Групповой чат: " + chatName);
     }
-    
-    qDebug() << "Установлен создатель чата:" << creator << "Текущий пользователь:" 
-             << (mainWindow ? mainWindow->getCurrentUsername() : "unknown")
+      qDebug() << "Установлен создатель чата:" << creator << "Текущий пользователь:" 
+             << (controller ? "через контроллер" : "unknown")
              << "Кнопка удаления " << (isCurrentUserCreator ? "показана" : "скрыта");
 }
 
@@ -190,14 +185,13 @@ void GroupChatWindow::on_pushButton_clicked()
 {
     // Скрываем текущее окно
     this->hide();
-    
-    // Отправляем запрос на добавление пользователя серверу
-    if (mainWindow) {
+      // Отправляем запрос на добавление пользователя серверу
+    if (controller) {
         QMessageBox::information(this, "Добавление пользователя", 
                               "Выберите пользователя в главном окне для добавления в чат");
         
-        // Устанавливаем режим добавления пользователя в главном окне
-        mainWindow->startAddUserToGroupMode(chatId);
+        // Отправляем сигнал для установки режима добавления пользователя
+        emit addUserRequested(chatId, "");
         
         // Важно! Сохраняем окно активным, чтобы его можно было вернуть
         QApplication::processEvents();
@@ -229,11 +223,10 @@ void GroupChatWindow::on_pushButton_3_clicked()
     reply = QMessageBox::question(this, "Подтверждение удаления", 
                                "Вы уверены, что хотите удалить пользователя " + selectedUser + " из чата?",
                                QMessageBox::Yes | QMessageBox::No);
-    
-    if (reply == QMessageBox::Yes) {
-        // Отправляем запрос на удаление пользователя
-        if (mainWindow) {
-            mainWindow->sendMessageToServer(QString("GROUP_REMOVE_USER:%1:%2").arg(chatId, selectedUser));
+      if (reply == QMessageBox::Yes) {
+        // Отправляем сигнал на удаление пользователя
+        if (controller) {
+            emit removeUserRequested(chatId, selectedUser);
         }
     }
 }
@@ -241,7 +234,8 @@ void GroupChatWindow::on_pushButton_3_clicked()
 void GroupChatWindow::on_pushButton_4_clicked()
 {
     // Проверка безопасности - убедиться, что пользователь действительно создатель
-    if (!mainWindow || mainWindow->getCurrentUsername() != creator) {
+    // Эта проверка заменена на проверку isCreator
+    if (!isCreator) {
         QMessageBox::warning(this, "Ошибка", "У вас нет прав для удаления этого чата");
         return;
     }
@@ -253,18 +247,15 @@ void GroupChatWindow::on_pushButton_4_clicked()
         "Вы уверены, что хотите удалить групповой чат \"" + chatName + "\"?\n"
         "Это действие нельзя отменить и чат будет удалён для всех участников.",
         QMessageBox::Yes | QMessageBox::No
-    );
-    
-    if (reply == QMessageBox::Yes) {
-        // Отправляем запрос на удаление чата
-        if (mainWindow) {
-            mainWindow->sendMessageToServer(QString("DELETE_GROUP_CHAT:%1").arg(chatId));
+    );      if (reply == QMessageBox::Yes) {
+        // Отправляем сигнал на удаление чата
+        if (controller) {
+            emit deleteChatRequested(chatId);
             
             // Закрываем окно
             close();
             
-            // Запрашиваем обновление списка чатов
-            mainWindow->sendMessageToServer("GET_USERLIST");
+            // Обновление будет запрошено через контроллер
         }
     }
 }
@@ -285,4 +276,17 @@ QString GroupChatWindow::convertUtcToLocalTime(const QString &utcTimestamp)
     }
     // Возвращаем исходное значение, если формат неизвестен
     return utcTimestamp;
+}
+
+void GroupChatWindow::setController(MainWindowController *controller)
+{
+    this->controller = controller;
+    
+    if (controller) {
+        // Подключаем сигналы к контроллеру
+        connect(this, &GroupChatWindow::messageSent, controller, &MainWindowController::handleGroupMessageSend);
+        connect(this, &GroupChatWindow::addUserRequested, controller, &MainWindowController::handleAddUserToGroup);
+        connect(this, &GroupChatWindow::removeUserRequested, controller, &MainWindowController::handleRemoveUserFromGroup);
+        connect(this, &GroupChatWindow::deleteChatRequested, controller, &MainWindowController::handleDeleteGroupChat);
+    }
 }

@@ -5,7 +5,7 @@
 #include <QDateTime>
 #include <QList>
 
-class MainWindow;
+class MainWindowController;
 
 namespace Ui {
 class Form;
@@ -16,7 +16,8 @@ class GroupChatWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit GroupChatWindow(const QString &chatId, const QString &chatName, MainWindow *mainWindow, QWidget *parent = nullptr);
+    explicit GroupChatWindow(const QString &chatId, const QString &chatName, QWidget *parent = nullptr);
+    void setController(MainWindowController *controller);
     ~GroupChatWindow();
 
     void receiveMessage(const QString &sender, const QString &message);
@@ -27,7 +28,13 @@ public:
     void endHistoryDisplay();
     
     void updateMembersList(const QStringList &members);
-    void setCreator(const QString &creator); // Добавляем метод для установки создателя чата
+    void setCreator(const QString &creator); // Метод для установки создателя чата
+
+signals:
+    void messageSent(const QString &chatId, const QString &message); // Сигнал отправки сообщения в групповой чат
+    void addUserRequested(const QString &chatId, const QString &username); // Сигнал запроса добавления пользователя
+    void removeUserRequested(const QString &chatId, const QString &username); // Сигнал запроса удаления пользователя
+    void deleteChatRequested(const QString &chatId); // Сигнал запроса удаления чата
 
 private slots:
     void on_pushButton_2_clicked(); // Кнопка отправки сообщения
@@ -40,18 +47,15 @@ private:
     Ui::Form *ui;
     QString chatId;
     QString chatName;
-    MainWindow *mainWindow;
-    QString creator; // Добавляем переменную для хранения имени создателя чата
+    MainWindowController *controller;
+    QString creator; // Имя создателя чата
     bool isCreator = false; // Флаг, указывающий, является ли текущий пользователь создателем
-    
-    void sendMessage(const QString &message);
+      void sendMessage(const QString &message);
     void updateWindowTitle();
+    QString convertUtcToLocalTime(const QString &utcTimestamp);
     
     // Флаги для отображения истории сообщений
     bool historyDisplayed = false;
-    
-    // Метод для конвертации времени UTC в локальное
-    QString convertUtcToLocalTime(const QString &utcTimestamp);
 };
 
 #endif // GROUPCHATWINDOW_H

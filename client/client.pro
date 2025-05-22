@@ -15,7 +15,10 @@ SOURCES += \
     privatechatwindow.cpp \
     reg_window.cpp \
     transitwindow.cpp \
-    groupchatwindow.cpp
+    groupchatwindow.cpp \
+    chat_controller.cpp \
+    mainwindow_controller.cpp \
+    controller_manager.cpp
 
 HEADERS += \
     mainwindow.h \
@@ -23,7 +26,11 @@ HEADERS += \
     privatechatwindow.h \
     reg_window.h \
     transitwindow.h \
-    groupchatwindow.h
+    groupchatwindow.h \
+    chat_controller.h \
+    mainwindow_controller.h \
+    singleton_helper.h \
+    controller_manager.h
 
 FORMS += \
     groupchatwindow.ui \

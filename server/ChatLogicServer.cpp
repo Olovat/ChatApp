@@ -464,6 +464,14 @@ void ChatLogicServer::sendUserList(std::shared_ptr<INetworkClient> client) {
 
 void ChatLogicServer::broadcastUserList() {
     if (!m_networkServer) return;
+    
+    // Логирование текущего состояния кэша
+    std::cout << "Broadcasting user list. Current cache state:" << std::endl;
+    for (const auto& pair : m_cachedUsers) {
+        std::cout << "User: " << pair.first << " - " << (pair.second.isOnline ? "ONLINE" : "offline") << std::endl;
+    }
+    
+    // Отправляем обновленный список всем подключенным пользователям
     for (const auto& pair : m_cachedUsers) {
         const CachedUser& user = pair.second;
         if (user.isOnline && user.client) {
@@ -782,9 +790,14 @@ bool ChatLogicServer::addFriend(const std::string &username, const std::string &
 
     bool success1 = m_db->execute("INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?, ?);", {userId, friendId});
     bool success2 = m_db->execute("INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?, ?);", {friendId, userId});
-    
-    if (success1 || success2) {
+      if (success1 || success2) {
         addFriendToCache(username, friendName); // Обновляем кэш
+        
+        // Broadcast the updated user list to all clients to ensure statuses are current
+        std::cout << "Friend relation between " << username << " and " << friendName 
+                  << " established. Broadcasting user list." << std::endl;
+        broadcastUserList();
+        
         return true;
     }
     std::cerr << "Failed to add friend relationship between " << username << " and " << friendName << " in DB: " << m_db->lastError() << std::endl;

@@ -75,3 +75,4 @@ qrc_*.cpp
 CMakeFiles/
 _deps/
 CMakeCache.txt
+client/chat_controller.h

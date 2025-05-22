@@ -2,7 +2,7 @@
 #include <QApplication>
 #include <QScreen>
 #include <QStyleFactory>
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
 
 #ifndef TESTING
 int main(int argc, char *argv[]) {
@@ -24,9 +24,8 @@ int main(int argc, char *argv[]) {
     lightPalette.setColor(QPalette::Highlight, QColor(0, 120, 215));
     lightPalette.setColor(QPalette::HighlightedText, Qt::white);
     qApp->setPalette(lightPalette);
-    
-    MainWindow w;
-    w.display();
+      MainWindow w;
+    // Do not call w.display() here - it will be called after successful authentication
     return a.exec();
 }
 #else

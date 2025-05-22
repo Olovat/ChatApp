@@ -16,7 +16,6 @@
 #include <QSet>
 #include "../tests/test_client/MockDatabase.h"
 #include "ui_mainwindow.h"
-#include "controller_manager.h"
 
 // Предварительные объявления
 class ChatController;
@@ -59,11 +58,9 @@ public:
     
     // Методы для работы с приватными чатами
     void handlePrivateMessage(const QString &sender, const QString &message); // Обработка приватных сообщений
-      // Методы для управления состоянием авторизации
-    bool isLoginSuccessful() const;
-    void setLoginSuccessful(bool success); // Метод для установки статуса авторизации
     
     // Методы для тестирования
+    bool isLoginSuccessful() const;
     bool hasPrivateChatWith(const QString &username) const;
     int privateChatsCount() const;
     QStringList privateChatParticipants() const;
@@ -92,20 +89,12 @@ signals:
     void requestPrivateMessageSend(const QString &recipient, const QString &message);
     void requestGroupMessageSend(const QString &chatId, const QString &message);
     void requestPrivateMessageHistory(const QString &username);
-    void requestAddUserToGroupChat(const QString &chatId, const QString &username);
-    void requestRemoveUserFromGroupChat(const QString &chatId, const QString &username);
-    void requestDeleteGroupChat(const QString &chatId);
-    void requestStartAddUserToGroupMode(const QString &chatId);
 
 public slots:
     // Слоты для обновления пользовательского интерфейса
     void updateUserList(const QStringList &users);
     void showSearchResults(const QStringList &users);
-    // Handle successful authentication
-    void onAuthSuccess();
-    // Handle successful registration
-    void onRegisterSuccess();
-
+    
 private slots:
     // Слоты для обработки действий в интерфейсе
     void authorizeUser(); // Обработка нажатия кнопки авторизации
@@ -115,29 +104,30 @@ private slots:
     void on_pushButton_2_clicked(); // Присоединиться к групповому чату
     void on_lineEdit_returnPressed(); // Поиск пользователей
     void onUserSelected(QListWidgetItem *item); // Выбор пользователя из списка
-    void onPrivateChatClosed(); // Обработка закрытия окна приватного чата    // Функции для поиска пользователей
+    void onPrivateChatClosed(); // Обработка закрытия окна приватного чата
+
+    // Функции для поиска пользователей
     void searchUsers();
     void addUserToFriends(const QString &username);
-    void startAddUserToGroupMode(const QString &chatId); // Установка режима добавления пользователя в группу
 
 public:
     Mode mode;
     std::unique_ptr<MockDatabase> testDb; // Mock база данных
-    
-    // Переменные для работы с окнами авторизации и регистрации
-    auth_window ui_Auth;
-    reg_window ui_Reg;
 
 private:
     Ui::MainWindow *ui;
     // Контроллер для управления логикой приложения
     MainWindowController *controller;
+    
+    // Переменные для работы с окнами авторизации и регистрации
+    auth_window ui_Auth;
+    reg_window ui_Reg;
     QString m_username;
     QString m_userpass;
     bool m_loginSuccesfull;
-      // Функции для создания или получения существующих окон чатов
+    
+    // Функция для создания или получения существующего окна приватного чата
     PrivateChatWindow* findOrCreatePrivateChatWindow(const QString &username);
-    GroupChatWindow* findOrCreateGroupChatWindow(const QString &chatId, const QString &chatName);
     
     // Хранилища окон чатов
     QMap<QString, PrivateChatWindow*> privateChatWindows; // Map для хранения открытых приватных чатов
@@ -150,15 +140,21 @@ private:
     QStringList searchResults;
     QDialog* searchDialog;
     QListWidget* searchListWidget;
-      // UI функции
-    void updateWindowTitle(); // Обновление заголовка окна
+    
+    // UI функции
+    void updateWindowTitle() {
+        if (!m_username.isEmpty()) {
+            setWindowTitle("Текущий пользователь: " + m_username);
+        } else {
+            setWindowTitle("Тестовый режим");
+        }
+    }
+    
     // Обновление статусов чатов
     void updatePrivateChatStatuses(const QMap<QString, bool> &userStatusMap);
     
     // Хранит пользователей, с которыми было общение
     QSet<QString> recentChatPartners;
-
-    QStringList userList; // Хранение текущего списка пользователей
 };
 
 #endif // MAINWINDOW_H

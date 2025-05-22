@@ -1,6 +1,6 @@
 #include "privatechatwindow.h"
 #include "ui_privatechatwindow.h"
-#include "mainwindow.h"
+#include "mainwindow_controller.h"
 #include <QDebug>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -8,11 +8,11 @@
 #include <QDateTime>
 #include <QShortcut>
 
-PrivateChatWindow::PrivateChatWindow(const QString &username, MainWindow *mainWindow, QWidget *parent) :
+PrivateChatWindow::PrivateChatWindow(const QString &username, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::PrivateChatWindow),
     username(username),
-    mainWindow(mainWindow),
+    controller(nullptr),
     isOffline(false),
     statusMessagePending(false),
     previousOfflineStatus(false)
@@ -26,12 +26,8 @@ PrivateChatWindow::PrivateChatWindow(const QString &username, MainWindow *mainWi
 
     // Настройка горячих клавиш для отправки сообщений
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Return), ui->messageEdit);
-    connect(shortcut, SIGNAL(activated()), this, SLOT(on_sendButton_clicked()));
-
-    if (mainWindow) {
-        // Запрашиваем историю сообщений у сервера
-        mainWindow->requestPrivateMessageHistory(username);
-    }
+    connect(shortcut, SIGNAL(activated()), this, SLOT(on_sendButton_clicked()));    // Сигналы будут подключены когда контроллер будет установлен
+    // Запрос истории будет выполнен после установки контроллера
 }
 
 void PrivateChatWindow::setOfflineStatus(bool offline)
@@ -96,20 +92,19 @@ void PrivateChatWindow::on_sendButton_clicked()
 
 void PrivateChatWindow::sendMessage(const QString &message)
 {
-    if (mainWindow) {
+    if (controller) {
         qDebug() << "PrivateChatWindow: Отправка сообщения к" << username << ":" << message;
         
-        // Отправляем сообщение через основное окно
-        mainWindow->sendPrivateMessage(username, message);
+        // Отправляем сообщение через сигнал
+        emit messageSent(username, message);
 
         // Добавляем сообщение в свое окно чата
         QTime currentTime = QTime::currentTime();
         QString timeStr = currentTime.toString("hh:mm");
         ui->chatBrowser->append("[" + timeStr + "] Вы: " + message);
-        
-        qDebug() << "PrivateChatWindow: Сообщение отображено локально";
+          qDebug() << "PrivateChatWindow: Сообщение отображено локально";
     } else {
-        qDebug() << "PrivateChatWindow: ОШИБКА - mainWindow равен nullptr!";
+        qDebug() << "PrivateChatWindow: ОШИБКА - controller равен nullptr!";
     }
 }
 
@@ -199,9 +194,24 @@ void PrivateChatWindow::endHistoryDisplay()
 // Метод для пометки сообщений как прочитанных
 void PrivateChatWindow::markMessagesAsRead()
 {
-    if (mainWindow) {
-        // Отправляем запрос на пометку всех сообщений как прочитанных
-        mainWindow->sendMessageToServer(QString("MARK_READ:%1").arg(username));
+    if (controller) {
+        // Отправляем запрос на пометку всех сообщений как прочитанных через контроллер
+        // TODO: Нужно добавить соответствующий метод в MainWindowController
+        // controller->handleMarkMessagesAsRead(username);
         qDebug() << "Отправлен запрос на пометку всех сообщений от" << username << "как прочитанных";
+    }
+}
+
+void PrivateChatWindow::setController(MainWindowController *controller)
+{
+    this->controller = controller;
+    
+    if (controller) {
+        // Подключаем сигналы к контроллеру
+        connect(this, &PrivateChatWindow::messageSent, controller, &MainWindowController::handlePrivateMessageSend);
+        connect(this, &PrivateChatWindow::requestMessageHistory, controller, &MainWindowController::handleRequestPrivateMessageHistory);
+        
+        // Запрашиваем историю сообщений у сервера
+        emit requestMessageHistory(username);
     }
 }

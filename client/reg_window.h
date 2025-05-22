@@ -15,12 +15,14 @@ class reg_window : public QDialog
 
 public:
     explicit reg_window(QWidget *parent = nullptr);
-    ~reg_window();
-    QString getName();
+    ~reg_window();    QString getName();
     QString getPass();
     void setButtonsEnabled(bool enabled);
     void setName(const QString& name);
     void setPass(const QString& pass);
+      // Алиасы для совместимости
+    QString getLogin() { return getName(); }
+    QString getPassword() { return getPass(); }
 
 signals:
     void register_button_clicked2();

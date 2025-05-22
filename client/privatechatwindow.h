@@ -4,7 +4,8 @@
 #include <QWidget>
 #include <QDate>
 
-class MainWindow;
+// Убираем прямую зависимость от MainWindow
+class MainWindowController;
 
 namespace Ui {
 class PrivateChatWindow;
@@ -15,7 +16,8 @@ class PrivateChatWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit PrivateChatWindow(const QString &username, MainWindow *mainWindow, QWidget *parent = nullptr);
+    explicit PrivateChatWindow(const QString &username, QWidget *parent = nullptr);
+    void setController(MainWindowController *controller); // Новый метод для установки контроллера
     ~PrivateChatWindow();
 
     void receiveMessage(const QString &sender, const QString &message);
@@ -29,7 +31,9 @@ public:
     void markMessagesAsRead();
 
 signals:
-    void historyDisplayCompleted(const QString &username); // New signal
+    void historyDisplayCompleted(const QString &username); // Сигнал завершения отображения истории
+    void requestMessageHistory(const QString &username); // Сигнал запроса истории сообщений
+    void messageSent(const QString &recipient, const QString &message); // Сигнал отправки сообщения
 
 private slots:
     void on_sendButton_clicked();
@@ -37,21 +41,15 @@ private slots:
 private:
     Ui::PrivateChatWindow *ui;
     QString username;
-    MainWindow *mainWindow;
+    MainWindowController *controller;
     bool isOffline;
-    
-    void sendMessage(const QString &message);
+      void sendMessage(const QString &message);
     void updateWindowTitle();
-
-    // Флаги для отображения истории сообщений
+    void addStatusMessage();
+    QString convertUtcToLocalTime(const QString &utcTimestamp);// Флаги для отображения истории сообщений
     bool historyDisplayed = false;
     bool statusMessagePending = false;
     bool previousOfflineStatus = false;
-    
-    void addStatusMessage();
-    
-    // Метод для конвертации времени UTC в локальное
-    QString convertUtcToLocalTime(const QString &utcTimestamp);
 };
 
 #endif // PRIVATECHATWINDOW_H

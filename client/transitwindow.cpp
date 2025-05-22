@@ -31,12 +31,12 @@ void TransitWindow::on_createButton_clicked()
         QMessageBox::warning(this, "Ошибка", "Введите название чата");
         return;
     }
-    
-    // Отправляем запрос на создание чата через MainWindow
-    if (mainWindow) {
+      // Отправляем запрос на создание чата через контроллер
+    if (mainWindow && mainWindow->getController()) {
         // Генерируем уникальный идентификатор для чата (UUID)
         QString chatId = QUuid::createUuid().toString(QUuid::WithoutBraces);
-        mainWindow->createGroupChat(chatName, chatId);
+        // Используем контроллер для создания чата
+        emit mainWindow->requestCreateGroupChat(chatName);
         
         // Закрываем окно после успешного создания
         accept();
