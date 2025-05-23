@@ -740,3 +740,5 @@ void ChatController::refreshUserListSlot()
         requestUserList();
     }
 }
+    }
+}
