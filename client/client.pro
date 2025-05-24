@@ -12,33 +12,39 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     auth_window.cpp \
-    privatechatwindow.cpp \
     reg_window.cpp \
     transitwindow.cpp \
     groupchatwindow.cpp \
     chat_controller.cpp \
     mainwindow_controller.cpp \
-    controller_manager.cpp
+    controller_manager.cpp \
+    privatechat_controller.cpp \
+    privatechatwindow.cpp \
+    privatechat_model.cpp \
+    message_database.cpp
 
 HEADERS += \
     mainwindow.h \
     auth_window.h \
-    privatechatwindow.h \
     reg_window.h \
     transitwindow.h \
     groupchatwindow.h \
     chat_controller.h \
     mainwindow_controller.h \
     singleton_helper.h \
-    controller_manager.h
+    controller_manager.h \
+    privatechat_controller.h \
+    privatechatwindow.h \
+    privatechat_model.h \
+    message_database.h
 
 FORMS += \
-    groupchatwindow.ui \
-    mainwindow.ui \
     auth_window.ui \
+    groupchatwindow.ui \
     privatechatwindow.ui \
     reg_window.ui \
-    transitwindow.ui
+    transitwindow.ui \
+    mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

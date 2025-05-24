@@ -58,15 +58,11 @@ public:
     QString getUserpass() const;
     
     // Методы для работы с приватными чатами
-    void handlePrivateMessage(const QString &sender, const QString &message); // Обработка приватных сообщений
       // Методы для управления состоянием авторизации
     bool isLoginSuccessful() const;
     void setLoginSuccessful(bool success); // Метод для установки статуса авторизации
     
     // Методы для тестирования
-    bool hasPrivateChatWith(const QString &username) const;
-    int privateChatsCount() const;
-    QStringList privateChatParticipants() const;
     QStringList getDisplayedUsers() const;
     QString getCurrentUsername() const;
     
@@ -89,13 +85,14 @@ signals:
     void requestAddUserToFriends(const QString &username);
     void requestCreateGroupChat(const QString &chatName);
     void requestJoinGroupChat(const QString &chatId);
-    void requestPrivateMessageSend(const QString &recipient, const QString &message);
     void requestGroupMessageSend(const QString &chatId, const QString &message);
-    void requestPrivateMessageHistory(const QString &username);
     void requestAddUserToGroupChat(const QString &chatId, const QString &username);
     void requestRemoveUserFromGroupChat(const QString &chatId, const QString &username);
     void requestDeleteGroupChat(const QString &chatId);
     void requestStartAddUserToGroupMode(const QString &chatId);
+    void userDoubleClicked(const QString &username);
+    void requestPrivateMessageSend(const QString &recipient, const QString &message);
+    void requestPrivateMessageHistory(const QString &username);
 
 public slots:
     // Слоты для обновления пользовательского интерфейса
@@ -105,6 +102,7 @@ public slots:
     void onAuthSuccess();
     // Handle successful registration
     void onRegisterSuccess();
+    void updateUnreadCounts(const QMap<QString, int> &counts);
 
 private slots:
     // Слоты для обработки действий в интерфейсе
@@ -115,10 +113,11 @@ private slots:
     void on_pushButton_2_clicked(); // Присоединиться к групповому чату
     void on_lineEdit_returnPressed(); // Поиск пользователей
     void onUserSelected(QListWidgetItem *item); // Выбор пользователя из списка
-    void onPrivateChatClosed(); // Обработка закрытия окна приватного чата    // Функции для поиска пользователей
+    // Функции для поиска пользователей
     void searchUsers();
     void addUserToFriends(const QString &username);
     void startAddUserToGroupMode(const QString &chatId); // Установка режима добавления пользователя в группу
+    void onUserDoubleClicked(QListWidgetItem *item);
 
 public:
     Mode mode;
@@ -136,11 +135,8 @@ private:
     QString m_userpass;
     bool m_loginSuccesfull;
       // Функции для создания или получения существующих окон чатов
-    PrivateChatWindow* findOrCreatePrivateChatWindow(const QString &username);
     GroupChatWindow* findOrCreateGroupChatWindow(const QString &chatId, const QString &chatName);
     
-    // Хранилища окон чатов
-    QMap<QString, PrivateChatWindow*> privateChatWindows; // Map для хранения открытых приватных чатов
     QMap<QString, GroupChatWindow*> groupChatWindows; // Map для хранения открытых групповых чатов
 
     // Таблица друзей пользователя
@@ -159,6 +155,7 @@ private:
     QSet<QString> recentChatPartners;
 
     QStringList userList; // Хранение текущего списка пользователей
+    QMap<QString, int> unreadMessageCounts; // Счетчики непрочитанных сообщений
 };
 
 #endif // MAINWINDOW_H

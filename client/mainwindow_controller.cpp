@@ -1,24 +1,33 @@
 #include "mainwindow_controller.h"
 #include "mainwindow.h"
-#include "privatechatwindow.h"
 #include "groupchatwindow.h"
 #include "controller_manager.h"
+#include "privatechat_controller.h"
+#include "privatechatwindow.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <QDateTime>
+#include <QTimer>
 
 MainWindowController::MainWindowController(MainWindow *view, QObject *parent)
     : QObject(parent), view(view)
 {
     chatController = ControllerManager::instance().getChatController();
     chatController->setParent(this);
+    
+    // Инициализация контроллера приватных чатов
+    privateChatController = new PrivateChatController(this, this);
+    
     ControllerManager::instance().registerMainWindowController(this);
-    chatController->setMainWindow(view);
+    
     setupViewConnections();    
     setupControllerConnections();
 }
 
-MainWindowController::~MainWindowController(){};
+MainWindowController::~MainWindowController()
+{
+    // ChatController и privateChatController будут удалены автоматически, так как имеют родителя this
+}
 
 ChatController* MainWindowController::getChatController() const
 {
@@ -70,6 +79,10 @@ void MainWindowController::setupViewConnections()
             
     connect(view, &MainWindow::requestDeleteGroupChat,
             this, &MainWindowController::handleDeleteGroupChat);
+    
+    // Соединение сигнала двойного клика по пользователю
+    connect(view, &MainWindow::userDoubleClicked, 
+            this, &MainWindowController::handleUserDoubleClicked);
 }
 
 void MainWindowController::setupControllerConnections()
@@ -93,9 +106,18 @@ void MainWindowController::setupControllerConnections()
     connect(chatController, &ChatController::searchResultsReady,
             this, &MainWindowController::handleSearchResultsReady);
             
-    connect(chatController, &ChatController::privateMessageReceived,
-            this, &MainWindowController::handlePrivateMessageReceived);
-            
+    // Соединения для приватных чатов
+    if (privateChatController && chatController) {
+        connect(chatController, &ChatController::privateMessageReceived,
+                privateChatController, &PrivateChatController::handleIncomingMessage);
+        
+        connect(chatController, &ChatController::privateHistoryReceived,
+                privateChatController, &PrivateChatController::handleMessageHistory);
+    }
+    else {
+        qDebug() << "Warning: privateChatController or chatController is null in setupControllerConnections";
+    }
+    
     connect(chatController, &ChatController::groupMessageReceived,
             this, &MainWindowController::handleGroupMessageReceived);
             
@@ -104,6 +126,12 @@ void MainWindowController::setupControllerConnections()
             
     connect(chatController, &ChatController::unreadCountsUpdated,
             this, &MainWindowController::handleUnreadCountsUpdated);
+    
+    // Добавляем соединение для сохранения сообщений (исправленная версия)
+    if (chatController) {
+        connect(chatController, &ChatController::privateMessageStored,
+                chatController, &ChatController::storePrivateMessage);
+    }
 }
 
 // Обработка действий пользователя из MainWindow
@@ -119,14 +147,26 @@ void MainWindowController::handleRegisterUser(const QString &username, const QSt
 
 void MainWindowController::handleUserSelected(const QString &username)
 {
-    if (!username.isEmpty()) {
-        // Реализация будет в MainWindow
+    // Проверяем, что privateChatController инициализирован
+    if (privateChatController) {
+        // Если пользователь не выбирает себя
+        if (username != view->getCurrentUsername()) {
+            PrivateChatWindow *window = privateChatController->findOrCreateChatWindow(username);
+            if (window) {
+                // Запрашиваем историю явно перед показом окна
+                privateChatController->requestMessageHistory(username);
+                
+                window->show();
+                window->activateWindow();
+                window->raise(); // Поднимаем окно наверх
+            }
+        } else {
+            QMessageBox::information(view, "Информация", "Вы не можете отправлять сообщения самому себе.");
+        }
     }
-}
-
-void MainWindowController::handlePrivateMessageSend(const QString &recipient, const QString &message)
-{
-    chatController->sendPrivateMessage(recipient, message);
+    else {
+        qDebug() << "Error: privateChatController is null in handleUserSelected";
+    }
 }
 
 void MainWindowController::handleGroupMessageSend(const QString &chatId, const QString &message)
@@ -175,7 +215,21 @@ void MainWindowController::handleAuthenticationSuccessful()
 {
     emit view->authSuccess();
     
-    view->display(); 
+    // Важно: устанавливаем текущего пользователя в PrivateChatController
+    if (privateChatController) {
+        privateChatController->setCurrentUsername(view->getCurrentUsername());
+        qDebug() << "Set current username in PrivateChatController to" << view->getCurrentUsername();
+        
+        // Загрузка истории сообщений, но НЕ открытие окон автоматически
+        if (chatController) {
+            QTimer::singleShot(1000, [this]() {
+                // Запрашиваем историю сообщений для всех известных пользователей
+                chatController->requestRecentChatPartners();
+            });
+        }
+    }
+    
+    view->display();
 }
 
 void MainWindowController::handleAuthenticationFailed(const QString &errorMessage)
@@ -227,12 +281,6 @@ void MainWindowController::handleSearchResultsReady(const QStringList &users)
     view->showSearchResults(users);
 }
 
-void MainWindowController::handlePrivateMessageReceived(const QString &sender, const QString &message, const QString &timestamp)
-{
-    Q_UNUSED(timestamp); // Добавляем макрос чтоб при сборке компилятор не ругался
-    view->handlePrivateMessage(sender, message);
-}
-
 void MainWindowController::handleGroupMessageReceived(const QString &chatId, const QString &sender, const QString &message, const QString &timestamp)
 {
     Q_UNUSED(chatId);
@@ -263,9 +311,21 @@ void MainWindowController::handleUnreadCountsUpdated(const QMap<QString, int> &p
     // TODO: Реализовать обновление счетчиков непрочитанных сообщений
 }
 
-void MainWindowController::handleRequestPrivateMessageHistory(const QString &username)
+void MainWindowController::handlePrivateMessageSend(const QString &recipient, const QString &message)
 {
+    qDebug() << "MainWindowController: Handling private message send to" << recipient << ":" << message;
+    
     if (chatController) {
-        chatController->requestPrivateMessageHistory(username);
+        chatController->sendPrivateMessage(recipient, message);
+    } else {
+        qDebug() << "Error: chatController is null in handlePrivateMessageSend";
     }
+}
+
+void MainWindowController::handleUserDoubleClicked(const QString &username)
+{
+    qDebug() << "MainWindowController: User double-clicked on" << username;
+    
+    // Обрабатываем двойной клик так же, как и обычный выбор пользователя
+    handleUserSelected(username);
 }

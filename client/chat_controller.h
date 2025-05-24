@@ -56,13 +56,6 @@ public:
     QStringList getUserList() const;
     QStringList getDisplayedUsers() const;
     
-    // Методы для приватных чатов
-    void sendPrivateMessage(const QString &recipient, const QString &message);
-    void requestPrivateMessageHistory(const QString &otherUser);
-    bool hasPrivateChatWith(const QString &username) const;
-    int privateChatsCount() const;
-    QStringList privateChatParticipants() const;
-    
     // Методы для групповых чатов
     void createGroupChat(const QString &chatName, const QString &chatId);
     void joinGroupChat(const QString &chatId);
@@ -85,8 +78,6 @@ public:
     void testAuthorizeUser(const QString& username, const QString& password);
     bool testRegisterUser(const QString& username, const QString& password);
     QStringList getLastSentMessages() const;
-      // Установка MainWindow для обратной связи
-    void setMainWindow(MainWindow *mainWindow);
 
     // Проверка валидности объекта контроллера
     bool isValid() const { 
@@ -108,12 +99,22 @@ signals:
     void registrationFailed(const QString &errorMessage);
     void userListUpdated(const QStringList &users);
     void searchResultsReady(const QStringList &users);
-    void privateMessageReceived(const QString &sender, const QString &message, const QString &timestamp);
     void groupMessageReceived(const QString &chatId, const QString &sender, const QString &message, const QString &timestamp);
-    void privateHistoryReceived(const QString &username, const QList<QPair<QString, QString>> &history);
-    void groupHistoryReceived(const QString &chatId, const QList<QPair<QString, QString>> &history);    void groupMembersUpdated(const QString &chatId, const QStringList &members, const QString &creator);
+    void groupHistoryReceived(const QString &chatId, const QList<QPair<QString, QString>> &history);
+    void groupMembersUpdated(const QString &chatId, const QStringList &members, const QString &creator);
     void unreadCountsUpdated(const QMap<QString, int> &privateCounts, const QMap<QString, int> &groupCounts);
     void friendAddedSuccessfully(const QString &username);
+    void privateMessageReceived(const QString &sender, const QString &message, const QString &timestamp);
+    void privateHistoryReceived(const QString &username, const QStringList &messages);
+    void privateMessageStored(const QString &sender, const QString &recipient, const QString &message, const QString &timestamp);
+    void friendStatusUpdated(const QString &username, bool isOnline); // Добавляем сигнал
+    void historyRequestStarted(const QString &username); // Добавляем сигнал
+
+public slots:
+    void sendPrivateMessage(const QString &recipient, const QString &message);
+    void requestPrivateMessageHistory(const QString &username);
+    void storePrivateMessage(const QString &sender, const QString &recipient, const QString &message, const QString &timestamp);
+    void requestRecentChatPartners(); // Добавляем метод для запроса недавних собеседников
 
 private slots: 
     void handleSocketReadyRead();
@@ -142,6 +143,10 @@ private:
     QTimer *authTimeoutTimer;
     Operation currentOperation;
 
+    // Добавляем поля для сбора истории сообщений
+    QStringList historyBuffer;
+    QString currentHistoryTarget;
+
     QTimer *newFriendStatusPollTimer;     
     QString currentlyPollingFriend;        
     int newFriendPollAttempts;             
@@ -157,8 +162,6 @@ private:
     bool isMessageDuplicate(const QString &chatId, const QString &timestamp, bool isGroup);
     void startPollingForFriendStatus(const QString& username);
     void stopPollingForFriendStatus();
-    
-    MainWindow *mainWindowRef;
 };
 
 #endif // CHAT_CONTROLLER_H

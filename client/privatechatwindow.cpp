@@ -1,217 +1,225 @@
 #include "privatechatwindow.h"
 #include "ui_privatechatwindow.h"
-#include "mainwindow_controller.h"
-#include <QDebug>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QTime>
+#include "privatechat_controller.h"
 #include <QDateTime>
-#include <QShortcut>
+#include <QScrollBar>
+#include <QMessageBox>
+#include <QDebug>
+#include <QCloseEvent>
+#include <QShowEvent>
+#include <QTimer>
 
-PrivateChatWindow::PrivateChatWindow(const QString &username, QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::PrivateChatWindow),
-    username(username),
-    controller(nullptr),
-    isOffline(false),
-    statusMessagePending(false),
-    previousOfflineStatus(false)
+PrivateChatWindow::PrivateChatWindow(const QString &peerUsername, QWidget *parent)
+    : QMainWindow(parent),
+      ui(new Ui::PrivateChatWindow),
+      m_controller(nullptr),
+      m_peerUsername(peerUsername)  // Исправление порядка инициализации
 {
     ui->setupUi(this);
-
+    setupUi();
     updateWindowTitle();
-
-    // Исправляем соединение сигналов и слотов
-    connect(ui->sendButton, SIGNAL(clicked()), this, SLOT(on_sendButton_clicked()));
-
-    // Настройка горячих клавиш для отправки сообщений
-    QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Return), ui->messageEdit);
-    connect(shortcut, SIGNAL(activated()), this, SLOT(on_sendButton_clicked()));    // Сигналы будут подключены когда контроллер будет установлен
-    // Запрос истории будет выполнен после установки контроллера
-}
-
-void PrivateChatWindow::setOfflineStatus(bool offline)
-{
-    // Обновляем только если статус действительно изменился
-    if (isOffline != offline) {
-        previousOfflineStatus = isOffline;
-        isOffline = offline;
-        updateWindowTitle();
-        
-        // Отложим добавление сообщения о статусе, если история еще загружается
-        statusMessagePending = true;
-        
-        // Если история уже загружена, добавим сообщение о статусе сразу
-        if (historyDisplayed) {
-            addStatusMessage();
-        }
-    }
-}
-
-// Новый метод для добавления сообщения о статусе
-void PrivateChatWindow::addStatusMessage()
-{
-    if (!statusMessagePending) return;
     
-    QTime currentTime = QTime::currentTime();
-    QString timeStr = currentTime.toString("hh:mm");
+    // Устанавливаем таймер для загрузки истории сообщений
+    QTimer::singleShot(300, this, &PrivateChatWindow::requestInitialHistory);
     
-    if (isOffline) {
-        // Сообщение об уходе пользователя
-        ui->chatBrowser->append("<i>[" + timeStr + "] Пользователь " + username + " вышел из сети. Сообщения ниже будут доставлены, когда пользователь вернется.</i>");
-    } else if (!previousOfflineStatus) {
-        // Сообщение о первом входе пользователя (избегаем дублирования)
-        ui->chatBrowser->append("<i>[" + timeStr + "] Пользователь " + username + " в сети.</i>");
-    } else {
-        // Сообщение о возвращении пользователя
-        ui->chatBrowser->append("<i>[" + timeStr + "] Пользователь " + username + " вернулся в сеть.</i>");
-    }
-    
-    statusMessagePending = false;
-}
-
-void PrivateChatWindow::updateWindowTitle()
-{
-    QString statusIndicator = isOffline ? " (Не в сети)" : " (В сети)";
-    setWindowTitle("Чат с " + username + statusIndicator);
+    qDebug() << "Created private chat window for conversation with" << peerUsername;
 }
 
 PrivateChatWindow::~PrivateChatWindow()
 {
+    qDebug() << "Destroyed private chat window for conversation with" << m_peerUsername;
     delete ui;
 }
 
-void PrivateChatWindow::on_sendButton_clicked()
+void PrivateChatWindow::setController(PrivateChatController *controller)
 {
-    QString message = ui->messageEdit->text().trimmed();
-    if (!message.isEmpty()) {
-        sendMessage(message);
-        ui->messageEdit->clear();
-    }
+    m_controller = controller;
 }
 
-void PrivateChatWindow::sendMessage(const QString &message)
+void PrivateChatWindow::setupUi()
 {
-    if (controller) {
-        qDebug() << "PrivateChatWindow: Отправка сообщения к" << username << ":" << message;
-        
-        // Отправляем сообщение через сигнал
-        emit messageSent(username, message);
+    // Создаем метку статуса в правом угле строки состояния
+    m_statusLabel = new QLabel(this);
+    ui->statusbar->addPermanentWidget(m_statusLabel);
+    updateUserStatus(false); // По умолчанию оффлайн
+    
+    // Настройка для авто-прокрутки чата
+    connect(ui->chatTextEdit->verticalScrollBar(), &QScrollBar::rangeChanged, 
+            [this](int min, int max){ 
+                Q_UNUSED(min);
+                ui->chatTextEdit->verticalScrollBar()->setValue(max); 
+            });
+}
 
-        // Добавляем сообщение в свое окно чата
-        QTime currentTime = QTime::currentTime();
-        QString timeStr = currentTime.toString("hh:mm");
-        ui->chatBrowser->append("[" + timeStr + "] Вы: " + message);
-          qDebug() << "PrivateChatWindow: Сообщение отображено локально";
+void PrivateChatWindow::updateUserStatus(bool isOnline)
+{
+    if (isOnline) {
+        m_statusLabel->setText("В сети");
+        m_statusLabel->setStyleSheet("color: green;");
     } else {
-        qDebug() << "PrivateChatWindow: ОШИБКА - controller равен nullptr!";
+        m_statusLabel->setText("Не в сети");
+        m_statusLabel->setStyleSheet("color: gray;");
     }
 }
 
-// Метод для конвертации UTC времени в локальное
-QString PrivateChatWindow::convertUtcToLocalTime(const QString &utcTimestamp)
+void PrivateChatWindow::showLoadingIndicator()
 {
-    // Если строка времени содержит дату и время
-    if (utcTimestamp.contains("-") && utcTimestamp.contains(":")) {
-        QDateTime utcTime = QDateTime::fromString(utcTimestamp, "yyyy-MM-dd hh:mm:ss");
-        utcTime.setTimeZone(QTimeZone::UTC);
-        QDateTime localTime = utcTime.toLocalTime();
-        return localTime.toString("hh:mm");
+    // Показываем индикатор загрузки только если в чате пусто
+    if (ui->chatTextEdit->toPlainText().isEmpty()) {
+        ui->chatTextEdit->setPlainText("Загрузка истории сообщений...");
     }
-    // Если строка времени содержит только время (уже в локальном формате)
-    else if (utcTimestamp.contains(":")) {
-        return utcTimestamp;
-    }
-    // Возвращаем исходное значение, если формат неизвестен
-    return utcTimestamp;
 }
 
-void PrivateChatWindow::receiveMessage(const QString &sender, const QString &message)
+void PrivateChatWindow::displayMessages(const QList<PrivateMessage> &messages)
 {
-    QTime currentTime = QTime::currentTime();
-    QString timeStr = currentTime.toString("hh:mm");
-    receiveMessage(sender, message, timeStr);
+    ui->chatTextEdit->clear();
+    
+    if (messages.isEmpty()) {
+        ui->chatTextEdit->setPlainText("История сообщений пуста");
+        return;
+    }
+    
+    for (const PrivateMessage &message : messages) {
+        addMessageToChat(message.sender, message.content, message.timestamp);
+    }
+    
+    // Прокручиваем к последнему сообщению
+    QScrollBar *scrollBar = ui->chatTextEdit->verticalScrollBar();
+    scrollBar->setValue(scrollBar->maximum());
+}
+
+void PrivateChatWindow::addMessageToChat(const QString &sender, const QString &content, const QString &timestamp)
+{
+    QString timeStr = timestamp.isEmpty() ? 
+                      QDateTime::currentDateTime().toString("hh:mm:ss") : 
+                      timestamp;
+                      
+    QString formattedMessage;
+    if (sender == m_peerUsername) {
+        formattedMessage = QString("<div style='margin-bottom: 5px;'><span style='color: blue; font-weight: bold;'>%1</span> (%2):<br>%3</div>")
+                            .arg(sender, timeStr, content);
+    } else {
+        formattedMessage = QString("<div style='margin-bottom: 5px;'><span style='color: green; font-weight: bold;'>Вы</span> (%1):<br>%2</div>")
+                            .arg(timeStr, content);
+    }
+    
+    ui->chatTextEdit->append(formattedMessage);
 }
 
 void PrivateChatWindow::receiveMessage(const QString &sender, const QString &message, const QString &timestamp)
 {
-    qDebug() << "PrivateChatWindow: Получено сообщение от" << sender << ":" << message << "в" << timestamp;
+    addMessageToChat(sender, message, timestamp);
     
-    // Конвертируем время UTC в локальное, если необходимо
-    QString localTimeStr;
-    QDateTime messageDateTime;
+    // Если окно не активно, показать уведомление
+    if (!this->isActiveWindow()) {
+        this->activateWindow();
+        this->raise();
+    }
+}
+
+void PrivateChatWindow::on_sendButton_clicked()
+{
+    sendCurrentMessage();
+}
+
+void PrivateChatWindow::on_messageEdit_returnPressed()
+{
+    sendCurrentMessage();
+}
+
+void PrivateChatWindow::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
     
-    // Если строка времени содержит дату и время
-    if (timestamp.contains("-") && timestamp.contains(":")) {
-        QDateTime utcTime = QDateTime::fromString(timestamp, "yyyy-MM-dd hh:mm:ss");
-        utcTime.setTimeZone(QTimeZone::UTC);
-        messageDateTime = utcTime.toLocalTime();
-        localTimeStr = messageDateTime.toString("hh:mm");
-    } else if (timestamp.contains(":")) {
-        // Если строка содержит только время, создаем QDateTime с текущей датой
-        QTime time = QTime::fromString(timestamp, "hh:mm");
-        messageDateTime = QDateTime(QDate::currentDate(), time);
-        localTimeStr = timestamp;
+    qDebug() << "Window shown for" << m_peerUsername;
+    
+    // Отправляем сигнал о показе окна
+    emit shown();
+    emit markAsReadRequested(m_peerUsername);
+    
+    // Всегда запрашиваем историю при показе окна
+    QTimer::singleShot(200, [this]() {
+        requestInitialHistory();
+    });
+}
+
+void PrivateChatWindow::requestInitialHistory()
+{
+    if (m_controller) {
+        qDebug() << "Explicitly requesting initial history for" << m_peerUsername;
+        showLoadingIndicator();
+        m_initialHistoryRequested = true;
     } else {
-        // Если формат неизвестен, используем текущее время
-        messageDateTime = QDateTime::currentDateTime();
-        localTimeStr = timestamp;
-    }
-    if (message.startsWith("[") && message.contains("]")) {
-        ui->chatBrowser->append(message);
-    } else {
-        ui->chatBrowser->append("[" + localTimeStr + "] " + sender + ": " + message);
+        qDebug() << "ERROR: Controller is null in requestInitialHistory!";
     }
 }
 
-void PrivateChatWindow::beginHistoryDisplay()
+void PrivateChatWindow::sendCurrentMessage()
 {
-    historyDisplayed = false;
-    // Очищаем чат перед отображением истории
-    ui->chatBrowser->clear();
-}
-
-void PrivateChatWindow::addHistoryMessage(const QString &formattedMessage)
-{
-    // История уже форматируется в MainWindow с учетом временной зоны
-    ui->chatBrowser->append(formattedMessage);
-}
-
-void PrivateChatWindow::endHistoryDisplay()
-{
-    //ui->chatBrowser->append("---------- КОНЕЦ ИСТОРИИ ЛИЧНЫХ СООБЩЕНИЙ ----------");
-    ui->chatBrowser->append(""); // просто отделение истории от новых сообщений
-    historyDisplayed = true;
+    QString message = ui->messageEdit->text().trimmed();
+    if (message.isEmpty())
+        return;
     
-    // Добавляем сообщение о статусе после загрузки истории
-    if (statusMessagePending) {
-        addStatusMessage();
+    // Защита от краша
+    if (!m_controller) {
+        qDebug() << "CRITICAL: Controller is null when trying to send message!";
+        QMessageBox::warning(this, "Ошибка", "Соединение с сервером потеряно. Пожалуйста, перезапустите приложение.");
+        return;
     }
     
-    emit historyDisplayCompleted(username);
-}
-
-// Метод для пометки сообщений как прочитанных
-void PrivateChatWindow::markMessagesAsRead()
-{
-    if (controller) {
-        // Отправляем запрос на пометку всех сообщений как прочитанных через контроллер
-        // TODO: Нужно добавить соответствующий метод в MainWindowController
-        // controller->handleMarkMessagesAsRead(username);
-        qDebug() << "Отправлен запрос на пометку всех сообщений от" << username << "как прочитанных";
-    }
-}
-
-void PrivateChatWindow::setController(MainWindowController *controller)
-{
-    this->controller = controller;
-    
-    if (controller) {
-        // Подключаем сигналы к контроллеру
-        connect(this, &PrivateChatWindow::messageSent, controller, &MainWindowController::handlePrivateMessageSend);
-        connect(this, &PrivateChatWindow::requestMessageHistory, controller, &MainWindowController::handleRequestPrivateMessageHistory);
+    // Отправляем сообщение
+    try {
+        emit messageSent(m_peerUsername, message);
+        ui->messageEdit->clear();
         
-        // Запрашиваем историю сообщений у сервера
-        emit requestMessageHistory(username);
+        // Явно устанавливаем фокус на поле ввода и активируем окно
+        QTimer::singleShot(50, this, [this]() {
+            this->activateWindow();
+            this->raise();
+            ui->messageEdit->setFocus();
+        });
+    } catch (const std::exception& e) {
+        qDebug() << "Exception when sending message:" << e.what();
+        QMessageBox::critical(this, "Ошибка", QString("Произошла ошибка при отправке сообщения: %1").arg(e.what()));
+    } catch (...) {
+        qDebug() << "Unknown exception when sending message";
+        QMessageBox::critical(this, "Ошибка", "Произошла неизвестная ошибка при отправке сообщения");
     }
+}
+
+void PrivateChatWindow::onPeerStatusChanged(bool isOnline)
+{
+    updateUserStatus(isOnline);
+}
+
+void PrivateChatWindow::onUnreadCountChanged(int count)
+{
+    updateWindowTitle();
+    if (count > 0 && this->isVisible()) {
+        // Если окно видимо, помечаем как прочитанные
+        emit markAsReadRequested(m_peerUsername);
+    }
+}
+
+void PrivateChatWindow::clearChat()
+{
+    ui->chatTextEdit->clear();
+}
+
+void PrivateChatWindow::updateWindowTitle()
+{
+    setWindowTitle(QString("Чат с %1").arg(m_peerUsername));
+}
+
+void PrivateChatWindow::closeEvent(QCloseEvent *event)
+{
+    // Перед закрытием окна, отправляем сигнал о закрытии
+    emit windowClosed(m_peerUsername);
+    
+    // Просто скрываем окно вместо закрытия
+    hide();
+    event->ignore();  // Игнорируем событие, чтобы окно не уничтожалось
+    
+    // Важно зафиксировать, что окно было скрыто
+    qDebug() << "Chat window with" << m_peerUsername << "was hidden (not closed)";
 }

@@ -1,55 +1,63 @@
 #ifndef PRIVATECHATWINDOW_H
 #define PRIVATECHATWINDOW_H
 
-#include <QWidget>
-#include <QDate>
+#include <QMainWindow>
+#include <QLabel>
+#include <QList>
+#include <QShowEvent>
+#include <QCloseEvent>
 
-// Убираем прямую зависимость от MainWindow
-class MainWindowController;
+// Предварительное объявление для структуры PrivateMessage
+struct PrivateMessage;
+class PrivateChatController;
 
 namespace Ui {
 class PrivateChatWindow;
 }
 
-class PrivateChatWindow : public QWidget
+class PrivateChatWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit PrivateChatWindow(const QString &username, QWidget *parent = nullptr);
-    void setController(MainWindowController *controller); // Новый метод для установки контроллера
+    explicit PrivateChatWindow(const QString &peerUsername, QWidget *parent = nullptr);
     ~PrivateChatWindow();
 
-    void receiveMessage(const QString &sender, const QString &message);
+    void setController(PrivateChatController *controller);
+    void updateUserStatus(bool isOnline);
     void receiveMessage(const QString &sender, const QString &message, const QString &timestamp);
-    void setOfflineStatus(bool offline);
+    void displayMessages(const QList<PrivateMessage> &messages);
+    void clearChat();
+    void showLoadingIndicator();
+    void requestInitialHistory(); // Новый метод для запроса начальной истории
 
-    void beginHistoryDisplay();
-    void addHistoryMessage(const QString &formattedMessage);
-    void endHistoryDisplay();
-    
-    void markMessagesAsRead();
+public slots:
+    void onPeerStatusChanged(bool isOnline);
+    void onUnreadCountChanged(int count);
+    void on_sendButton_clicked();
+    void on_messageEdit_returnPressed();
 
 signals:
-    void historyDisplayCompleted(const QString &username); // Сигнал завершения отображения истории
-    void requestMessageHistory(const QString &username); // Сигнал запроса истории сообщений
-    void messageSent(const QString &recipient, const QString &message); // Сигнал отправки сообщения
+    void messageSent(const QString &recipient, const QString &message);
+    void windowClosed(const QString &username);
+    void markAsReadRequested(const QString &username);
+    void shown(); // Новый сигнал, который будет вызываться при отображении окна
 
-private slots:
-    void on_sendButton_clicked();
+protected:
+    void closeEvent(QCloseEvent *event) override;
+    void showEvent(QShowEvent *event) override;
 
 private:
-    Ui::PrivateChatWindow *ui;
-    QString username;
-    MainWindowController *controller;
-    bool isOffline;
-      void sendMessage(const QString &message);
+    void setupUi();
+    void addMessageToChat(const QString &sender, const QString &content, const QString &timestamp);
+    void sendCurrentMessage();
     void updateWindowTitle();
-    void addStatusMessage();
-    QString convertUtcToLocalTime(const QString &utcTimestamp);// Флаги для отображения истории сообщений
-    bool historyDisplayed = false;
-    bool statusMessagePending = false;
-    bool previousOfflineStatus = false;
+
+    Ui::PrivateChatWindow *ui;
+    PrivateChatController *m_controller;
+    QString m_peerUsername;
+    QLabel *m_statusLabel;
+    bool m_initialHistoryRequested = false; // Флаг, показывающий была ли запрошена начальная история
 };
 
 #endif // PRIVATECHATWINDOW_H

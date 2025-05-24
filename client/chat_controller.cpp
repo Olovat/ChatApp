@@ -10,8 +10,7 @@ ChatController::ChatController(QObject *parent)
     : QObject(parent),
       loginSuccessful(false),
       nextBlockSize(0),
-      newFriendPollAttempts(0), 
-      mainWindowRef(nullptr)
+      newFriendPollAttempts(0)
 {
     // Инициализация сокета
     socket = new QTcpSocket(this);
@@ -49,11 +48,6 @@ ChatController::~ChatController()
         socket->close();
         delete socket;
     }
-}
-
-void ChatController::setMainWindow(MainWindow *mainWindow)
-{
-    mainWindowRef = mainWindow;
 }
 
 bool ChatController::connectToServer(const QString& host, quint16 port)
@@ -156,7 +150,7 @@ void ChatController::handleSocketReadyRead()
         // Обработка входящих данных
         for(;;) {
             if (nextBlockSize == 0) {
-                if (socket->bytesAvailable() < sizeof(quint16)) {
+                if (socket->bytesAvailable() < static_cast<qint64>(sizeof(quint16))) {
                     break;
                 }
                 in >> nextBlockSize;
@@ -317,185 +311,227 @@ void ChatController::processServerResponse(const QString &response)
                 continue;
             }
             
+            // Поддержка формата с 4 частами (username:status:type1:type2)
+            QString username;
+            bool isOnline = false;
+            QString userType;
+            
             QStringList userDetails = entry.split(':');
-            if (userDetails.size() == 3) { 
-                QString username = userDetails[0];
-                QString status_str = userDetails[1];
-                QString type_from_server = userDetails[2]; 
-
-                bool isOnline = (status_str == "1" || status_str.compare("online", Qt::CaseInsensitive) == 0 || status_str.toInt() > 0);
-
-
-                QString formattedUser = username + ":" + (isOnline ? "1" : "0") + ":" + type_from_server;
+            if (userDetails.size() >= 2) {
+                username = userDetails[0].trimmed();
+                QString statusStr = userDetails[1].trimmed();
+                isOnline = (statusStr == "1" || statusStr.compare("online", Qt::CaseInsensitive) == 0 || statusStr.toInt() > 0);
                 
+                // Собираем типы пользователя, если они есть
+                if (userDetails.size() >= 3) {
+                    userType = userDetails.mid(2).join(":");
+                }
+                
+                QString formattedUser = username + ":" + (isOnline ? "1" : "0") + ":" + userType;
                 tempUserList.append(formattedUser);
-                qDebug() << "ChatController parsed user entry:" << formattedUser;
+                
+                qDebug() << "ChatController parsed user entry:" << formattedUser 
+                        << "(username=" << username << ", isOnline=" << isOnline 
+                        << ", userType=" << userType << ")";
 
                 if (isOnline) {
-                    tempOnlineUsernames.append(username); 
+                    tempOnlineUsernames.append(username);
                 }
             } else {
-                qDebug() << "ChatController: Malformed user entry in USERLIST:" << entry << "(expected 3 parts, got" << userDetails.size() << ")";
+                qDebug() << "ChatController: Malformed user entry in USERLIST:" << entry 
+                        << "(expected at least 2 parts, got" << userDetails.size() << ")";
             }
         }
         
- 
-        this->userList = tempUserList; 
+        this->userList = tempUserList;
         this->onlineUsers = tempOnlineUsernames;
         
-        qDebug() << "ChatController emitting userListUpdated with" << this->userList.size() << "total users processed. Online usernames:" << this->onlineUsers.size();
-        emit userListUpdated(this->userList); 
-
-        if (!currentlyPollingFriend.isEmpty() && !this->onlineUsers.filter(currentlyPollingFriend, Qt::CaseInsensitive).isEmpty()) {
-            qDebug() << "New friend" << currentlyPollingFriend << "is now reported as online. Stopping poll.";
-            stopPollingForFriendStatus();
-        }
-    } else if (command == "SEARCH_RESULTS") {
-        // Предотвращаем дублирование результатов поиска с одинаковым содержимым
-        QStringList currentResults;
-        
-        for (int i = 1; i < parts.size(); ++i) {
-            // Добавляем пользователей в список результатов
-            currentResults.append(parts[i]);
-        }
-        
-        // Если список пуст, не отправляем его дальше
-        if (currentResults.isEmpty()) {
-            qDebug() << "Получены пустые результаты поиска";
-            emit searchResultsReady(QStringList());
+        emit userListUpdated(this->userList);
+    } else if (command == "FRIEND_STATUS" || command == "NEW_FRIEND_STATUS") {
+        // Обработка статуса нового друга
+        if (parts.size() < 3) {
+            qDebug() << "ChatController: Malformed FRIEND_STATUS command:" << response;
             return;
         }
         
-        // Проверяем, не совпадают ли текущие результаты с предыдущими
-        if (currentResults != lastSearchResults) {
-            qDebug() << "Получены новые результаты поиска:" << currentResults;
-            lastSearchResults = currentResults;
-            searchResults = currentResults;
-            emit searchResultsReady(searchResults);
+        QString friendUsername = parts[1];
+        QString status = parts[2];
+        
+        qDebug() << "Friend status update:" << friendUsername << "is" << (status == "1" ? "online" : "offline");
+        
+        // Обновляем статус друга в списке друзей
+        int index = friendList.indexOf(friendUsername);
+        if (index != -1) {
+            // Друг найден в списке, обновляем статус
+            friendList[index] = friendUsername + ":" + status;
         } else {
-            qDebug() << "Игнорирование дублированных результатов поиска:" << currentResults;
+            // Друг не найден, добавляем в список с новым статусом
+            friendList.append(friendUsername + ":" + status);
+        }
+        
+        emit friendStatusUpdated(friendUsername, (status == "1"));
+    } else if (command == "PRIVATE_MESSAGE" || command == "PRIVMSG") {
+        // Обработка входящего приватного сообщения
+        if (parts.size() < 3) {
+            qDebug() << "ChatController: Malformed PRIVATE_MESSAGE command:" << response;
+            return;
+        }
+        
+        QString sender = parts[1];
+        QString message = parts.mid(2).join(":");
+        
+        qDebug() << "Received private message from" << sender << ":" << message;
+        
+        // Текущее время для метки времени сообщения
+        QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
+        
+        // Отправляем сигнал о получении сообщения
+        emit privateMessageReceived(sender, message, timestamp);
+        
+        // Сохраняем сообщение в истории
+        emit privateMessageStored(sender, username, message, timestamp);
+    } else if (command == "MESSAGE_HISTORY" || command == "HISTORY") {
+        // Обработка истории сообщений
+        if (parts.size() < 2) {
+            qDebug() << "ChatController: Malformed MESSAGE_HISTORY command:" << response;
+            return;
+        }
+        
+        QStringList messages = QString(parts.mid(1).join(":")).split(";");
+        for (const QString &msg : messages) {
+            QStringList msgParts = msg.split(',');
+            if (msgParts.size() < 3) {
+                continue; // Игнорируем некорректные сообщения
+            }
+            
+            QString sender = msgParts[0];
+            QString recipient = msgParts[1];
+            QString message = msgParts.mid(2).join(",");
+            QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
+            
+            // Отправляем сигнал о получении сообщения из истории
+            emit privateMessageReceived(sender, message, timestamp);
+        }
+    } else if (command == "PRIVATE_MSG") {
+    if (parts.size() >= 3) {
+        QString sender = parts[1];
+        QString message = parts[2];
+        QString timestamp = parts.size() > 3 ? parts[3] : QDateTime::currentDateTime().toString("hh:mm:ss");
+        
+        // Отладка
+        qDebug() << "PRIVATE_MSG received: Sender=" << sender << ", Message=" << message << ", Timestamp=" << timestamp;
+        
+        // Проверка на дубликаты сообщений
+        if (!isMessageDuplicate(sender, timestamp, false)) {
+            // Сохраняем timestamp сообщения
+            if (!timestamp.isEmpty()) {
+                lastPrivateChatTimestamps[sender] = timestamp;
+            }
+            
+            // Добавляем отправителя в список недавних собеседников
+            recentChatPartners.insert(sender);
+            
+            // ВАЖНО: Сохраняем сообщение в базе данных на сервере
+            if (sender != getCurrentUsername()) {
+                storePrivateMessage(sender, getCurrentUsername(), message, timestamp);
+            }
+            
+            // Вызов сигнала для обработки приватного сообщения
+            emit privateMessageReceived(sender, message, timestamp);
+            
+            // Увеличиваем счетчик непрочитанных сообщений только если окно не активно
+            unreadPrivateMessageCounts[sender] = unreadPrivateMessageCounts.value(sender, 0) + 1;
+            
+            // Сообщаем об обновлении счетчиков непрочитанных сообщений
+            emit unreadCountsUpdated(unreadPrivateMessageCounts, unreadGroupMessageCounts);
+        } else {
+            qDebug() << "PRIVATE_MSG: Duplicate message detected, ignoring";
         }
     }
-    else if (command == "PRIVATE_MSG") {
-        if (parts.size() >= 3) {
-            QString sender = parts[1];
-            QString message = parts[2];
-            QString timestamp = parts.size() > 3 ? parts[3] : QString();
-            
-            // Проверка на дубликаты сообщений
+}
+// Обработчик сообщения от сервера в формате "username: PRIVMSG:recipient:message"
+else if (parts.size() >= 2 && parts[1].trimmed() == "PRIVMSG") {
+    if (parts.size() >= 4) {
+        QString sender = parts[0];
+        QString recipient = parts[2];
+        QString message = parts[3];
+        QString timestamp = parts.size() > 4 ? parts[4] : QDateTime::currentDateTime().toString("hh:mm:ss");
+        
+        qDebug() << "Interpreted as private message: sender=" << sender 
+                << ", recipient=" << recipient << ", message=" << message;
+        
+        // Проверяем, относится ли сообщение к текущему пользователю
+        if (recipient == getCurrentUsername() || sender == getCurrentUsername()) {
+            // Проверка на дубликаты
             if (!isMessageDuplicate(sender, timestamp, false)) {
-                // Сохраняем timestamp сообщения
-                if (!timestamp.isEmpty()) {
-                    lastPrivateChatTimestamps[sender] = timestamp;
-                }
+                // Добавляем в список недавних собеседников
+                QString chatPartner = (sender == getCurrentUsername()) ? recipient : sender;
+                recentChatPartners.insert(chatPartner);
                 
-                // Увеличиваем счетчик непрочитанных сообщений
-                unreadPrivateMessageCounts[sender] = unreadPrivateMessageCounts.value(sender, 0) + 1;
-                
-                // Добавляем отправителя в список недавних собеседников
-                recentChatPartners.insert(sender);
-                
-                // Отправляем сигнал о получении сообщения
+                // Отправляем сигнал о новом приватном сообщении
                 emit privateMessageReceived(sender, message, timestamp);
-                
-                // Сообщаем об обновлении счетчиков непрочитанных сообщений
-                emit unreadCountsUpdated(unreadPrivateMessageCounts, unreadGroupMessageCounts);
             }
         }
     }
-    else if (command == "GROUP_MSG") {
-        if (parts.size() >= 4) {
-            QString chatId = parts[1];
-            QString sender = parts[2];
-            QString message = parts[3];
-            QString timestamp = parts.size() > 4 ? parts[4] : QString();
-            
-            // Проверка на дубликаты сообщений
-            if (!isMessageDuplicate(chatId, timestamp, true)) {
-                // Сохраняем timestamp
-                if (!timestamp.isEmpty()) {
-                    lastGroupChatTimestamps[chatId] = timestamp;
-                }
-                
-                // Увеличиваем счетчик непрочитанных сообщений
-                unreadGroupMessageCounts[chatId] = unreadGroupMessageCounts.value(chatId, 0) + 1;
-                
-                // Отправляем сигнал о получении группового сообщения
-                emit groupMessageReceived(chatId, sender, message, timestamp);
-                
-                // Сообщаем об обновлении счетчиков непрочитанных сообщений
-                emit unreadCountsUpdated(unreadPrivateMessageCounts, unreadGroupMessageCounts);
-            }
-        }
-    }
-    else if (command == "GROUP_MEMBERS") {
-        if (parts.size() >= 3) {
-            QString chatId = parts[1];
-            QString creator = parts[2];
-            QStringList members;
-            
-            for (int i = 3; i < parts.size(); ++i) {
-                members.append(parts[i]);
-            }
-            
-            emit groupMembersUpdated(chatId, members, creator);
-        }
-    }
-    else if (command == "UNREAD_COUNTS") {
-        unreadPrivateMessageCounts.clear();
-        unreadGroupMessageCounts.clear();
-        
-        int privateCount = parts.size() > 1 ? parts[1].toInt() : 0;
-        int groupCount = parts.size() > 2 ? parts[2].toInt() : 0;
-        
-        for (int i = 0; i < privateCount && (3 + i*2 + 1) < parts.size(); i++) {
-            QString user = parts[3 + i*2];
-            int count = parts[3 + i*2 + 1].toInt();
-            unreadPrivateMessageCounts[user] = count;
-        }
-        
-        int groupOffset = 3 + privateCount * 2;
-        for (int i = 0; i < groupCount && (groupOffset + i*2 + 1) < parts.size(); i++) {
-            QString chatId = parts[groupOffset + i*2];
-            int count = parts[groupOffset + i*2 + 1].toInt();
-            unreadGroupMessageCounts[chatId] = count;
-        }
-        
-        emit unreadCountsUpdated(unreadPrivateMessageCounts, unreadGroupMessageCounts);
-    }    else if (command == "FRIEND_ADDED") {
-        // Обработка успешного добавления друга
-        if (parts.size() > 1) {
-            QString addedUsername = parts[1];
-            qDebug() << "Friend added successfully:" << addedUsername;
-            
-            // Сохраняем ID друга в перманентном списке друзей
-            if (!friendList.contains(addedUsername)) {
-                friendList.append(addedUsername);
-                  // Сохраняем в QSettings для сохранения между сессиями
-                saveFriendList();
-                
-                qDebug() << "Added" << addedUsername << "to permanent friend list. Total friends:" << friendList.size();
-            }
-            
-            // Уведомляем о том, что друг успешно добавлен
-            emit friendAddedSuccessfully(addedUsername);
-
-            startPollingForFriendStatus(addedUsername);
-        }
+} else {
+        qDebug() << "ChatController: Unknown command from server:" << command;
     }
 }
 
-void ChatController::clearSocketBuffer()
+void ChatController::sendPrivateMessage(const QString &recipient, const QString &message)
 {
-    buffer.clear();
-    nextBlockSize = 0;
+    qDebug() << "Sending private message to" << recipient << ":" << message;
+    
+    // Формат команды для отправки приватного сообщения
+    QString command = QString("PRIVMSG:%1:%2").arg(recipient, message);
+    sendToServer(command);
+    
+    // Текущее время для сохранения в истории
+    QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
+    
+    // Добавляем сообщение себе для отображения в чате
+    emit privateMessageReceived(username, message, timestamp);
+    
+    // Сохраняем сообщение в истории
+    emit privateMessageStored(username, recipient, message, timestamp);
+    
+    // Добавляем в список последних отправленных сообщений для отладки
+    recentSentMessages.append(command);
+    if (recentSentMessages.size() > 10) {
+        recentSentMessages.removeFirst();
+    }
 }
 
-void ChatController::requestUserList()
+void ChatController::storePrivateMessage(const QString &sender, const QString &recipient, const QString &message, const QString &timestamp)
 {
-    qDebug() << "Requesting user list";
-    sendToServer("GET_USERS");
-    sendToServer("GET_USERLIST");
+    // Эта команда заставляет сервер сохранить сообщение в базе данных
+    QString command = QString("STORE_PRIVMSG:%1:%2:%3:%4").arg(sender, recipient, message, timestamp);
+    sendToServer(command);
+    qDebug() << "Requesting server to store message in history:" << command;
+    
+    // Добавляем получателя в список последних собеседников
+    recentChatPartners.insert(recipient);
+}
+
+void ChatController::requestPrivateMessageHistory(const QString &username)
+{
+    qDebug() << "Requesting private message history with" << username;
+    
+    // Очищаем буфер истории перед запросом
+    historyBuffer.clear();
+    currentHistoryTarget = username;
+    
+    // Запрашиваем обе стороны истории сообщений
+    // Важно запрашивать историю в обоих направлениях
+    sendToServer(QString("GET_PRIVATE_HISTORY:%1:%2").arg(this->username, username));
+    
+    // Добавляем задержку перед вторым запросом, чтобы избежать смешивания истории
+    QTimer::singleShot(200, [this, username]() {
+        sendToServer(QString("GET_PRIVATE_HISTORY:%1:%2").arg(username, this->username));
+    });
+    
+    // Обновляем интерфейс, чтобы показать, что идёт загрузка
+    emit historyRequestStarted(username);
 }
 
 void ChatController::searchUsers(const QString &query)
@@ -510,18 +546,6 @@ void ChatController::addUserToFriends(const QString &username)
 {
     qDebug() << "Отправка запроса на добавление пользователя в друзья:" << username;
     sendToServer("ADD_FRIEND:" + username);
-    
-}
-
-void ChatController::sendPrivateMessage(const QString &recipient, const QString &message)
-{
-    sendToServer("SEND_PRIVATE:" + recipient + ":" + message);
-    recentChatPartners.insert(recipient);
-}
-
-void ChatController::requestPrivateMessageHistory(const QString &otherUser)
-{
-    sendToServer("GET_PRIVATE_HISTORY:" + otherUser);
 }
 
 void ChatController::createGroupChat(const QString &chatName, const QString &chatId)
@@ -559,89 +583,17 @@ void ChatController::requestUnreadCounts()
     sendToServer("GET_UNREAD_COUNTS");
 }
 
-void ChatController::setCurrentUser(const QString &username, const QString &password)
+void ChatController::clearSocketBuffer()
 {
-    this->username = username;
-    this->password = password;
+    buffer.clear();
+    nextBlockSize = 0;
 }
 
-QString ChatController::getCurrentUsername() const
+void ChatController::requestUserList()
 {
-    return username;
-}
-
-bool ChatController::isLoginSuccessful() const
-{
-    return loginSuccessful;
-}
-
-QStringList ChatController::getOnlineUsers() const
-{
-    return onlineUsers;
-}
-
-QStringList ChatController::getUserList() const
-{
-    return userList;
-}
-
-QStringList ChatController::getDisplayedUsers() const
-{
-    QStringList displayed = userList;
-    
-    // Добавляем недавних собеседников, даже если их нет в основном списке
-    for (const QString &user : recentChatPartners) {
-        if (!displayed.contains(user)) {
-            displayed.append(user);
-        }
-    }
-    
-    return displayed;
-}
-
-QStringList ChatController::getLastSentMessages() const
-{
-    return recentSentMessages;
-}
-
-bool ChatController::hasPrivateChatWith(const QString &username) const
-{
-    if (mainWindowRef) {
-        return mainWindowRef->hasPrivateChatWith(username);
-    }
-    return false;
-}
-
-int ChatController::privateChatsCount() const
-{
-    if (mainWindowRef) {
-        return mainWindowRef->privateChatsCount();
-    }
-    return 0;
-}
-
-QStringList ChatController::privateChatParticipants() const
-{
-    if (mainWindowRef) {
-        return mainWindowRef->privateChatParticipants();
-    }
-    return QStringList();
-}
-
-void ChatController::testAuthorizeUser(const QString& username, const QString& password)
-{
-    this->username = username;
-    this->password = password;
-    loginSuccessful = true;
-    emit authenticationSuccessful();
-}
-
-bool ChatController::testRegisterUser(const QString& username, const QString& password)
-{
-    this->username = username;
-    this->password = password;
-    emit registrationSuccessful();
-    return true;
+    qDebug() << "Requesting user list";
+    sendToServer("GET_USERS");
+    sendToServer("GET_USERLIST");
 }
 
 bool ChatController::isMessageDuplicate(const QString &chatId, const QString &timestamp, bool isGroup)
@@ -697,16 +649,14 @@ void ChatController::saveFriendList()
 
 void ChatController::startPollingForFriendStatus(const QString& username) {
     if (newFriendStatusPollTimer->isActive()) {
-       
-       
         qDebug() << "Poll timer was active for" << currentlyPollingFriend << ", stopping it first.";
         newFriendStatusPollTimer->stop();
     }
     currentlyPollingFriend = username;
     newFriendPollAttempts = 0;
     qDebug() << "Starting to poll for status of new friend:" << username << "at" << newFriendStatusPollTimer->interval() << "ms interval.";
-    newFriendStatusPollTimer->start();
-    onPollNewFriendStatus(); 
+    newFriendStatusPollTimer->start(2000); // интервал в 2 секунды
+    onPollNewFriendStatus(); // вызываем сразу, чтобы не ждать таймера
 }
 
 void ChatController::stopPollingForFriendStatus() {
@@ -740,5 +690,22 @@ void ChatController::refreshUserListSlot()
         requestUserList();
     }
 }
-    }
+
+void ChatController::requestRecentChatPartners()
+{
+    // Запрашиваем список недавних собеседников
+    QString command = "GET_RECENT_PARTNERS";
+    sendToServer(command);
+    qDebug() << "Requesting recent chat partners";
 }
+
+bool ChatController::isLoginSuccessful() const
+{
+    return loginSuccessful;
+}
+
+QString ChatController::getCurrentUsername() const
+{
+    return username;
+}
+

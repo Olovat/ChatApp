@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "privatechatwindow.h"
+// #include "privatechatwindow.h" // Удалено
 #include "groupchatwindow.h"
 #include "mainwindow_controller.h"
 #include <QMessageBox>
@@ -402,30 +402,21 @@ void MainWindow::updateUserList(const QStringList &users)
         emptyItem->setFlags(Qt::NoItemFlags);
         ui->userListWidget->addItem(emptyItem);
     }
-    
-    // Обновляем статусы приватных чатов
-    updatePrivateChatStatuses(userFriends);
-    
-    qDebug() << "Final UI user list count:" << ui->userListWidget->count();
-}
 
-void MainWindow::updatePrivateChatStatuses(const QMap<QString, bool> &userStatusMap)
-{
-    qDebug() << "Updating private chat statuses. Received statuses for" << userStatusMap.size() << "users:";
-    for (auto it = userStatusMap.begin(); it != userStatusMap.end(); ++it) {
-        qDebug() << "  - User" << it.key() << "status:" << (it.value() ? "ONLINE" : "offline");
-    }
-    
-    for (auto it = privateChatWindows.begin(); it != privateChatWindows.end(); ++it) {
-        QString username = it.key();
-        PrivateChatWindow *chatWindow = it.value();
-        
-        if (userStatusMap.contains(username)) {
-            bool isOffline = !userStatusMap[username];
-            chatWindow->setOfflineStatus(isOffline);
-            qDebug() << "Updated status for private chat with" << username << "to" << (isOffline ? "offline" : "ONLINE");
+    // Добавляем метки непрочитанных сообщений к элементам списка
+    for (int i = 0; i < ui->userListWidget->count(); ++i) {
+        QListWidgetItem *item = ui->userListWidget->item(i);
+        if (!item || !(item->flags() & Qt::ItemIsEnabled))
+            continue;
+            
+        QString username = item->text();
+        if (unreadMessageCounts.contains(username) && unreadMessageCounts[username] > 0) {
+            item->setText(username + " (" + QString::number(unreadMessageCounts[username]) + ")");
+            item->setForeground(Qt::red); // Выделяем красным цветом пользователей с непрочитанными сообщениями
         }
     }
+    
+    qDebug() << "Final UI user list count:" << ui->userListWidget->count();
 }
 
 void MainWindow::onUserSelected(QListWidgetItem *item)
@@ -440,42 +431,23 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
     if (selectedText.startsWith("GROUP_")) {
         emit requestJoinGroupChat(selectedText);
     } else {
+        // Только отправляем сигнал о выборе пользователя
         emit userSelected(selectedText);
         
-        // Создаем или показываем окно приватного чата
-        PrivateChatWindow *chatWindow = findOrCreatePrivateChatWindow(selectedText);
-        chatWindow->show();
-        chatWindow->activateWindow();
-        
-        // Запрашиваем историю сообщений
-        emit requestPrivateMessageHistory(selectedText);
+        // Отключаем эту строку, пока не реализуем MVC полностью
+        // emit requestPrivateMessageHistory(selectedText);
     }
 }
 
-PrivateChatWindow* MainWindow::findOrCreatePrivateChatWindow(const QString &username)
+void MainWindow::onUserDoubleClicked(QListWidgetItem *item) 
 {
-    // Если окно уже существует, просто возвращаем его
-    if (privateChatWindows.contains(username)) {
-        return privateChatWindows[username];
+    if (item) {
+        QString username = item->text();
+        // Проверяем, что это не категория и не групповой чат
+        if (!username.startsWith("ДРУЗЬЯ") && !username.startsWith("ГРУППОВЫЕ")) {
+            emit userDoubleClicked(username);
+        }
     }
-    
-    // Создаем новое окно чата
-    PrivateChatWindow *chatWindow = new PrivateChatWindow(username);
-    
-    // Устанавливаем контроллер
-    if (controller) {
-        chatWindow->setController(controller);
-    }
-    
-    // Подключаем сигнал закрытия окна
-    connect(chatWindow, &PrivateChatWindow::destroyed, this, [this, username]() {
-        privateChatWindows.remove(username);
-    });
-    
-    // Сохраняем окно в карте
-    privateChatWindows[username] = chatWindow;
-    
-    return chatWindow;
 }
 
 GroupChatWindow* MainWindow::findOrCreateGroupChatWindow(const QString &chatId, const QString &chatName)
@@ -502,36 +474,6 @@ GroupChatWindow* MainWindow::findOrCreateGroupChatWindow(const QString &chatId, 
     groupChatWindows[chatId] = chatWindow;
     
     return chatWindow;
-}
-
-void MainWindow::handlePrivateMessage(const QString &sender, const QString &message)
-{
-    // Добавляем отправителя в недавние контакты
-    recentChatPartners.insert(sender);
-    
-    // Создаем или находим существующее окно чата
-    PrivateChatWindow *chatWindow = findOrCreatePrivateChatWindow(sender);
-    
-    // Добавляем сообщение в окно
-    chatWindow->receiveMessage(sender, message);
-    
-    // Если окно не активно, открываем его
-    if (!chatWindow->isVisible()) {
-        chatWindow->show();
-    }
-}
-
-void MainWindow::onPrivateChatClosed()
-{
-    // Обработка закрытия приватного чата
-    QObject *sender = QObject::sender();
-    
-    for (auto it = privateChatWindows.begin(); it != privateChatWindows.end(); ++it) {
-        if (it.value() == sender) {
-            privateChatWindows.erase(it);
-            break;
-        }
-    }
 }
 
 void MainWindow::on_pushButton_clicked()
@@ -770,21 +712,6 @@ QStringList MainWindow::getDisplayedUsers() const
     return displayed;
 }
 
-bool MainWindow::hasPrivateChatWith(const QString &username) const
-{
-    return privateChatWindows.contains(username);
-}
-
-int MainWindow::privateChatsCount() const
-{
-    return privateChatWindows.size();
-}
-
-QStringList MainWindow::privateChatParticipants() const
-{
-    return privateChatWindows.keys();
-}
-
 void MainWindow::startAddUserToGroupMode(const QString &chatId)
 {
     emit requestStartAddUserToGroupMode(chatId);
@@ -808,12 +735,6 @@ void MainWindow::onAuthSuccess()
                 userFriends[friend_name] = false; // Initially set as offline
                 qDebug() << "Added friend from settings:" << friend_name;
             }
-            
-            // After loading friends, request a user list update to get their current status
-            // chatController->requestUserList(); // REMOVED - Server sends list on AUTH_SUCCESS
-            
-            // Request again after a short delay to ensure we have the latest status
-            // QTimer::singleShot(500, chatController, &ChatController::requestUserList); // REMOVED
         }
     }
     
@@ -841,4 +762,13 @@ void MainWindow::updateWindowTitle()
     } else {
         this->setWindowTitle("Чат приложение");
     }
+}
+
+// Метод для обновления счетчиков непрочитанных сообщений
+void MainWindow::updateUnreadCounts(const QMap<QString, int> &counts)
+{
+    unreadMessageCounts = counts;
+    
+    // Обновляем список пользователей, чтобы отобразить счетчики
+    updateUserList(this->userList);
 }
