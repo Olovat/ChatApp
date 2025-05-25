@@ -393,9 +393,7 @@ void MainWindow::updateUserList(const QStringList &users)
         QListWidgetItem *emptyItem = new QListWidgetItem("Список пользователей пуст");
         emptyItem->setFlags(Qt::NoItemFlags);
         ui->userListWidget->addItem(emptyItem);
-    }
-
-    // Добавляем метки непрочитанных сообщений к элементам списка
+    }    // Добавляем метки непрочитанных сообщений к элементам списка
     for (int i = 0; i < ui->userListWidget->count(); ++i) {
         QListWidgetItem *item = ui->userListWidget->item(i);
         if (!item || !(item->flags() & Qt::ItemIsEnabled))
@@ -404,7 +402,8 @@ void MainWindow::updateUserList(const QStringList &users)
         QString username = item->text();
         if (unreadMessageCounts.contains(username) && unreadMessageCounts[username] > 0) {
             item->setText(username + " (" + QString::number(unreadMessageCounts[username]) + ")");
-            item->setForeground(Qt::red); // Выделяем красным цветом пользователей с непрочитанными сообщениями
+            item->setBackground(Qt::yellow); // Жёлтый фон для пользователей с непрочитанными сообщениями
+            item->setForeground(Qt::black);  // Чёрный текст для читаемости
         }
     }
     
@@ -419,15 +418,22 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
     
     QString selectedText = item->text();
     
+    // Извлекаем чистое имя пользователя, удаляя счетчик непрочитанных сообщений если он есть
+    QString cleanUsername = selectedText;
+    int parenIndex = selectedText.indexOf(" (");
+    if (parenIndex != -1) {
+        cleanUsername = selectedText.left(parenIndex);
+    }
+    
     // Проверяем, является ли выбранный элемент групповым чатом
-    if (selectedText.startsWith("GROUP_")) {
-        emit requestJoinGroupChat(selectedText);
+    if (cleanUsername.startsWith("GROUP_")) {
+        emit requestJoinGroupChat(cleanUsername);
     } else {
-        // Только отправляем сигнал о выборе пользователя
-        emit userSelected(selectedText);
+        // Только отправляем сигнал о выборе пользователя с чистым именем
+        emit userSelected(cleanUsername);
         
         // Отключаем эту строку, пока не реализуем MVC полностью
-        // emit requestPrivateMessageHistory(selectedText);
+        // emit requestPrivateMessageHistory(cleanUsername);
     }
 }
 
@@ -435,9 +441,17 @@ void MainWindow::onUserDoubleClicked(QListWidgetItem *item)
 {
     if (item) {
         QString username = item->text();
+        
+        // Извлекаем чистое имя пользователя, удаляя счетчик непрочитанных сообщений если он есть
+        QString cleanUsername = username;
+        int parenIndex = username.indexOf(" (");
+        if (parenIndex != -1) {
+            cleanUsername = username.left(parenIndex);
+        }
+        
         // Проверяем, что это не категория и не групповой чат
-        if (!username.startsWith("ДРУЗЬЯ") && !username.startsWith("ГРУППОВЫЕ")) {
-            emit userDoubleClicked(username);
+        if (!cleanUsername.startsWith("ДРУЗЬЯ") && !cleanUsername.startsWith("ГРУППОВЫЕ")) {
+            emit userDoubleClicked(cleanUsername);
         }
     }
 }

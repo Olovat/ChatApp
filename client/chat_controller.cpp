@@ -368,8 +368,7 @@ void ChatController::processServerResponse(const QString &response)
             // Друг не найден, добавляем в список с новым статусом
             friendList.append(friendUsername + ":" + status);
         }
-          emit friendStatusUpdated(friendUsername, (status == "1"));
-    } else if (command == "PRIVATE") {
+          emit friendStatusUpdated(friendUsername, (status == "1"));    } else if (command == "PRIVATE") {
         // Обработка входящего приватного сообщения в формате PRIVATE:sender:message
         if (parts.size() < 3) {
             qDebug() << "ChatController: Malformed PRIVATE command:" << response;
@@ -384,11 +383,32 @@ void ChatController::processServerResponse(const QString &response)
         // Текущее время для метки времени сообщения
         QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
         
-        // Отправляем сигнал о получении сообщения
-        emit privateMessageReceived(sender, message, timestamp);
-        
-        // Сохраняем сообщение в истории
-        emit privateMessageStored(sender, username, message, timestamp);
+        // Проверка на дубликаты сообщений
+        if (!isMessageDuplicate(sender, timestamp, false)) {
+            // Сохраняем timestamp сообщения
+            if (!timestamp.isEmpty()) {
+                lastPrivateChatTimestamps[sender] = timestamp;
+            }
+            
+            // Добавляем отправителя в список недавних собеседников
+            recentChatPartners.insert(sender);
+            
+            // Отправляем сигнал о получении сообщения
+            emit privateMessageReceived(sender, message, timestamp);
+            
+            // Сохраняем сообщение в истории
+            emit privateMessageStored(sender, username, message, timestamp);
+            
+            // Увеличиваем счетчик непрочитанных сообщений для отправителя
+            unreadPrivateMessageCounts[sender] = unreadPrivateMessageCounts.value(sender, 0) + 1;
+            
+            // Сообщаем об обновлении счетчиков непрочитанных сообщений
+            emit unreadCountsUpdated(unreadPrivateMessageCounts, unreadGroupMessageCounts);
+            
+            qDebug() << "Updated unread count for" << sender << "to" << unreadPrivateMessageCounts[sender];
+        } else {
+            qDebug() << "PRIVATE: Duplicate message detected, ignoring";
+        }
     } else if (command == "PRIVATE_MESSAGE" || command == "PRIVMSG") {
         // Обработка входящего приватного сообщения
         if (parts.size() < 3) {
@@ -566,6 +586,24 @@ else if (parts.size() >= 2 && parts[1].trimmed() == "PRIVMSG") {
         // Можно показать сообщение об ошибке пользователю
         // Или отправить соответствующий сигнал
     }
+} else if (command == "UNREAD_COUNT") {
+    // Обработка ответа сервера о количестве непрочитанных сообщений
+    if (parts.size() >= 3) {
+        QString chatPartner = parts[1];
+        int count = parts[2].toInt();
+        
+        qDebug() << "Received unread count for" << chatPartner << ":" << count;
+        
+        // Обновляем счетчик непрочитанных сообщений
+        if (count > 0) {
+            unreadPrivateMessageCounts[chatPartner] = count;
+        } else {
+            unreadPrivateMessageCounts.remove(chatPartner);
+        }
+        
+        // Отправляем сигнал об обновлении счетчиков
+        emit unreadCountsUpdated(unreadPrivateMessageCounts, unreadGroupMessageCounts);
+    }
 } else {
         qDebug() << "ChatController: Unknown command from server:" << command;
     }
@@ -671,6 +709,16 @@ void ChatController::requestUnreadCounts()
     sendToServer("GET_UNREAD_COUNTS");
 }
 
+void ChatController::requestUnreadCountForUser(const QString &username)
+{
+    sendToServer("GET_UNREAD_COUNT:" + username);
+}
+
+void ChatController::markMessagesAsRead(const QString &username)
+{
+    sendToServer("MARK_READ:" + username);
+}
+
 void ChatController::clearSocketBuffer()
 {
     buffer.clear();
@@ -690,15 +738,27 @@ bool ChatController::isMessageDuplicate(const QString &chatId, const QString &ti
         return false;
     }
     
-    if (isGroup) {
-        if (lastGroupChatTimestamps.contains(chatId) && lastGroupChatTimestamps[chatId] == timestamp) {
-            return true;
-        }
-    } else {
-        if (lastPrivateChatTimestamps.contains(chatId) && lastPrivateChatTimestamps[chatId] == timestamp) {
+    // Используем более консервативный подход - считаем дубликатом только если прошло менее 50мс
+    // Это позволяет быстро отправлять сообщения, но предотвращает настоящие дубликаты
+    static QMap<QString, QDateTime> lastMessageTimes;
+    QString key = (isGroup ? "GROUP_" : "PRIVATE_") + chatId;
+    
+    QDateTime currentTime = QDateTime::currentDateTime();
+    
+    if (lastMessageTimes.contains(key)) {
+        QDateTime lastTime = lastMessageTimes[key];
+        qint64 timeDiff = lastTime.msecsTo(currentTime);
+        
+        // Считаем дубликатом только если прошло менее 50 миллисекунд
+        // Это достаточно для предотвращения настоящих дубликатов сети
+        if (timeDiff < 50) {
+            qDebug() << "Duplicate message detected for" << chatId << "time diff:" << timeDiff << "ms";
             return true;
         }
     }
+    
+    // Обновляем время последнего сообщения
+    lastMessageTimes[key] = currentTime;
     
     return false;
 }

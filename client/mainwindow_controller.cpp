@@ -151,10 +151,20 @@ void MainWindowController::handleUserSelected(const QString &username)
     if (privateChatController) {
         // Если пользователь не выбирает себя
         if (username != view->getCurrentUsername()) {
+            // Запрашиваем количество непрочитанных сообщений для выбранного пользователя
+            if (chatController) {
+                chatController->requestUnreadCountForUser(username);
+            }
+            
             PrivateChatWindow *window = privateChatController->findOrCreateChatWindow(username);
             if (window) {
                 // Запрашиваем историю явно перед показом окна
                 privateChatController->requestMessageHistory(username);
+                
+                // Помечаем сообщения как прочитанные при открытии окна
+                if (chatController) {
+                    chatController->markMessagesAsRead(username);
+                }
                 
                 window->show();
                 window->activateWindow();
@@ -225,6 +235,9 @@ void MainWindowController::handleAuthenticationSuccessful()
             QTimer::singleShot(1000, [this]() {
                 // Запрашиваем историю сообщений для всех известных пользователей
                 chatController->requestRecentChatPartners();
+                
+                // Запрашиваем счетчики непрочитанных сообщений
+                chatController->requestUnreadCounts();
             });
         }
     }
@@ -304,11 +317,15 @@ void MainWindowController::handleGroupMembersUpdated(const QString &chatId, cons
 
 void MainWindowController::handleUnreadCountsUpdated(const QMap<QString, int> &privateCounts, const QMap<QString, int> &groupCounts)
 {
-    // Функциональность должна быть добавлена в MainWindow
-    Q_UNUSED(privateCounts);
-    Q_UNUSED(groupCounts);
+    qDebug() << "MainWindowController: Unread counts updated - private:" << privateCounts << ", group:" << groupCounts;
     
-    // TODO: Реализовать обновление счетчиков непрочитанных сообщений
+    // Update the MainWindow UI with the unread counts
+    if (view) {
+        view->updateUnreadCounts(privateCounts);
+    }
+    
+    // TODO: Handle group chat unread counts when group chat UI is implemented
+    Q_UNUSED(groupCounts);
 }
 
 void MainWindowController::handlePrivateMessageSend(const QString &recipient, const QString &message)

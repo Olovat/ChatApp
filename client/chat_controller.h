@@ -62,10 +62,10 @@ public:
     void startAddUserToGroupMode(const QString &chatId);
     void addUserToGroupChat(const QString &chatId, const QString &username);
     void removeUserFromGroupChat(const QString &chatId, const QString &username);
-    void deleteGroupChat(const QString &chatId);
-    
-    // Методы для обработки непрочитанных сообщений
+    void deleteGroupChat(const QString &chatId);    // Методы для обработки непрочитанных сообщений
     void requestUnreadCounts();
+    void requestUnreadCountForUser(const QString &username);
+    void markMessagesAsRead(const QString &username);
     
     // Метод для отправки произвольных сообщений на сервер
     void sendMessageToServer(const QString &message);
