@@ -222,18 +222,17 @@ void MainWindow::updateUserList(const QStringList &users)
     
     // Сохраняем текущий список друзей (чтобы не потерять друзей, которые оффлайн)
     QMap<QString, bool> existingFriends = userFriends; // userFriends is a member, captures state before this update
-    
-    // Получаем актуальный список друзей из ChatController (сохраненные в настройках)
+      // Получаем актуальный список друзей из ChatController (полученные от сервера)
     if (controller) {
         ChatController* chatController = controller->getChatController();
         if (chatController) {
             QStringList savedFriends = chatController->getFriendList();
-            qDebug() << "Got friend list from ChatController settings, found" << savedFriends.size() << "saved friends";
+            qDebug() << "Got friend list from ChatController, found" << savedFriends.size() << "friends from server";
             
             for (const QString &friend_name : savedFriends) {
                 if (!existingFriends.contains(friend_name)) {
-                    existingFriends[friend_name] = false; // По умолчанию оффлайн, если новый из настроек
-                    qDebug() << "Added friend from controller's saved list:" << friend_name;
+                    existingFriends[friend_name] = false; // По умолчанию оффлайн, если новый от сервера
+                    qDebug() << "Added friend from controller's server list:" << friend_name;
                 }
             }
         }
@@ -677,12 +676,10 @@ void MainWindow::addUserToFriends(const QString &username)
             QStringList currentFriends = chatController->getFriendList();
             if (!currentFriends.contains(username)) {
                 // Добавляем его в список друзей контроллера
-                chatController->addUserToFriends(username);
-            }
+                chatController->addUserToFriends(username);        }
             
-            // Явно запрашиваем сохранение списка друзей после добавления нового друга
-            qDebug() << "Explicitly saving friend list for user" << m_username << "with new friend" << username;
-            chatController->saveFriendList();
+            // Friend list is now managed entirely by server, no local persistence needed
+            qDebug() << "Friend added for user" << m_username << "with new friend" << username << "- server will handle persistence";
         }
     }
     

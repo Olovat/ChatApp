@@ -9,7 +9,7 @@
 #include <QList>
 #include <QSet>
 #include <QTimer>
-#include <QSettings>
+
 
 class MainWindow;
 class PrivateChatWindow;
@@ -83,11 +83,9 @@ public:
     bool isValid() const { 
         return socket && socket->state() == QAbstractSocket::ConnectedState;
     }
-    
-    // Методы для работы с друзьями
+      // Методы для работы с друзьями
     bool isFriend(const QString &username) const;
     QStringList getFriendList() const;
-    void saveFriendList();
 
 signals:
     // Сигналы для UI

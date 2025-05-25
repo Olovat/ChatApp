@@ -102,21 +102,12 @@ void ChatController::authorizeUser(const QString &username, const QString &passw
         emit authenticationSuccessful();
         return;
     }
-      this->username = username;
+    this->username = username;
     this->password = password;
     
-    QSettings settings("ChatApp", "Client");
-    settings.beginGroup("Friends");
-    
-    if (settings.contains(username)) {
-        friendList = settings.value(username, QStringList()).toStringList();
-        qDebug() << "Loaded friend list for user" << username << ":" << friendList.size() 
-                 << "friends. List contents:" << friendList;
-    } else {
-        friendList.clear();
-        qDebug() << "No saved friend list found for user" << username << ", starting with empty list";
-    }
-    settings.endGroup();
+    // Очищаем список друзей - он будет загружен с сервера
+    friendList.clear();
+    qDebug() << "Starting with empty friend list for user" << username << ", friends will be loaded from server";
     
     currentOperation = Auth;
     
@@ -561,11 +552,10 @@ else if (parts.size() >= 2 && parts[1].trimmed() == "PRIVMSG") {
     if (parts.size() >= 2) {
         QString friendUsername = parts[1];
         qDebug() << "Friend successfully added:" << friendUsername;
-        
-        // Добавляем друга в локальный список, если его там еще нет
+          // Добавляем друга в локальный список, если его там еще нет
         if (!friendList.contains(friendUsername)) {
             friendList.append(friendUsername);
-            saveFriendList();
+            // Friend list is now managed entirely by server, no local persistence needed
         }
         
         // Начинаем отслеживание статуса нового друга
@@ -771,28 +761,6 @@ bool ChatController::isFriend(const QString &username) const
 QStringList ChatController::getFriendList() const 
 {
     return friendList;
-}
-
-void ChatController::saveFriendList()
-{
-    if (!username.isEmpty()) {
-        QSettings settings("ChatApp", "Client");
-        settings.beginGroup("Friends");
-        
-        qDebug() << "Saving friend list with key:" << username << "Value:" << friendList;
-        
-        settings.setValue(username, friendList);
-        settings.endGroup();
-        
-        settings.beginGroup("Friends");
-        QStringList savedList = settings.value(username, QStringList()).toStringList();
-        settings.endGroup();
-        
-        qDebug() << "Saved friend list for" << username << ":" << friendList.size() 
-                 << "friends. Verification read back:" << savedList.size() << "friends";
-    } else {
-        qDebug() << "Cannot save friend list: current username is empty.";
-    }
 }
 
 void ChatController::startPollingForFriendStatus(const QString& username) {
