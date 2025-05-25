@@ -473,6 +473,80 @@ else if (parts.size() >= 2 && parts[1].trimmed() == "PRIVMSG") {
             }
         }
     }
+} else if (command == "PRIVATE_HISTORY_CMD") {
+    if (parts.size() >= 3 && parts[1] == "BEGIN") {
+        // Начало получения истории приватных сообщений
+        currentHistoryTarget = parts[2];
+        historyBuffer.clear();
+        qDebug() << "Starting to receive private history for:" << currentHistoryTarget;
+    } else if (parts.size() >= 2 && parts[1] == "END") {
+        // Конец получения истории
+        qDebug() << "Finished receiving private history for:" << currentHistoryTarget;
+        if (!currentHistoryTarget.isEmpty()) {
+            emit privateHistoryReceived(currentHistoryTarget, historyBuffer);
+            currentHistoryTarget.clear();
+            historyBuffer.clear();
+        }
+    }
+} else if (command == "PRIVATE_HISTORY_MSG") {
+    // Сообщение из истории: PRIVATE_HISTORY_MSG:sender:recipient:message:timestamp
+    if (parts.size() >= 5 && !currentHistoryTarget.isEmpty()) {
+        QString sender = parts[1];
+        QString recipient = parts[2]; 
+        QString message = parts[3];
+        QString timestamp = parts[4];
+        
+        // Форматируем сообщение для добавления в буфер истории
+        QString formattedMessage = QString("[%1] %2: %3").arg(timestamp, sender, message);
+        historyBuffer.append(formattedMessage);
+        
+        qDebug() << "Received history message:" << formattedMessage;
+    }
+} else if (command == "SEARCH_RESULTS") {
+    // Обработка результатов поиска пользователей
+    QStringList searchResults;
+    if (parts.size() > 1) {
+        // Пропускаем первую часть (команду), остальные - это найденные пользователи
+        for (int i = 1; i < parts.size(); ++i) {
+            if (!parts[i].trimmed().isEmpty()) {
+                searchResults.append(parts[i].trimmed());
+            }
+        }
+    }
+    
+    qDebug() << "Received search results:" << searchResults;
+    lastSearchResults = searchResults;
+    emit searchResultsReady(searchResults);
+} else if (command == "FRIEND_ADDED") {
+    // Обработка успешного добавления друга
+    if (parts.size() >= 2) {
+        QString friendUsername = parts[1];
+        qDebug() << "Friend successfully added:" << friendUsername;
+        
+        // Добавляем друга в локальный список, если его там еще нет
+        if (!friendList.contains(friendUsername)) {
+            friendList.append(friendUsername);
+            saveFriendList();
+        }
+        
+        // Начинаем отслеживание статуса нового друга
+        startPollingForFriendStatus(friendUsername);
+        
+        // Отправляем сигнал об успешном добавлении
+        emit friendAddedSuccessfully(friendUsername);
+        
+        // Запрашиваем обновленный список пользователей
+        requestUserList();
+    }
+} else if (command == "FRIEND_ADD_FAIL") {
+    // Обработка неудачного добавления друга
+    if (parts.size() >= 2) {
+        QString friendUsername = parts[1];
+        qDebug() << "Failed to add friend:" << friendUsername;
+        
+        // Можно показать сообщение об ошибке пользователю
+        // Или отправить соответствующий сигнал
+    }
 } else {
         qDebug() << "ChatController: Unknown command from server:" << command;
     }
@@ -489,8 +563,8 @@ void ChatController::sendPrivateMessage(const QString &recipient, const QString 
     // Текущее время для сохранения в истории
     QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
     
-    // Добавляем сообщение себе для отображения в чате
-    emit privateMessageReceived(username, message, timestamp);
+    // УБИРАЕМ это - сообщение будет показано когда сервер пришлет подтверждение
+    // emit privateMessageReceived(username, message, timestamp);
     
     // Сохраняем сообщение в истории
     emit privateMessageStored(username, recipient, message, timestamp);
@@ -521,14 +595,9 @@ void ChatController::requestPrivateMessageHistory(const QString &username)
     historyBuffer.clear();
     currentHistoryTarget = username;
     
-    // Запрашиваем обе стороны истории сообщений
-    // Важно запрашивать историю в обоих направлениях
+    // Запрашиваем историю сообщений - сервер должен вернуть все сообщения между пользователями
+    // ИСПРАВЛЕНО: делаем только один запрос, сервер сам обработает историю в обе стороны
     sendToServer(QString("GET_PRIVATE_HISTORY:%1:%2").arg(this->username, username));
-    
-    // Добавляем задержку перед вторым запросом, чтобы избежать смешивания истории
-    QTimer::singleShot(200, [this, username]() {
-        sendToServer(QString("GET_PRIVATE_HISTORY:%1:%2").arg(username, this->username));
-    });
     
     // Обновляем интерфейс, чтобы показать, что идёт загрузка
     emit historyRequestStarted(username);

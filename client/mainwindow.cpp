@@ -284,8 +284,7 @@ void MainWindow::updateUserList(const QStringList &users)
             qDebug() << "Skipping current user:" << username;
             continue;
         }
-        
-        // Определяем тип пользователя на основе typeFromServer
+          // Определяем тип пользователя на основе typeFromServer
         bool isFriendByServerType = typeFromServer.endsWith(":F"); // e.g., "U:F"
         bool isGroupChatByServerType = typeFromServer.startsWith("G") || typeFromServer.endsWith(":G"); // e.g., "G_chatname" or "U:G"
 
@@ -302,16 +301,9 @@ void MainWindow::updateUserList(const QStringList &users)
                 offlineFriendUsers.append(username);
             }
         } else {
-            // Не групповой чат, не друг по типу от сервера и не в existingFriends.
-            // Это может быть обычный пользователь 'U', 'U:U', или результат поиска.
-            qDebug() << "User" << username << "(type:" << typeFromServer << ") is not a group/friend. Checking if recent chat partner.";
-            if (recentChatPartners.contains(username) && !currentSessionUserFriends.contains(username)) {
-                 qDebug() << "Adding recent (non-friend) chat partner:" << username << "as offline.";
-                 currentSessionUserFriends[username] = false; // Показываем недавних собеседников как оффлайн, если они не друзья
-                 offlineFriendUsers.append(username);
-            } else {
-                 qDebug() << "Skipping user" << username << "(not a friend, not recent, or already handled).";
-            }
+            // Обычный пользователь (U), не друг - не добавляем в список интерфейса
+            // Поиск пользователей обрабатывается отдельно через showSearchResults
+            qDebug() << "User" << username << "(type:" << typeFromServer << ") is not a friend, skipping from user list.";
         }
     }
     
