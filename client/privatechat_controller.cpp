@@ -2,7 +2,6 @@
 #include "privatechatwindow.h"
 #include "mainwindow_controller.h"
 #include "chat_controller.h"
-#include "message_database.h"
 #include <QDebug>
 #include <QTimer>
 
@@ -38,16 +37,12 @@ PrivateChatWindow* PrivateChatController::findOrCreateChatWindow(const QString &
     // Если окно уже существует, возвращаем его
     if (m_chatWindows.contains(username)) {
         qDebug() << "Found existing window for" << username;
-        
-        // Если нужно, проверяем историю и запрашиваем ее
+          // Если нужно, проверяем историю и запрашиваем ее
         if (findOrCreateChatModel(username)->getMessages().isEmpty()) {
             // Если сообщений нет, запрашиваем историю и показываем индикатор загрузки
             m_chatWindows[username]->showLoadingIndicator();
             
-            // Загружаем историю из базы данных
-            loadHistoryFromDatabase(username);
-            
-            // Также запрашиваем историю с сервера
+            // Запрашиваем историю с сервера
             requestMessageHistory(username);
         }
         
@@ -73,14 +68,10 @@ PrivateChatWindow* PrivateChatController::findOrCreateChatWindow(const QString &
     
     // Настраиваем соединения
     setupConnectionsForWindow(chatWindow, username);
-    
-    // Сохраняем окно в карте
+      // Сохраняем окно в карте
     m_chatWindows[username] = chatWindow;
     
-    // Сначала загружаем историю из базы данных
-    loadHistoryFromDatabase(username);
-    
-    // Затем запрашиваем историю сообщений с сервера
+    // Запрашиваем историю сообщений с сервера
     qDebug() << "Requesting message history for new chat window with" << username;
     QTimer::singleShot(100, [this, username]() {
         requestMessageHistory(username);
@@ -157,19 +148,12 @@ void PrivateChatController::handleIncomingMessage(const QString &sender, const Q
         model->addMessage(sender, message, timestamp.isEmpty() ? 
                       QDateTime::currentDateTime().toString("hh:mm:ss") : timestamp);
         return; // Важно - не открываем новое окно
-    }
-
-    // Получаем или создаём модель для этого чата
+    }    // Получаем или создаём модель для этого чата
     PrivateChatModel *model = findOrCreateChatModel(sender);
     
-    // Сохраняем сообщение в базу данных
+    // Добавляем сообщение в модель
     QString actualTimestamp = timestamp.isEmpty() ? 
                       QDateTime::currentDateTime().toString("hh:mm:ss") : timestamp;
-    
-    MessageDatabase::instance().storeMessage(
-        m_currentUsername, sender, sender, message, actualTimestamp, false);
-    
-    // Добавляем сообщение в модель
     model->addMessage(sender, message, actualTimestamp);
     
     // Если окно чата с этим пользователем уже открыто и видимо
@@ -217,16 +201,11 @@ void PrivateChatController::handleMessageHistory(const QString &username, const 
 void PrivateChatController::sendMessage(const QString &recipient, const QString &message)
 {
     qDebug() << "PrivateChatController: Sending message to" << recipient << ":" << message;
-    
-    // Отправляем сообщение через ChatController
+      // Отправляем сообщение через ChatController
     emit messageSent(recipient, message);
     
     // Текущее время для метки сообщения
     QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
-    
-    // Сохраняем сообщение в базу данных
-    MessageDatabase::instance().storeMessage(
-        m_currentUsername, recipient, m_currentUsername, message, timestamp, true);
     
     // Добавляем сообщение в модель чата для отображения (это наше сообщение)
     PrivateChatModel *model = findOrCreateChatModel(recipient);
@@ -234,46 +213,7 @@ void PrivateChatController::sendMessage(const QString &recipient, const QString 
     
     // Запрашиваем обновление истории
     QTimer::singleShot(500, [this, recipient]() {
-        requestMessageHistory(recipient);
-    });
-}
-
-// Добавим новый метод для загрузки истории из базы данных
-void PrivateChatController::loadHistoryFromDatabase(const QString &username)
-{
-    qDebug() << "Loading message history from database for" << username;
-    
-    // Пробуем явно инициализировать базу данных
-    bool dbInitialized = MessageDatabase::instance().init();
-    qDebug() << "Database initialization result:" << (dbInitialized ? "Success" : "Failed");
-    
-    QList<PrivateMessage> messages = MessageDatabase::instance().loadMessages(m_currentUsername, username);
-    
-    qDebug() << "Loaded" << messages.size() << "messages from database for" << username;
-    
-    if (!messages.isEmpty()) {
-        // Получаем модель для этого чата
-        PrivateChatModel *model = findOrCreateChatModel(username);
-        
-        // Для отладки выводим несколько сообщений
-        int debugMsgCount = qMin(3, messages.size());
-        for (int i = 0; i < debugMsgCount; ++i) {
-            qDebug() << "Sample message" << i << ": " << messages[i].sender 
-                     << " -> " << messages[i].content.left(20) 
-                     << "... at" << messages[i].timestamp;
-        }
-        
-        // Устанавливаем историю сообщений
-        model->setMessageHistory(messages);
-        
-        // Обновляем окно, если оно существует
-        if (m_chatWindows.contains(username)) {
-            m_chatWindows[username]->displayMessages(messages);
-            qDebug() << "Updated chat window with history from database";
-        }
-    } else {
-        qDebug() << "No messages found in database for" << username;
-    }
+        requestMessageHistory(recipient);    });
 }
 
 void PrivateChatController::requestMessageHistory(const QString &username)
@@ -603,21 +543,9 @@ void PrivateChatController::parseMessageHistory(const QString &username, const Q
                  [](const PrivateMessage &a, const PrivateMessage &b) {
                      return a.timestamp < b.timestamp;
                  });
-        
-        qDebug() << "Setting complete message history with" << allMessages.size() 
+          qDebug() << "Setting complete message history with" << allMessages.size() 
                  << "messages (existing:" << existingMessages.size() 
                  << ", new:" << parsedMessages.size() << ")";
-        
-        // Сохраняем все новые сообщения в базу данных
-        for (const PrivateMessage &msg : parsedMessages) {
-            MessageDatabase::instance().storeMessage(
-                m_currentUsername, 
-                username, 
-                msg.sender, 
-                msg.content, 
-                msg.timestamp, 
-                msg.isRead);
-        }
         
         model->setMessageHistory(allMessages);
         

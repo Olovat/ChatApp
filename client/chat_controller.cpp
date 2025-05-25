@@ -368,8 +368,27 @@ void ChatController::processServerResponse(const QString &response)
             // Друг не найден, добавляем в список с новым статусом
             friendList.append(friendUsername + ":" + status);
         }
+          emit friendStatusUpdated(friendUsername, (status == "1"));
+    } else if (command == "PRIVATE") {
+        // Обработка входящего приватного сообщения в формате PRIVATE:sender:message
+        if (parts.size() < 3) {
+            qDebug() << "ChatController: Malformed PRIVATE command:" << response;
+            return;
+        }
         
-        emit friendStatusUpdated(friendUsername, (status == "1"));
+        QString sender = parts[1];
+        QString message = parts.mid(2).join(":");
+        
+        qDebug() << "Received private message from" << sender << ":" << message;
+        
+        // Текущее время для метки времени сообщения
+        QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
+        
+        // Отправляем сигнал о получении сообщения
+        emit privateMessageReceived(sender, message, timestamp);
+        
+        // Сохраняем сообщение в истории
+        emit privateMessageStored(sender, username, message, timestamp);
     } else if (command == "PRIVATE_MESSAGE" || command == "PRIVMSG") {
         // Обработка входящего приватного сообщения
         if (parts.size() < 3) {
@@ -557,7 +576,7 @@ void ChatController::sendPrivateMessage(const QString &recipient, const QString 
     qDebug() << "Sending private message to" << recipient << ":" << message;
     
     // Формат команды для отправки приватного сообщения
-    QString command = QString("PRIVMSG:%1:%2").arg(recipient, message);
+    QString command = QString("PRIVATE:%1:%2").arg(recipient, message);
     sendToServer(command);
     
     // Текущее время для сохранения в истории

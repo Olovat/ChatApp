@@ -47,10 +47,8 @@ private:
     QMap<QString, PrivateChatWindow*> m_chatWindows;
     QMap<QString, PrivateChatModel*> m_chatModels;
 
-    PrivateChatModel* findOrCreateChatModel(const QString &username);
-    void setupConnectionsForWindow(PrivateChatWindow *window, const QString &username);
+    PrivateChatModel* findOrCreateChatModel(const QString &username);    void setupConnectionsForWindow(PrivateChatWindow *window, const QString &username);
     void parseMessageHistory(const QString &username, const QStringList &messages);
-    void loadHistoryFromDatabase(const QString &username);
 };
 
 #endif // PRIVATECHAT_CONTROLLER_H

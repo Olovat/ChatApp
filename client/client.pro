@@ -21,7 +21,6 @@ SOURCES += \
     privatechat_controller.cpp \
     privatechatwindow.cpp \
     privatechat_model.cpp \
-    message_database.cpp
 
 HEADERS += \
     mainwindow.h \
@@ -36,7 +35,6 @@ HEADERS += \
     privatechat_controller.h \
     privatechatwindow.h \
     privatechat_model.h \
-    message_database.h
 
 FORMS += \
     auth_window.ui \
