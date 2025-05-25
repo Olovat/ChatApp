@@ -157,7 +157,7 @@ private:
     void sendToServer(const QString &message);
     void processServerResponse(const QString &response);
     void clearSocketBuffer();
-    bool isMessageDuplicate(const QString &chatId, const QString &timestamp, bool isGroup);
+    bool isMessageDuplicate(const QString &chatId, const QString &content, bool isGroup);
     void startPollingForFriendStatus(const QString& username);
     void stopPollingForFriendStatus();
 };

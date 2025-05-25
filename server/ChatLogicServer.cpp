@@ -167,10 +167,9 @@ void ChatLogicServer::handleMessageReceived(std::shared_ptr<INetworkClient> clie
     else if (command == "GET_HISTORY") {
         if (!senderUsername.empty()) {
             sendMessageHistoryToClient(client);
-        }
-    } else if (command == "GET_PRIVATE_HISTORY" && parts.size() >= 2) {
+        }    } else if (command == "GET_PRIVATE_HISTORY" && parts.size() >= 3) {
         if (!senderUsername.empty()) {
-            sendPrivateMessageHistoryToClient(client, senderUsername, parts[1]);
+            sendPrivateMessageHistoryToClient(client, parts[1], parts[2]);
         }
     } else if (command == "CREATE_GROUP_CHAT" && parts.size() >= 2) {
         if (!senderUsername.empty()) {

@@ -370,12 +370,10 @@ void ChatController::processServerResponse(const QString &response)
         QString message = parts.mid(2).join(":");
         
         qDebug() << "Received private message from" << sender << ":" << message;
-        
-        // Текущее время для метки времени сообщения
+          // Текущее время для метки времени сообщения
         QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
-        
-        // Проверка на дубликаты сообщений
-        if (!isMessageDuplicate(sender, timestamp, false)) {
+          // Проверка на дубликаты сообщений
+        if (!isMessageDuplicate(sender, message, false)) {
             // Сохраняем timestamp сообщения
             if (!timestamp.isEmpty()) {
                 lastPrivateChatTimestamps[sender] = timestamp;
@@ -399,28 +397,7 @@ void ChatController::processServerResponse(const QString &response)
             qDebug() << "Updated unread count for" << sender << "to" << unreadPrivateMessageCounts[sender];
         } else {
             qDebug() << "PRIVATE: Duplicate message detected, ignoring";
-        }
-    } else if (command == "PRIVATE_MESSAGE" || command == "PRIVMSG") {
-        // Обработка входящего приватного сообщения
-        if (parts.size() < 3) {
-            qDebug() << "ChatController: Malformed PRIVATE_MESSAGE command:" << response;
-            return;
-        }
-        
-        QString sender = parts[1];
-        QString message = parts.mid(2).join(":");
-        
-        qDebug() << "Received private message from" << sender << ":" << message;
-        
-        // Текущее время для метки времени сообщения
-        QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
-        
-        // Отправляем сигнал о получении сообщения
-        emit privateMessageReceived(sender, message, timestamp);
-        
-        // Сохраняем сообщение в истории
-        emit privateMessageStored(sender, username, message, timestamp);
-    } else if (command == "MESSAGE_HISTORY" || command == "HISTORY") {
+        }    }else if (command == "MESSAGE_HISTORY" || command == "HISTORY") {
         // Обработка истории сообщений
         if (parts.size() < 2) {
             qDebug() << "ChatController: Malformed MESSAGE_HISTORY command:" << response;
@@ -442,45 +419,9 @@ void ChatController::processServerResponse(const QString &response)
             // Отправляем сигнал о получении сообщения из истории
             emit privateMessageReceived(sender, message, timestamp);
         }
-    } else if (command == "PRIVATE_MSG") {
-    if (parts.size() >= 3) {
-        QString sender = parts[1];
-        QString message = parts[2];
-        QString timestamp = parts.size() > 3 ? parts[3] : QDateTime::currentDateTime().toString("hh:mm:ss");
-        
-        // Отладка
-        qDebug() << "PRIVATE_MSG received: Sender=" << sender << ", Message=" << message << ", Timestamp=" << timestamp;
-        
-        // Проверка на дубликаты сообщений
-        if (!isMessageDuplicate(sender, timestamp, false)) {
-            // Сохраняем timestamp сообщения
-            if (!timestamp.isEmpty()) {
-                lastPrivateChatTimestamps[sender] = timestamp;
-            }
-            
-            // Добавляем отправителя в список недавних собеседников
-            recentChatPartners.insert(sender);
-            
-            // ВАЖНО: Сохраняем сообщение в базе данных на сервере
-            if (sender != getCurrentUsername()) {
-                storePrivateMessage(sender, getCurrentUsername(), message, timestamp);
-            }
-            
-            // Вызов сигнала для обработки приватного сообщения
-            emit privateMessageReceived(sender, message, timestamp);
-            
-            // Увеличиваем счетчик непрочитанных сообщений только если окно не активно
-            unreadPrivateMessageCounts[sender] = unreadPrivateMessageCounts.value(sender, 0) + 1;
-            
-            // Сообщаем об обновлении счетчиков непрочитанных сообщений
-            emit unreadCountsUpdated(unreadPrivateMessageCounts, unreadGroupMessageCounts);
-        } else {
-            qDebug() << "PRIVATE_MSG: Duplicate message detected, ignoring";
-        }
     }
-}
-// Обработчик сообщения от сервера в формате "username: PRIVMSG:recipient:message"
-else if (parts.size() >= 2 && parts[1].trimmed() == "PRIVMSG") {
+    // Обработчик сообщения от сервера в формате "username: PRIVMSG:recipient:message"
+    else if (parts.size() >= 2 && parts[1].trimmed() == "PRIVMSG") {
     if (parts.size() >= 4) {
         QString sender = parts[0];
         QString recipient = parts[2];
@@ -489,13 +430,12 @@ else if (parts.size() >= 2 && parts[1].trimmed() == "PRIVMSG") {
         
         qDebug() << "Interpreted as private message: sender=" << sender 
                 << ", recipient=" << recipient << ", message=" << message;
-        
-        // Проверяем, относится ли сообщение к текущему пользователю
+          // Проверяем, относится ли сообщение к текущему пользователю
         if (recipient == getCurrentUsername() || sender == getCurrentUsername()) {
-            // Проверка на дубликаты
-            if (!isMessageDuplicate(sender, timestamp, false)) {
+            // Проверка на дубликаты - используем отправителя как chatId для приватных сообщений
+            QString chatPartner = (sender == getCurrentUsername()) ? recipient : sender;
+            if (!isMessageDuplicate(chatPartner, message, false)) {
                 // Добавляем в список недавних собеседников
-                QString chatPartner = (sender == getCurrentUsername()) ? recipient : sender;
                 recentChatPartners.insert(chatPartner);
                 
                 // Отправляем сигнал о новом приватном сообщении
@@ -519,18 +459,24 @@ else if (parts.size() >= 2 && parts[1].trimmed() == "PRIVMSG") {
         }
     }
 } else if (command == "PRIVATE_HISTORY_MSG") {
-    // Сообщение из истории: PRIVATE_HISTORY_MSG:sender:recipient:message:timestamp
-    if (parts.size() >= 5 && !currentHistoryTarget.isEmpty()) {
-        QString sender = parts[1];
-        QString recipient = parts[2]; 
-        QString message = parts[3];
-        QString timestamp = parts[4];
+    // Сообщение из истории: PRIVATE_HISTORY_MSG:timestamp|sender|recipient|message_text
+    if (parts.size() >= 2 && !currentHistoryTarget.isEmpty()) {
+        // Парсим данные, разделенные символом "|"
+        QString remainingData = parts.mid(1).join(":");
+        QStringList msgParts = remainingData.split("|");
         
-        // Форматируем сообщение для добавления в буфер истории
-        QString formattedMessage = QString("[%1] %2: %3").arg(timestamp, sender, message);
-        historyBuffer.append(formattedMessage);
-        
-        qDebug() << "Received history message:" << formattedMessage;
+        if (msgParts.size() >= 4) {
+            QString timestamp = msgParts[0];
+            QString sender = msgParts[1];
+            QString recipient = msgParts[2];
+            QString message = msgParts[3];
+            
+            // Форматируем сообщение для добавления в буфер истории, включая всю информацию
+            QString formattedMessage = QString("%1|%2|%3|%4").arg(timestamp, sender, recipient, message);
+            historyBuffer.append(formattedMessage);
+            
+            qDebug() << "Received history message:" << formattedMessage;
+        }
     }
 } else if (command == "SEARCH_RESULTS") {
     // Обработка результатов поиска пользователей
@@ -610,10 +556,8 @@ void ChatController::sendPrivateMessage(const QString &recipient, const QString 
     // Текущее время для сохранения в истории
     QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
     
-    // УБИРАЕМ это - сообщение будет показано когда сервер пришлет подтверждение
-    // emit privateMessageReceived(username, message, timestamp);
-    
-    // Сохраняем сообщение в истории
+    // Сохраняем сообщение в истории без дублирования отображения
+    // Сообщение будет добавлено в модель через PrivateChatController
     emit privateMessageStored(username, recipient, message, timestamp);
     
     // Добавляем в список последних отправленных сообщений для отладки
@@ -722,27 +666,24 @@ void ChatController::requestUserList()
     sendToServer("GET_USERLIST");
 }
 
-bool ChatController::isMessageDuplicate(const QString &chatId, const QString &timestamp, bool isGroup)
+bool ChatController::isMessageDuplicate(const QString &chatId, const QString &content, bool isGroup)
 {
-    if (timestamp.isEmpty()) {
-        return false;
-    }
-    
-    // Используем более консервативный подход - считаем дубликатом только если прошло менее 50мс
-    // Это позволяет быстро отправлять сообщения, но предотвращает настоящие дубликаты
-    static QMap<QString, QDateTime> lastMessageTimes;
+    // Проверяем только временные интервалы для предотвращения технических дубликатов
+    // Не проверяем содержимое - пользователь может отправить одинаковые сообщения
+    static QMap<QString, qint64> lastMessageTimes;
     QString key = (isGroup ? "GROUP_" : "PRIVATE_") + chatId;
     
-    QDateTime currentTime = QDateTime::currentDateTime();
+    qint64 currentTime = QDateTime::currentMSecsSinceEpoch();
     
     if (lastMessageTimes.contains(key)) {
-        QDateTime lastTime = lastMessageTimes[key];
-        qint64 timeDiff = lastTime.msecsTo(currentTime);
+        qint64 lastTime = lastMessageTimes[key];
+        qint64 timeDiff = currentTime - lastTime;
         
-        // Считаем дубликатом только если прошло менее 50 миллисекунд
-        // Это достаточно для предотвращения настоящих дубликатов сети
-        if (timeDiff < 50) {
-            qDebug() << "Duplicate message detected for" << chatId << "time diff:" << timeDiff << "ms";
+        // Считаем дубликатом только если сообщения пришли слишком быстро (менее 100мс)
+        // Это защищает от технических дубликатов, но позволяет отправлять одинаковые сообщения
+        if (timeDiff < 100) {
+            qDebug() << "Technical duplicate detected for" << chatId 
+                    << "time diff:" << timeDiff << "ms - likely network duplicate";
             return true;
         }
     }

@@ -201,7 +201,8 @@ void PrivateChatController::handleMessageHistory(const QString &username, const 
 void PrivateChatController::sendMessage(const QString &recipient, const QString &message)
 {
     qDebug() << "PrivateChatController: Sending message to" << recipient << ":" << message;
-      // Отправляем сообщение через ChatController
+    
+    // Отправляем сообщение через ChatController
     emit messageSent(recipient, message);
     
     // Текущее время для метки сообщения
@@ -211,9 +212,8 @@ void PrivateChatController::sendMessage(const QString &recipient, const QString 
     PrivateChatModel *model = findOrCreateChatModel(recipient);
     model->addMessage(m_currentUsername, message, timestamp);
     
-    // Запрашиваем обновление истории
-    QTimer::singleShot(500, [this, recipient]() {
-        requestMessageHistory(recipient);    });
+    // Не запрашиваем историю сразу после отправки, чтобы избежать дублирования
+    // История будет обновлена при следующем открытии окна чата
 }
 
 void PrivateChatController::requestMessageHistory(const QString &username)
@@ -376,26 +376,60 @@ void PrivateChatController::parseMessageHistory(const QString &username, const Q
         QString timestamp;
         
         // Попытаемся распознать все возможные форматы сообщений
-        
-        // Формат 1: "sender|content|timestamp"
+          // Формат 1: Новый формат "timestamp|sender|recipient|message"
         if (messageData.contains('|')) {
             QStringList parts = messageData.split('|');
-            if (parts.size() >= 2) {
-                sender = parts[0].trimmed();
+            
+            if (parts.size() >= 4) {
+                // Новый формат: timestamp|sender|recipient|message
+                timestamp = parts[0].trimmed();
+                QString messageSender = parts[1].trimmed();
+                QString messageRecipient = parts[2].trimmed();
+                content = parts[3].trimmed();
+                
+                // Проверяем, что сообщение не служебное
+                if (messageSender == "Система" || messageSender == "System") {
+                    qDebug() << "Skipping system message:" << messageData;
+                    continue;
+                }
+                
+                // Определяем отправителя на основе текущего пользователя и собеседника
+                if (messageSender == m_currentUsername) {
+                    sender = m_currentUsername;
+                } else if (messageSender == username) {
+                    sender = username;
+                } else {
+                    // Попробуем определить по получателю
+                    if (messageRecipient == m_currentUsername) {
+                        sender = username; // Сообщение пришло к нам от собеседника
+                    } else if (messageRecipient == username) {
+                        sender = m_currentUsername; // Мы отправили сообщение собеседнику
+                    } else {
+                        qDebug() << "Cannot determine sender for message:" << messageData;
+                        continue;
+                    }
+                }
+            } else if (parts.size() >= 3) {
+                // Старый формат: timestamp|sender|message (для совместимости)
+                timestamp = parts[0].trimmed();
+                sender = parts[1].trimmed();
+                content = parts[2].trimmed();
                 
                 // Проверяем, что сообщение не служебное
                 if (sender == "Система" || sender == "System") {
                     qDebug() << "Skipping system message:" << messageData;
                     continue;
                 }
+            } else if (parts.size() >= 2) {
+                // Очень старый формат: sender|message
+                sender = parts[0].trimmed();
+                content = parts[1].trimmed();
+                timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
                 
-                // Получаем содержимое и timestamp
-                if (parts.size() >= 3) {
-                    content = parts[1];
-                    timestamp = parts[2];
-                } else {
-                    content = parts[1];
-                    timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
+                // Проверяем, что сообщение не служебное
+                if (sender == "Система" || sender == "System") {
+                    qDebug() << "Skipping system message:" << messageData;
+                    continue;
                 }
             } else {
                 qDebug() << "Invalid message format (|), skipping:" << messageData;
