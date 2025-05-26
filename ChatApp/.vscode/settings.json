@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.old": "cpp",
+        "system_error": "cpp"
+    }
+}

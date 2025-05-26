@@ -1,0 +1,160 @@
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
+
+#include <QApplication>
+#include <QMessageBox>
+#include <QMainWindow>
+#include <QString>
+#include <QtSql/QtSql>
+#include "auth_window.h"
+#include "reg_window.h"
+#include <QUuid>
+#include <QListWidgetItem>
+#include <QMap>
+#include <QDialog>
+#include <QListWidget>
+#include <QSet>
+#include "../tests/test_client/MockDatabase.h"
+#include "ui_mainwindow.h"
+
+// Предварительные объявления
+class ChatController;
+class MainWindowController;
+class PrivateChatWindow;
+class GroupChatWindow;
+class TransitWindow;
+
+QT_BEGIN_NAMESPACE
+namespace Ui {
+class MainWindow;
+}
+QT_END_NAMESPACE
+
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+    enum class Mode { Production, Testing };
+
+    explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(Mode mode, QWidget *parent = nullptr); // Конструктор для тестового режима
+    ~MainWindow();
+    
+    // Для тестового режима
+    void setTestCredentials(const QString& login, const QString& pass) {
+        m_username = login;
+        m_userpass = pass;
+    }
+    
+    // Метод отображения главного окна (после успешной авторизации)
+    void display();
+    
+    // Методы доступа к данным пользователя
+    void setLogin(const QString &login);
+    void setPass(const QString &pass);
+    QString getUsername() const;
+    QString getUserpass() const;
+    
+    // Методы для работы с приватными чатами
+    void handlePrivateMessage(const QString &sender, const QString &message); // Обработка приватных сообщений
+    
+    // Методы для тестирования
+    bool isLoginSuccessful() const;
+    bool hasPrivateChatWith(const QString &username) const;
+    int privateChatsCount() const;
+    QStringList privateChatParticipants() const;
+    QStringList getDisplayedUsers() const;
+    QString getCurrentUsername() const;
+    
+    // Для поддержки тестов
+    void setTestDatabase(std::unique_ptr<MockDatabase> db) { testDb = std::move(db); }
+    
+    // Получение контроллера для тестов
+    MainWindowController* getController() const { return controller; }
+    
+    void initializeCommon(); // Инициализация общих компонентов
+
+signals:
+    void authSuccess();
+    void registerSuccess();
+    void userListUpdated();
+    void requestAuthorizeUser(const QString &username, const QString &password);
+    void requestRegisterUser(const QString &username, const QString &password);
+    void userSelected(const QString &username);
+    void requestSearchUsers(const QString &query);
+    void requestAddUserToFriends(const QString &username);
+    void requestCreateGroupChat(const QString &chatName);
+    void requestJoinGroupChat(const QString &chatId);
+    void requestPrivateMessageSend(const QString &recipient, const QString &message);
+    void requestGroupMessageSend(const QString &chatId, const QString &message);
+    void requestPrivateMessageHistory(const QString &username);
+
+public slots:
+    // Слоты для обновления пользовательского интерфейса
+    void updateUserList(const QStringList &users);
+    void showSearchResults(const QStringList &users);
+    
+private slots:
+    // Слоты для обработки действий в интерфейсе
+    void authorizeUser(); // Обработка нажатия кнопки авторизации
+    void registerUser();  // Обработка нажатия кнопки регистрации
+    void prepareForRegistration(); // Для переключения на окно регистрации
+    void on_pushButton_clicked();  // Создать групповой чат
+    void on_pushButton_2_clicked(); // Присоединиться к групповому чату
+    void on_lineEdit_returnPressed(); // Поиск пользователей
+    void onUserSelected(QListWidgetItem *item); // Выбор пользователя из списка
+    void onPrivateChatClosed(); // Обработка закрытия окна приватного чата
+
+    // Функции для поиска пользователей
+    void searchUsers();
+    void addUserToFriends(const QString &username);
+
+public:
+    Mode mode;
+    std::unique_ptr<MockDatabase> testDb; // Mock база данных
+
+private:
+    Ui::MainWindow *ui;
+    // Контроллер для управления логикой приложения
+    MainWindowController *controller;
+    
+    // Переменные для работы с окнами авторизации и регистрации
+    auth_window ui_Auth;
+    reg_window ui_Reg;
+    QString m_username;
+    QString m_userpass;
+    bool m_loginSuccesfull;
+    
+    // Функция для создания или получения существующего окна приватного чата
+    PrivateChatWindow* findOrCreatePrivateChatWindow(const QString &username);
+    
+    // Хранилища окон чатов
+    QMap<QString, PrivateChatWindow*> privateChatWindows; // Map для хранения открытых приватных чатов
+    QMap<QString, GroupChatWindow*> groupChatWindows; // Map для хранения открытых групповых чатов
+
+    // Таблица друзей пользователя
+    QMap<QString, bool> userFriends; // имя пользователя -> флаг онлайн
+    
+    // Результаты поиска
+    QStringList searchResults;
+    QDialog* searchDialog;
+    QListWidget* searchListWidget;
+    
+    // UI функции
+    void updateWindowTitle() {
+        if (!m_username.isEmpty()) {
+            setWindowTitle("Текущий пользователь: " + m_username);
+        } else {
+            setWindowTitle("Тестовый режим");
+        }
+    }
+    
+    // Обновление статусов чатов
+    void updatePrivateChatStatuses(const QMap<QString, bool> &userStatusMap);
+    
+    // Хранит пользователей, с которыми было общение
+    QSet<QString> recentChatPartners;
+};
+
+#endif // MAINWINDOW_H
