@@ -371,8 +371,7 @@ void ChatController::processServerResponse(const QString &response)
         
         qDebug() << "Received private message from" << sender << ":" << message;
           // Текущее время для метки времени сообщения
-        QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
-          // Проверка на дубликаты сообщений
+        QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");        // Проверка на дубликаты сообщений
         if (!isMessageDuplicate(sender, message, false)) {
             // Сохраняем timestamp сообщения
             if (!timestamp.isEmpty()) {
@@ -388,16 +387,14 @@ void ChatController::processServerResponse(const QString &response)
             // Сохраняем сообщение в истории
             emit privateMessageStored(sender, username, message, timestamp);
             
-            // Увеличиваем счетчик непрочитанных сообщений для отправителя
-            unreadPrivateMessageCounts[sender] = unreadPrivateMessageCounts.value(sender, 0) + 1;
+            // Запрашиваем актуальный счетчик непрочитанных сообщений с сервера
+            // вместо локального увеличения на 1
+            requestUnreadCountForUser(sender);
             
-            // Сообщаем об обновлении счетчиков непрочитанных сообщений
-            emit unreadCountsUpdated(unreadPrivateMessageCounts, unreadGroupMessageCounts);
-            
-            qDebug() << "Updated unread count for" << sender << "to" << unreadPrivateMessageCounts[sender];
+            qDebug() << "Requested updated unread count for" << sender << "from server";
         } else {
             qDebug() << "PRIVATE: Duplicate message detected, ignoring";
-        }    }else if (command == "MESSAGE_HISTORY" || command == "HISTORY") {
+        }}else if (command == "MESSAGE_HISTORY" || command == "HISTORY") {
         // Обработка истории сообщений
         if (parts.size() < 2) {
             qDebug() << "ChatController: Malformed MESSAGE_HISTORY command:" << response;

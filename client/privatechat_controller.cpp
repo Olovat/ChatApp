@@ -155,8 +155,7 @@ void PrivateChatController::handleIncomingMessage(const QString &sender, const Q
     QString actualTimestamp = timestamp.isEmpty() ? 
                       QDateTime::currentDateTime().toString("hh:mm:ss") : timestamp;
     model->addMessage(sender, message, actualTimestamp);
-    
-    // Если окно чата с этим пользователем уже открыто и видимо
+      // Если окно чата с этим пользователем уже открыто и видимо
     if (m_chatWindows.contains(sender) && m_chatWindows[sender]->isVisible()) {
         // Активируем окно только если оно уже открыто и видимо
         m_chatWindows[sender]->activateWindow();
@@ -165,8 +164,8 @@ void PrivateChatController::handleIncomingMessage(const QString &sender, const Q
     // Больше не открываем окно автоматически при получении сообщения
     // Вместо этого полагаемся на уведомления через счетчик непрочитанных сообщений
     
-    // Увеличиваем счетчик непрочитанных сообщений
-    model->incrementUnreadCount();
+    // Счетчик непрочитанных сообщений будет обновлен через ChatController
+    // который запросит актуальные данные с сервера
 }
 
 void PrivateChatController::handleMessageHistory(const QString &username, const QStringList &messages)
