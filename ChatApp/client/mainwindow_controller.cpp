@@ -225,7 +225,7 @@ void MainWindowController::handleUserSelected(const QString &username)
 
 void MainWindowController::handleGroupMessageSend(const QString &chatId, const QString &message)
 {
-    chatController->sendMessageToServer("SEND_GROUP|" + chatId + "|" + message); // поменять на : не забыть
+    chatController->sendMessageToServer("SEND_GROUP:" + chatId + ":" + message); // поменять на : не забыть
 }
 
 void MainWindowController::handleCreateGroupChat(const QString &chatName)
@@ -395,13 +395,11 @@ void MainWindowController::handleUnreadCountsUpdated(const QMap<QString, int> &p
 {
     qDebug() << "MainWindowController: Unread counts updated - private:" << privateCounts << ", group:" << groupCounts;
     
-    // Update the MainWindow UI with the unread counts
+    // Update the MainWindow UI with the unread counts for both private and group chats
     if (view) {
         view->updateUnreadCounts(privateCounts);
+        view->updateGroupUnreadCounts(groupCounts);
     }
-    
-    // TODO: Handle group chat unread counts when group chat UI is implemented
-    Q_UNUSED(groupCounts);
 }
 
 void MainWindowController::handlePrivateMessageSend(const QString &recipient, const QString &message)
@@ -432,13 +430,10 @@ void MainWindowController::handleGroupChatSelected(const QString &chatId)
         // Используем groupChatController для создания/получения окна группового чата
         GroupChatWindow *window = groupChatController->findOrCreateChatWindow(chatId, ""); // Имя будет получено автоматически
         
+        // Отмечаем сообщения как прочитанные при выборе чата
+        groupChatController->markMessagesAsRead(chatId);
+        
         if (window) {
-            // Помечаем сообщения как прочитанные при открытии окна
-            if (chatController) {
-                // TODO: Добавить метод markGroupMessagesAsRead в ChatController
-                // chatController->markGroupMessagesAsRead(chatId);
-            }
-            
             window->show();
             window->activateWindow();
             window->raise(); // Поднимаем окно наверх

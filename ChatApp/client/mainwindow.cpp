@@ -477,9 +477,18 @@ void MainWindow::onUserDoubleClicked(QListWidgetItem *item)
             cleanUsername = username.left(parenIndex);
         }
         
-        // Проверяем, что это не категория и не групповой чат
+        // Проверяем, что это не категория
         if (!cleanUsername.startsWith("ДРУЗЬЯ") && !cleanUsername.startsWith("ГРУППОВЫЕ")) {
-            emit userDoubleClicked(cleanUsername);
+            // Проверяем, является ли выбранный элемент групповым чатом
+            QString itemType = item->data(Qt::UserRole + 1).toString();
+            if (itemType == "G") {
+                // Это групповой чат - получаем chatId из Qt::UserRole
+                QString chatId = item->data(Qt::UserRole).toString();
+                emit groupChatSelected(chatId);
+            } else {
+                // Это обычный пользователь
+                emit userDoubleClicked(cleanUsername);
+            }
         }
     }
 }
@@ -825,4 +834,63 @@ void MainWindow::updateUnreadCounts(const QMap<QString, int> &counts)
     
     // Обновляем список пользователей, чтобы отобразить счетчики
     updateUserList(this->userList);
+}
+
+// Метод для обновления счетчиков непрочитанных сообщений для групповых чатов
+void MainWindow::updateGroupUnreadCounts(const QMap<QString, int> &counts)
+{
+    unreadGroupMessageCounts = counts;
+    
+    // Обновляем заголовки окон групповых чатов
+    for (auto it = groupChatWindows.begin(); it != groupChatWindows.end(); ++it) {
+        QString chatId = it.key();
+        GroupChatWindow* window = it.value();
+        
+        if (window && unreadGroupMessageCounts.contains(chatId)) {
+            int count = unreadGroupMessageCounts[chatId];
+            // Вызываем слот обновления счетчика в окне чата
+            QMetaObject::invokeMethod(window, "onUnreadCountChanged", 
+                                     Qt::QueuedConnection, Q_ARG(int, count));
+        }
+    }
+    
+    // Обновляем отображение списка групповых чатов в главном окне
+    for (int i = 0; i < ui->userListWidget->count(); ++i) {
+        QListWidgetItem *item = ui->userListWidget->item(i);
+        if (!item || !(item->flags() & Qt::ItemIsEnabled))
+            continue;
+        
+        // Проверяем, является ли элемент групповым чатом
+        QString type = item->data(Qt::UserRole + 1).toString();
+        if (type == "G") {
+            QString chatId = item->data(Qt::UserRole).toString();
+            QString chatName = item->data(Qt::UserRole + 2).toString();
+            
+            if (unreadGroupMessageCounts.contains(chatId) && unreadGroupMessageCounts[chatId] > 0) {
+                int count = unreadGroupMessageCounts[chatId];
+                // Убираем старый счетчик, если он был
+                QString cleanName = chatName;
+                int parenIndex = cleanName.indexOf(" (");
+                if (parenIndex != -1) {
+                    cleanName = cleanName.left(parenIndex);
+                }
+                
+                // Устанавливаем новый текст с счетчиком
+                item->setText(cleanName + " (" + QString::number(count) + ")");
+                item->setBackground(Qt::yellow); // Жёлтый фон для чатов с непрочитанными сообщениями
+                item->setForeground(Qt::black);  // Чёрный текст для читаемости
+            } else {
+                // Если непрочитанных сообщений нет, возвращаем обычный вид
+                QString cleanName = chatName;
+                int parenIndex = cleanName.indexOf(" (");
+                if (parenIndex != -1) {
+                    cleanName = cleanName.left(parenIndex);
+                }
+                
+                item->setText(cleanName);
+                item->setForeground(Qt::blue);
+                item->setBackground(Qt::white);
+            }
+        }
+    }
 }

@@ -147,10 +147,21 @@ void GroupChatController::startAddUserToGroupMode(const QString &chatId)
 // Методы для работы с сообщениями
 void GroupChatController::markMessagesAsRead(const QString &chatId)
 {
+    qDebug() << "GroupChatController: Marking messages as read for chat" << chatId;
+    
     if (m_chatModels.contains(chatId)) {
+        // Отмечаем сообщения как прочитанные в локальной модели
         m_chatModels[chatId]->markAllAsRead();
+        
         // Уведомляем сервер о прочтении
         m_chatController->sendMessageToServer("MARK_GROUP_READ:" + chatId);
+        
+        // Запрашиваем обновленный счетчик непрочитанных сообщений
+        QTimer::singleShot(300, this, [this, chatId]() {
+            m_chatController->requestUnreadCountForGroupChat(chatId);
+        });
+        
+        qDebug() << "Marked messages as read and sent update to server for chat" << chatId;
     }
 }
 
@@ -170,8 +181,27 @@ void GroupChatController::handleIncomingMessage(const QString &chatId, const QSt
     
     GroupChatModel *model = m_chatModels[chatId];
     if (model) {
-        // Добавляем сообщение в модель
-        model->addMessage(sender, message, actualTimestamp);
+        // Проверяем статус окна
+        bool windowIsVisibleAndActive = false;
+        if (m_chatWindows.contains(chatId)) {
+            GroupChatWindow* window = m_chatWindows[chatId];
+            windowIsVisibleAndActive = window && 
+                                      window->isVisible() && 
+                                      !window->isMinimized() &&
+                                      window->isActiveWindow();
+            
+            qDebug() << "Window check for chat" << chatId << ": exists=" << (window != nullptr) 
+                     << ", visible=" << (window ? window->isVisible() : false)
+                     << ", minimized=" << (window ? window->isMinimized() : false)
+                     << ", active=" << (window ? window->isActiveWindow() : false)
+                     << ", final=" << windowIsVisibleAndActive;
+        }
+        
+        // Добавляем сообщение в модель с правильным статусом прочитанности
+        // Сообщения от текущего пользователя всегда считаются прочитанными
+        bool isRead = sender == m_currentUsername || windowIsVisibleAndActive;
+        GroupMessage newMessage(sender, message, actualTimestamp, isRead);
+        model->addMessage(newMessage);
     }
     
     // Отображаем сообщение в окне, если оно открыто
@@ -179,13 +209,6 @@ void GroupChatController::handleIncomingMessage(const QString &chatId, const QSt
         GroupChatWindow *window = m_chatWindows[chatId];
         if (window) {
             window->receiveMessage(sender, message, actualTimestamp);
-            
-            // Если окно видимо и активно, отмечаем сообщения как прочитанные
-            if (window->isVisible() && !window->isMinimized() && window->isActiveWindow()) {
-                QTimer::singleShot(500, this, [this, chatId]() {
-                    markMessagesAsRead(chatId);
-                });
-            }
         }
     }
 }
@@ -319,11 +342,26 @@ void GroupChatController::setupConnectionsForWindow(GroupChatWindow *window, con
     connect(window, &GroupChatWindow::deleteChatRequested,
             this, &GroupChatController::handleDeleteGroupChat);
     
-    // Подключаем сигнал закрытия окна
+    // Подключаем сигнал закрытия окна к обработчику
     connect(window, &QWidget::destroyed,
             this, [this, chatId]() {
                 handleChatWindowClosed(chatId);
             });
+            
+    // Подключаем сигнал windowClosed от окна (для скрытия, а не уничтожения окна)
+    connect(window, &GroupChatWindow::windowClosed,
+            this, &GroupChatController::handleChatWindowClosed);
+    
+    // Подключаем сигнал для отметки сообщений как прочитанных
+    connect(window, &GroupChatWindow::markAsReadRequested,
+            this, &GroupChatController::markMessagesAsRead);
+            
+    // Подключаем модель к окну для обновления счетчика непрочитанных сообщений
+    if (m_chatModels.contains(chatId)) {
+        GroupChatModel *model = m_chatModels[chatId];
+        connect(model, &GroupChatModel::unreadCountChanged,
+                window, &GroupChatWindow::onUnreadCountChanged);
+    }
     
     qDebug() << "Connections set up for group chat window" << chatId;
 }

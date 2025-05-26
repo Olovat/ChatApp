@@ -48,7 +48,15 @@ GroupChatWindow::~GroupChatWindow()
 
 void GroupChatWindow::updateWindowTitle()
 {
-    setWindowTitle("Групповой чат: " + chatName);
+    // Базовый заголовок окна
+    QString title = "Групповой чат: " + chatName;
+    
+    // Добавляем метку создателя, если текущий пользователь - создатель
+    if (isCreator) {
+        title += " (Вы создатель)";
+    }
+    
+    setWindowTitle(title);
 }
 
 void GroupChatWindow::on_pushButton_2_clicked()
@@ -99,6 +107,11 @@ void GroupChatWindow::receiveMessage(const QString &sender, const QString &messa
         ui->textBrowser->append("<i>[" + localTimeStr + "] " + message + "</i>");
     } else {
         ui->textBrowser->append("[" + localTimeStr + "] " + sender + ": " + message);
+    }
+    
+    // Если окно активно, отмечаем сообщение как прочитанное
+    if (isActiveWindow() && isVisible() && !isMinimized()) {
+        emit markAsReadRequested(chatId);
     }
 }
 
@@ -402,9 +415,15 @@ void GroupChatWindow::addMessageToChat(const QString &sender, const QString &con
 // Публичные слоты для обновления UI
 void GroupChatWindow::onUnreadCountChanged(int count)
 {
-    Q_UNUSED(count);
-    // TODO: Реализовать отображение счетчика непрочитанных сообщений в заголовке
     qDebug() << "Unread count changed for chat" << chatName << ":" << count;
+    
+    // Обновляем заголовок окна с учетом непрочитанных сообщений
+    if (count > 0) {
+        setWindowTitle(QString("Групповой чат: %1 (%2)").arg(chatName).arg(count));
+    } else {
+        // Возвращаем обычный заголовок
+        updateWindowTitle();
+    }
 }
 
 void GroupChatWindow::onMembersUpdated(const QStringList &members)
@@ -448,4 +467,18 @@ void GroupChatWindow::sendCurrentMessage()
         sendMessage(message);
         ui->lineEdit->clear();
     }
+}
+
+bool GroupChatWindow::event(QEvent *e)
+{
+    // Перехватываем событие активации окна
+    if (e->type() == QEvent::WindowActivate) {
+        qDebug() << "GroupChatWindow: Window activated for chat" << chatName;
+        
+        // Отмечаем сообщения как прочитанные при активации окна
+        QTimer::singleShot(100, this, [this]() {
+            emit markAsReadRequested(chatId);
+        });
+    }
+    return QWidget::event(e);
 }

@@ -521,17 +521,29 @@ void ChatController::processServerResponse(const QString &response)
     }
 } else if (command == "UNREAD_COUNT") {
     // Обработка ответа сервера о количестве непрочитанных сообщений
-    if (parts.size() >= 3) {
-        QString chatPartner = parts[1];
+    if (parts.size() >= 3) {        QString chatPartner = parts[1];
         int count = parts[2].toInt();
         
         qDebug() << "Received unread count for" << chatPartner << ":" << count;
         
-        // Обновляем счетчик непрочитанных сообщений
-        if (count > 0) {
-            unreadPrivateMessageCounts[chatPartner] = count;
+        // Определяем, является ли это групповым чатом по формату идентификатора
+        // Групповые чаты обычно имеют UUID-подобный формат, а приватные чаты - имя пользователя
+        bool isGroupChat = chatPartner.contains("-") || emit groupChatExists(chatPartner);
+        
+        if (isGroupChat) {
+            // Обновляем счетчик непрочитанных сообщений для группового чата
+            if (count > 0) {
+                unreadGroupMessageCounts[chatPartner] = count;
+            } else {
+                unreadGroupMessageCounts.remove(chatPartner);
+            }
         } else {
-            unreadPrivateMessageCounts.remove(chatPartner);
+            // Обновляем счетчик непрочитанных сообщений для приватного чата
+            if (count > 0) {
+                unreadPrivateMessageCounts[chatPartner] = count;
+            } else {
+                unreadPrivateMessageCounts.remove(chatPartner);
+            }
         }
         
         // Отправляем сигнал об обновлении счетчиков
@@ -795,6 +807,11 @@ void ChatController::requestUnreadCounts()
 void ChatController::requestUnreadCountForUser(const QString &username)
 {
     sendToServer("GET_UNREAD_COUNT:" + username);
+}
+
+void ChatController::requestUnreadCountForGroupChat(const QString &chatId)
+{
+    sendToServer("GET_UNREAD_COUNT:" + chatId);
 }
 
 void ChatController::markMessagesAsRead(const QString &username)

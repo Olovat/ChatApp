@@ -285,8 +285,17 @@ void ChatLogicServer::handleMessageReceived(std::shared_ptr<INetworkClient> clie
             markAllMessagesAsRead(senderUsername, parts[1]);
             sendUnreadMessagesCount(client, senderUsername, parts[1]);
         }
+    } else if (command == "MARK_GROUP_READ" && parts.size() >= 2) {
+        if (!senderUsername.empty()) {
+            // Get the chat ID from the command parts
+            std::string chatId = parts[1];
+            // Mark all messages as read for this user in this group chat
+            markAllMessagesAsRead(senderUsername, chatId);
+            // Send updated unread count back to the client
+            sendUnreadMessagesCount(client, senderUsername, chatId);
+        }
     } else if (command == "GET_UNREAD_COUNT" && parts.size() >= 2) {
-         if (!senderUsername.empty()) {
+        if (!senderUsername.empty()) {
             sendUnreadMessagesCount(client, senderUsername, parts[1]);
         }
     }
@@ -1017,14 +1026,14 @@ bool ChatLogicServer::saveGroupChatMessage(const std::string &chatId, const std:
 
 void ChatLogicServer::sendGroupChatMessageToClients(const std::string &chatId, const std::string &sender, const std::string &message) {
     if (!m_db || !m_networkServer) return;
-    if (!saveGroupChatMessage(chatId, sender, message)) { // Сначала сохраняем
-        std::cerr << "Message not sent because it failed to save to DB." << std::endl;
-        return;
-    }
-
     std::string membersQuery = "SELECT username FROM group_chat_members WHERE chat_id = ?;";
     auto membersResult = m_db->fetchAll(membersQuery, {chatId});
     std::string formattedMessage = "GROUP_MESSAGE:" + chatId + ":" + sender + ":" + message;
+    
+    // Сохраняем сообщение в базе данных для истории и отслеживания непрочитанных
+    if(!saveGroupChatMessage(chatId, sender, message)) {
+        std::cerr << "Failed to save group chat message to database" << std::endl;
+    }
 
     for (const auto& row : membersResult) { 
         std::string memberUsername = std::any_cast<std::string>(row.at("username"));
@@ -1298,7 +1307,7 @@ void ChatLogicServer::addOrUpdateGroupChatInCache(const std::string& chatId, con
     } else {
         // Добавляем новый
         m_cachedGroupChats[chatId] = {chatId, chatName, creatorUsername, {}};
-        std::cout << "Cache updated: Group chat " << chatId << " added." << std::endl;
+        std::cout << "Cache updated: Group chat " << chatId << " добавлен." << std::endl;
     }
 }
 

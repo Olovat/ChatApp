@@ -104,6 +104,7 @@ public slots:
     // Handle successful registration
     void onRegisterSuccess();
     void updateUnreadCounts(const QMap<QString, int> &counts);
+    void updateGroupUnreadCounts(const QMap<QString, int> &counts);
 
 private slots:
     // Слоты для обработки действий в интерфейсе
@@ -146,6 +147,10 @@ private:
     // Таблица друзей пользователя
     QMap<QString, bool> userFriends; // имя пользователя -> флаг онлайн
     
+    // Хранение счетчиков непрочитанных сообщений
+    QMap<QString, int> unreadMessageCounts; // приватные чаты: пользователь -> количество
+    QMap<QString, int> unreadGroupMessageCounts; // групповые чаты: id чата -> количество
+    
     // Результаты поиска
     QStringList searchResults;
     QDialog* searchDialog;
@@ -159,7 +164,6 @@ private:
     QSet<QString> recentChatPartners;
 
     QStringList userList; // Хранение текущего списка пользователей
-    QMap<QString, int> unreadMessageCounts; // Счетчики непрочитанных сообщений
 };
 
 #endif // MAINWINDOW_H

@@ -72,6 +72,7 @@ public:
     // Методы для обработки непрочитанных сообщений
     void requestUnreadCounts();
     void requestUnreadCountForUser(const QString &username);
+    void requestUnreadCountForGroupChat(const QString &chatId);
     void markMessagesAsRead(const QString &username);
     
     // Метод для отправки произвольных сообщений на сервер
@@ -109,6 +110,7 @@ signals:
     void groupMembersUpdated(const QString &chatId, const QStringList &members, const QString &creator);
     void groupCreatorUpdated(const QString &chatId, const QString &creator);
     void groupChatCreated(const QString &chatId, const QString &chatName);
+    bool groupChatExists(const QString &chatId); // Signal to check if a chatId corresponds to a group chat
     void groupChatsListReceived(const QStringList &groupChats);
     void groupChatDeleted(const QString &chatId);
     void unreadCountsUpdated(const QMap<QString, int> &privateCounts, const QMap<QString, int> &groupCounts);
