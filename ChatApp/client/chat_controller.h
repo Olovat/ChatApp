@@ -62,7 +62,14 @@ public:
     void startAddUserToGroupMode(const QString &chatId);
     void addUserToGroupChat(const QString &chatId, const QString &username);
     void removeUserFromGroupChat(const QString &chatId, const QString &username);
-    void deleteGroupChat(const QString &chatId);    // Методы для обработки непрочитанных сообщений
+    void deleteGroupChat(const QString &chatId);
+    
+    // Методы для проверки состояния добавления пользователя в группу
+    bool isPendingGroupChatAddition() const;
+    QString getPendingGroupChatId() const;
+    void clearPendingGroupChatId();
+    
+    // Методы для обработки непрочитанных сообщений
     void requestUnreadCounts();
     void requestUnreadCountForUser(const QString &username);
     void markMessagesAsRead(const QString &username);
@@ -100,6 +107,10 @@ signals:
     void groupMessageReceived(const QString &chatId, const QString &sender, const QString &message, const QString &timestamp);
     void groupHistoryReceived(const QString &chatId, const QList<QPair<QString, QString>> &history);
     void groupMembersUpdated(const QString &chatId, const QStringList &members, const QString &creator);
+    void groupCreatorUpdated(const QString &chatId, const QString &creator);
+    void groupChatCreated(const QString &chatId, const QString &chatName);
+    void groupChatsListReceived(const QStringList &groupChats);
+    void groupChatDeleted(const QString &chatId);
     void unreadCountsUpdated(const QMap<QString, int> &privateCounts, const QMap<QString, int> &groupCounts);
     void friendAddedSuccessfully(const QString &username);
     void privateMessageReceived(const QString &sender, const QString &message, const QString &timestamp);

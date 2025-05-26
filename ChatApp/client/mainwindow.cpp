@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 // #include "privatechatwindow.h" // Удалено
 #include "groupchatwindow.h"
+#include "transitwindow.h"
+#include "groupchat_controller.h"
 #include "mainwindow_controller.h"
 #include <QMessageBox>
 #include <QVBoxLayout>
@@ -272,12 +274,22 @@ void MainWindow::updateUserList(const QStringList &users)
                  << " (Raw data:" << userInfo << ")";
         
         QString typeFromServer;
+        QString groupChatName; // Для хранения названия группового чата
+        
         if (parts.size() == 3) { // username:status:TYPE (e.g. F, G, U)
             typeFromServer = parts[2];
-        } else if (parts.size() >= 4) { // username:status:TYPE1:TYPE2 (e.g. U:F)
-            typeFromServer = parts[2] + ":" + parts[3]; // Собираем полный тип
+        } else if (parts.size() >= 4) { // chatId:status:G:chatName или username:status:U:F
+            typeFromServer = parts[2];
+            if (typeFromServer == "G" && parts.size() >= 4) {
+                // Это групповой чат: chatId:1:G:chatName
+                groupChatName = parts[3];
+                typeFromServer = "G";
+            } else if (parts.size() >= 4) {
+                // Это пользователь с дополнительным типом: username:status:U:F
+                typeFromServer = parts[2] + ":" + parts[3];
+            }
         }
-        qDebug() << "Parsed type for" << username << ":" << typeFromServer;
+        qDebug() << "Parsed type for" << username << ":" << typeFromServer << (groupChatName.isEmpty() ? "" : " (Group name: " + groupChatName + ")");
         
         if (username == m_username) {
             qDebug() << "Skipping current user:" << username;
@@ -285,11 +297,14 @@ void MainWindow::updateUserList(const QStringList &users)
         }
           // Определяем тип пользователя на основе typeFromServer
         bool isFriendByServerType = typeFromServer.endsWith(":F"); // e.g., "U:F"
-        bool isGroupChatByServerType = typeFromServer.startsWith("G") || typeFromServer.endsWith(":G"); // e.g., "G_chatname" or "U:G"
+        bool isGroupChatByServerType = typeFromServer == "G"; // Точное совпадение для групповых чатов
 
         if (isGroupChatByServerType || username.startsWith("GROUP_")) {
-            groupChats.append(username);
-            qDebug() << "Identified as group chat:" << username;
+            // Для групповых чатов сохраняем как chatId:chatName для удобства
+            QString displayName = groupChatName.isEmpty() ? username : groupChatName;
+            QString groupEntry = username + ":" + displayName; // chatId:chatName
+            groupChats.append(groupEntry);
+            qDebug() << "Identified as group chat:" << username << "with name:" << displayName;
         } else if (isFriendByServerType || existingFriends.contains(username)) {
             // Либо сервер сказал, что это друг (U:F), либо он уже был в нашем списке друзей
             qDebug() << "User" << username << "is a friend (server type:" << typeFromServer << ", was in existingFriends:" << existingFriends.contains(username) << "). Status:" << (isOnline ? "online" : "offline");
@@ -350,9 +365,20 @@ void MainWindow::updateUserList(const QStringList &users)
         groupChatHeader->setForeground(Qt::white);
         ui->userListWidget->addItem(groupChatHeader);
         
-        for (const QString &chatId : groupChats) {
-            QListWidgetItem *item = new QListWidgetItem(chatId);
-            item->setForeground(Qt::blue); 
+        for (const QString &groupEntry : groupChats) {
+            // groupEntry формат: "chatId:chatName"
+            QStringList groupParts = groupEntry.split(":", Qt::SkipEmptyParts);
+            QString chatId = groupParts[0];
+            QString chatName = groupParts.size() > 1 ? groupParts[1] : chatId;
+            
+            // Отображаем название группового чата без префикса
+            QString displayText = chatName;
+            
+            QListWidgetItem *item = new QListWidgetItem(displayText);
+            item->setForeground(Qt::blue);
+            item->setData(Qt::UserRole, chatId); // Сохраняем ID чата для обработки
+            item->setData(Qt::UserRole + 1, "G"); // Тип элемента
+            item->setData(Qt::UserRole + 2, chatName); // Название чата
             ui->userListWidget->addItem(item);
             qDebug() << "Added group chat to UI list:" << chatId;
         }
@@ -424,11 +450,14 @@ void MainWindow::onUserSelected(QListWidgetItem *item)
         cleanUsername = selectedText.left(parenIndex);
     }
     
-    // Проверяем, является ли выбранный элемент групповым чатом
-    if (cleanUsername.startsWith("GROUP_")) {
-        emit requestJoinGroupChat(cleanUsername);
+    // Проверяем, является ли выбранный элемент групповым чатом по Qt::UserRole данным
+    QString itemType = item->data(Qt::UserRole + 1).toString();
+    if (itemType == "G") {
+        // Это групповой чат - получаем chatId из Qt::UserRole
+        QString chatId = item->data(Qt::UserRole).toString();
+        emit groupChatSelected(chatId);
     } else {
-        // Только отправляем сигнал о выборе пользователя с чистым именем
+        // Это обычный пользователь
         emit userSelected(cleanUsername);
         
         // Отключаем эту строку, пока не реализуем MVC полностью
@@ -457,25 +486,38 @@ void MainWindow::onUserDoubleClicked(QListWidgetItem *item)
 
 GroupChatWindow* MainWindow::findOrCreateGroupChatWindow(const QString &chatId, const QString &chatName)
 {
-    // Если окно уже существует, просто возвращаем его
+    // Используем GroupChatController для создания окна
+    if (controller && controller->getGroupChatController()) {
+        GroupChatWindow *window = controller->getGroupChatController()->findOrCreateChatWindow(chatId, chatName);
+        
+        // Обновляем нашу карту для обратной совместимости
+        if (window && !groupChatWindows.contains(chatId)) {
+            groupChatWindows[chatId] = window;
+            
+            // Подключаем сигнал закрытия окна для удаления из карты
+            connect(window, &GroupChatWindow::destroyed, this, [this, chatId]() {
+                groupChatWindows.remove(chatId);
+            });
+        }
+        
+        return window;
+    }
+    
+    // Fallback: создаем окно по старому методу, если контроллер недоступен
     if (groupChatWindows.contains(chatId)) {
         return groupChatWindows[chatId];
     }
     
-    // Создаем новое окно чата
     GroupChatWindow *chatWindow = new GroupChatWindow(chatId, chatName);
     
-    // Устанавливаем контроллер
     if (controller) {
         chatWindow->setController(controller);
     }
     
-    // Подключаем сигнал закрытия окна
     connect(chatWindow, &GroupChatWindow::destroyed, this, [this, chatId]() {
         groupChatWindows.remove(chatId);
     });
     
-    // Сохраняем окно в карте
     groupChatWindows[chatId] = chatWindow;
     
     return chatWindow;
@@ -484,10 +526,19 @@ GroupChatWindow* MainWindow::findOrCreateGroupChatWindow(const QString &chatId, 
 void MainWindow::on_pushButton_clicked()
 {
     // Обработка нажатия кнопки "Создать групповой чат"
-    QString chatName = QInputDialog::getText(this, "Создание группового чата", "Введите название чата:");
-    
-    if (!chatName.isEmpty()) {
-        emit requestCreateGroupChat(chatName);
+    // Используем TransitWindow для создания группового чата
+    if (controller) {
+        TransitWindow *transitWindow = new TransitWindow(controller, this);
+        transitWindow->setModal(true);
+        transitWindow->setAttribute(Qt::WA_DeleteOnClose);
+        transitWindow->exec();
+    } else {
+        // Fallback к простому диалогу, если контроллер недоступен
+        QString chatName = QInputDialog::getText(this, "Создание группового чата", "Введите название чата:");
+        
+        if (!chatName.isEmpty()) {
+            emit requestCreateGroupChat(chatName);
+        }
     }
 }
 

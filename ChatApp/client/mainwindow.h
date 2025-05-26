@@ -90,6 +90,7 @@ signals:
     void requestRemoveUserFromGroupChat(const QString &chatId, const QString &username);
     void requestDeleteGroupChat(const QString &chatId);
     void requestStartAddUserToGroupMode(const QString &chatId);
+    void groupChatSelected(const QString &chatId);
     void userDoubleClicked(const QString &username);
     void requestPrivateMessageSend(const QString &recipient, const QString &message);
     void requestPrivateMessageHistory(const QString &username);
@@ -135,8 +136,11 @@ private:
     QString m_userpass;
     bool m_loginSuccesfull;
       // Функции для создания или получения существующих окон чатов
+    
+public:
     GroupChatWindow* findOrCreateGroupChatWindow(const QString &chatId, const QString &chatName);
     
+private:
     QMap<QString, GroupChatWindow*> groupChatWindows; // Map для хранения открытых групповых чатов
 
     // Таблица друзей пользователя

@@ -30,7 +30,7 @@ ChatController::ChatController(QObject *parent)
    
     userListRefreshTimer = new QTimer(this);
     connect(userListRefreshTimer, &QTimer::timeout, this, &ChatController::refreshUserListSlot);
-    userListRefreshTimer->start(500);
+    userListRefreshTimer->start(5000); // Увеличиваем до 5 секунд (5000 мс)
     
     // Инициализация счетчиков непрочитанных сообщений
     unreadPrivateMessageCounts = QMap<QString, int>();
@@ -537,6 +537,139 @@ void ChatController::processServerResponse(const QString &response)
         // Отправляем сигнал об обновлении счетчиков
         emit unreadCountsUpdated(unreadPrivateMessageCounts, unreadGroupMessageCounts);
     }
+} else if (command == "GROUP_CHAT_CREATED") {
+    // Обработка успешного создания группового чата
+    if (parts.size() >= 3) {
+        QString chatId = parts[1];
+        QString chatName = parts[2];
+        qDebug() << "Group chat created successfully:" << chatName << "(ID:" << chatId << ")";
+        
+        // Отправляем сигнал о создании группового чата
+        emit groupChatCreated(chatId, chatName);
+        
+        // Запрашиваем обновленный список групповых чатов
+        sendToServer("GET_GROUP_CHATS");
+    }
+} else if (command == "GROUP_MESSAGE") {
+    // Обработка входящего группового сообщения: GROUP_MESSAGE:chatId:sender:message:timestamp
+    if (parts.size() >= 4) {
+        QString chatId = parts[1];
+        QString sender = parts[2];
+        QString message = parts[3];
+        QString timestamp = parts.size() > 4 ? parts[4] : QDateTime::currentDateTime().toString("hh:mm:ss");
+        
+        qDebug() << "Received group message in chat" << chatId << "from" << sender << ":" << message;
+        
+        // Проверка на дубликаты
+        if (!isMessageDuplicate(chatId, message, true)) {
+            // Отправляем сигнал о получении группового сообщения
+            emit groupMessageReceived(chatId, sender, message, timestamp);
+            
+            // Обновляем счетчик непрочитанных сообщений для группового чата
+            if (sender != getCurrentUsername()) {
+                unreadGroupMessageCounts[chatId]++;
+                emit unreadCountsUpdated(unreadPrivateMessageCounts, unreadGroupMessageCounts);
+            }
+        }
+    }
+} else if (command == "GROUP_CHATS_LIST") {
+    // Обработка списка групповых чатов: GROUP_CHATS_LIST:chatId1:chatName1,chatId2:chatName2,...
+    QStringList groupChats;
+    if (parts.size() > 1) {
+        QString chatData = parts.mid(1).join(":");
+        if (!chatData.isEmpty()) {
+            QStringList chatEntries = chatData.split(",");
+            for (const QString &entry : chatEntries) {
+                if (!entry.isEmpty()) {
+                    groupChats.append(entry);
+                }
+            }
+        }
+    }
+    
+    qDebug() << "Received group chats list:" << groupChats;
+    emit groupChatsListReceived(groupChats);
+} else if (command == "GROUP_CHAT_INFO") {
+    // Обработка информации о групповом чате: GROUP_CHAT_INFO:chatId:chatName:members
+    if (parts.size() >= 4) {
+        QString chatId = parts[1];
+        QString chatName = parts[2];
+        QStringList members = parts[3].split(",", Qt::SkipEmptyParts);
+        
+        qDebug() << "Received group chat info for" << chatName << "(" << chatId << ") - members:" << members;
+        emit groupMembersUpdated(chatId, members, QString()); // creator будет получен отдельно
+    }
+} else if (command == "GROUP_CHAT_CREATOR") {
+    // Обработка информации о создателе группового чата: GROUP_CHAT_CREATOR:chatId:creator
+    if (parts.size() >= 3) {
+        QString chatId = parts[1];
+        QString creator = parts[2];
+        
+        qDebug() << "Received group chat creator info for" << chatId << "- creator:" << creator;
+        emit groupCreatorUpdated(chatId, creator);
+    }
+} else if (command == "GROUP_HISTORY") {
+    // Обработка истории группового чата: GROUP_HISTORY:chatId:timestamp|sender|message,...
+    if (parts.size() >= 2) {
+        QString chatId = parts[1];
+        QList<QPair<QString, QString>> history;
+        
+        if (parts.size() > 2) {
+            QString historyData = parts.mid(2).join(":");
+            QStringList historyEntries = historyData.split(",");
+            
+            for (const QString &entry : historyEntries) {
+                QStringList msgParts = entry.split("|");
+                if (msgParts.size() >= 3) {
+                    QString timestamp = msgParts[0];
+                    QString sender = msgParts[1];
+                    QString message = msgParts[2];
+                    history.append(qMakePair(sender + " (" + timestamp + ")", message));
+                }
+            }
+        }
+        
+        qDebug() << "Received group history for chat" << chatId << "with" << history.size() << "messages";
+        emit groupHistoryReceived(chatId, history);
+    }
+} else if (command == "GROUP_CHAT_DELETED") {
+    // Обработка удаления группового чата
+    if (parts.size() >= 2) {
+        QString chatId = parts[1];
+        qDebug() << "Group chat deleted:" << chatId;
+        emit groupChatDeleted(chatId);
+        
+        // Удаляем счетчик непрочитанных сообщений для этого чата
+        unreadGroupMessageCounts.remove(chatId);
+        emit unreadCountsUpdated(unreadPrivateMessageCounts, unreadGroupMessageCounts);
+    }
+} else if (command == "USER_ADDED_TO_GROUP") {
+    // Обработка добавления пользователя в группу
+    if (parts.size() >= 3) {
+        QString chatId = parts[1];
+        QString username = parts[2];
+        qDebug() << "User" << username << "added to group" << chatId;
+        
+        // Запрашиваем обновленную информацию о группе
+        sendToServer("GROUP_GET_INFO:" + chatId);
+    }
+} else if (command == "USER_REMOVED_FROM_GROUP") {
+    // Обработка удаления пользователя из группы
+    if (parts.size() >= 3) {
+        QString chatId = parts[1];
+        QString username = parts[2];
+        qDebug() << "User" << username << "removed from group" << chatId;
+        
+        // Запрашиваем обновленную информацию о группе
+        sendToServer("GROUP_GET_INFO:" + chatId);
+    }
+} else if (command == "GROUP_CHAT_ERROR") {
+    // Обработка ошибок группого чата
+    if (parts.size() >= 2) {
+        QString errorMessage = parts[1];
+        qDebug() << "Group chat error:" << errorMessage;
+        // Можно отправить сигнал об ошибке или показать пользователю
+    }
 } else {
         qDebug() << "ChatController: Unknown command from server:" << command;
     }
@@ -607,7 +740,11 @@ void ChatController::addUserToFriends(const QString &username)
 
 void ChatController::createGroupChat(const QString &chatName, const QString &chatId)
 {
-    sendToServer("CREATE_GROUP:" + chatId + ":" + chatName);
+   // Используем неиспользуемый параметр, чтобы убрать предупреждение
+    const QString actualChatId = chatId.isEmpty() ? "AUTO_GENERATE" : chatId;
+    
+    // Отправляем запрос на создание группы
+    sendToServer("CREATE_GROUP_CHAT:" + chatName + ":" + actualChatId);
 }
 
 void ChatController::joinGroupChat(const QString &chatId)
@@ -622,17 +759,32 @@ void ChatController::startAddUserToGroupMode(const QString &chatId)
 
 void ChatController::addUserToGroupChat(const QString &chatId, const QString &username)
 {
-    sendToServer("ADD_TO_GROUP:" + chatId + ":" + username);
+    sendToServer("GROUP_ADD_USER:" + chatId + ":" + username);
+}
+
+bool ChatController::isPendingGroupChatAddition() const
+{
+    return !pendingGroupChatId.isEmpty();
+}
+
+QString ChatController::getPendingGroupChatId() const
+{
+    return pendingGroupChatId;
+}
+
+void ChatController::clearPendingGroupChatId()
+{
+    pendingGroupChatId.clear();
 }
 
 void ChatController::removeUserFromGroupChat(const QString &chatId, const QString &username)
 {
-    sendToServer("REMOVE_FROM_GROUP:" + chatId + ":" + username);
+    sendToServer("GROUP_REMOVE_USER:" + chatId + ":" + username);
 }
 
 void ChatController::deleteGroupChat(const QString &chatId)
 {
-    sendToServer("DELETE_GROUP:" + chatId);
+    sendToServer("DELETE_GROUP_CHAT:" + chatId);
 }
 
 void ChatController::requestUnreadCounts()
@@ -665,6 +817,8 @@ void ChatController::requestUserList()
 
 bool ChatController::isMessageDuplicate(const QString &chatId, const QString &content, bool isGroup)
 {
+    Q_UNUSED(content); // Содержимое не проверяем - только временные интервалы
+    
     // Проверяем только временные интервалы для предотвращения технических дубликатов
     // Не проверяем содержимое - пользователь может отправить одинаковые сообщения
     static QMap<QString, qint64> lastMessageTimes;

@@ -10,6 +10,7 @@
 class MainWindow;
 class ChatController;
 class PrivateChatController;
+class GroupChatController;
 
 // Контроллер для MainWindow, объединяющий ChatController и MainWindow
 class MainWindowController : public QObject
@@ -23,6 +24,7 @@ public:
     // Доступ к чат-контроллерам
     ChatController* getChatController() const;
     PrivateChatController* getPrivateChatController() const { return privateChatController; }
+    GroupChatController* getGroupChatController() const { return groupChatController; }
 
 public slots:
     // Обработчики для сигналов от MainWindow
@@ -36,9 +38,11 @@ public slots:
     void handleAddUserToGroup(const QString &chatId, const QString &username);
     void handleRemoveUserFromGroup(const QString &chatId, const QString &username);
     void handleDeleteGroupChat(const QString &chatId);
+    void handleStartAddUserToGroupMode(const QString &chatId);
     void handleUserSearch(const QString &query);
     void handleAddUserToFriends(const QString &username);
     void handleUserDoubleClicked(const QString &username);
+    void handleGroupChatSelected(const QString &chatId);
 
     // Обработчики для сигналов от ChatController
     void handleAuthenticationSuccessful();
@@ -49,12 +53,14 @@ public slots:
     void handleSearchResultsReady(const QStringList &users);
     void handleGroupMessageReceived(const QString &chatId, const QString &sender, const QString &message, const QString &timestamp);
     void handleGroupMembersUpdated(const QString &chatId, const QStringList &members, const QString &creator);
+    void handleGroupChatCreated(const QString &chatId, const QString &chatName);
     void handleUnreadCountsUpdated(const QMap<QString, int> &privateCounts, const QMap<QString, int> &groupCounts);
 
 private:
     MainWindow *view;
     ChatController *chatController;
     PrivateChatController *privateChatController;
+    GroupChatController *groupChatController;
 
     // Вспомогательные методы
     void setupViewConnections();

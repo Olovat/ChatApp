@@ -8,6 +8,7 @@ class TransitWindow;
 }
 
 class MainWindow;
+class MainWindowController;
 
 class TransitWindow : public QDialog
 {
@@ -15,6 +16,7 @@ class TransitWindow : public QDialog
 
 public:
     explicit TransitWindow(MainWindow *mainWindow, QWidget *parent = nullptr);
+    explicit TransitWindow(MainWindowController *controller, QWidget *parent = nullptr);
     ~TransitWindow();
 
 private slots:
@@ -24,6 +26,7 @@ private slots:
 private:
     Ui::TransitWindow *ui;
     MainWindow *mainWindow;
+    MainWindowController *controller;
 };
 
 #endif // TRANSITWINDOW_H

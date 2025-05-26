@@ -3,6 +3,7 @@
 #include "groupchatwindow.h"
 #include "controller_manager.h"
 #include "privatechat_controller.h"
+#include "groupchat_controller.h"
 #include "privatechatwindow.h"
 #include <QDebug>
 #include <QMessageBox>
@@ -18,6 +19,9 @@ MainWindowController::MainWindowController(MainWindow *view, QObject *parent)
     // Инициализация контроллера приватных чатов
     privateChatController = new PrivateChatController(this, this);
     
+    // Инициализация контроллера групповых чатов
+    groupChatController = new GroupChatController(this, this);
+    
     ControllerManager::instance().registerMainWindowController(this);
     
     setupViewConnections();    
@@ -26,7 +30,7 @@ MainWindowController::MainWindowController(MainWindow *view, QObject *parent)
 
 MainWindowController::~MainWindowController()
 {
-    // ChatController и privateChatController будут удалены автоматически, так как имеют родителя this
+    // ChatController, privateChatController и groupChatController будут удалены автоматически, так как имеют родителя this
 }
 
 ChatController* MainWindowController::getChatController() const
@@ -80,6 +84,10 @@ void MainWindowController::setupViewConnections()
     connect(view, &MainWindow::requestDeleteGroupChat,
             this, &MainWindowController::handleDeleteGroupChat);
     
+    // Соединение сигнала выбора группового чата
+    connect(view, &MainWindow::groupChatSelected,
+            this, &MainWindowController::handleGroupChatSelected);
+    
     // Соединение сигнала двойного клика по пользователю
     connect(view, &MainWindow::userDoubleClicked, 
             this, &MainWindowController::handleUserDoubleClicked);
@@ -118,12 +126,22 @@ void MainWindowController::setupControllerConnections()
         qDebug() << "Warning: privateChatController or chatController is null in setupControllerConnections";
     }
     
-    connect(chatController, &ChatController::groupMessageReceived,
-            this, &MainWindowController::handleGroupMessageReceived);
-            
-    connect(chatController, &ChatController::groupMembersUpdated,
-            this, &MainWindowController::handleGroupMembersUpdated);
-            
+    // Соединения для групповых чатов
+    if (groupChatController && chatController) {
+        connect(chatController, &ChatController::groupMessageReceived,
+                groupChatController, &GroupChatController::handleIncomingMessage);
+        
+        connect(chatController, &ChatController::groupMembersUpdated,
+                groupChatController, &GroupChatController::handleMembersUpdated);
+                
+        // Добавляем обработчик создания группового чата
+        connect(chatController, &ChatController::groupChatCreated,
+                this, &MainWindowController::handleGroupChatCreated);
+    }
+    else {
+        qDebug() << "Warning: groupChatController or chatController is null in setupControllerConnections";
+    }
+    
     connect(chatController, &ChatController::unreadCountsUpdated,
             this, &MainWindowController::handleUnreadCountsUpdated);
     
@@ -147,7 +165,33 @@ void MainWindowController::handleRegisterUser(const QString &username, const QSt
 
 void MainWindowController::handleUserSelected(const QString &username)
 {
-    // Проверяем, что privateChatController инициализирован
+    // Проверяем, находимся ли мы в режиме добавления пользователя в групповой чат
+    if (chatController && chatController->isPendingGroupChatAddition()) {
+        QString groupChatId = chatController->getPendingGroupChatId();
+        
+        // Если пользователь не выбирает себя
+        if (username != view->getCurrentUsername()) {
+            // Добавляем пользователя в групповой чат
+            chatController->addUserToGroupChat(groupChatId, username);
+            
+            // Очищаем состояние ожидания
+            chatController->clearPendingGroupChatId();
+            
+            // Показываем сообщение об успешном добавлении
+            QMessageBox::information(view, "Групповой чат", 
+                QString("Пользователь %1 добавлен в групповой чат.").arg(username));
+                
+            qDebug() << "User" << username << "added to group chat" << groupChatId;
+        } else {
+            QMessageBox::information(view, "Ошибка", "Вы не можете добавить самого себя в групповой чат.");
+            // Очищаем состояние ожидания при ошибке
+            chatController->clearPendingGroupChatId();
+        }
+        
+        return; // Важно: выходим из функции, не открывая приватный чат
+    }
+    
+    // Обычная логика для приватных чатов (если не в режиме добавления в группу)
     if (privateChatController) {
         // Если пользователь не выбирает себя
         if (username != view->getCurrentUsername()) {
@@ -186,8 +230,8 @@ void MainWindowController::handleGroupMessageSend(const QString &chatId, const Q
 
 void MainWindowController::handleCreateGroupChat(const QString &chatName)
 {
-    QString chatId = QUuid::createUuid().toString(QUuid::WithoutBraces);
-    chatController->createGroupChat(chatName, chatId);
+    // Сервер сам генерирует chatId, поэтому передаем только chatName
+    chatController->createGroupChat(chatName, QString()); // Передаем пустой chatId
 }
 
 void MainWindowController::handleJoinGroupChat(const QString &chatId)
@@ -210,6 +254,14 @@ void MainWindowController::handleDeleteGroupChat(const QString &chatId)
     chatController->deleteGroupChat(chatId);
 }
 
+void MainWindowController::handleStartAddUserToGroupMode(const QString &chatId)
+{
+    if (chatController) {
+        chatController->startAddUserToGroupMode(chatId);
+        qDebug() << "MainWindowController: Started add user to group mode for chat" << chatId;
+    }
+}
+
 void MainWindowController::handleUserSearch(const QString &query)
 {
     chatController->searchUsers(query);
@@ -229,17 +281,23 @@ void MainWindowController::handleAuthenticationSuccessful()
     if (privateChatController) {
         privateChatController->setCurrentUsername(view->getCurrentUsername());
         qDebug() << "Set current username in PrivateChatController to" << view->getCurrentUsername();
-        
-        // Загрузка истории сообщений, но НЕ открытие окон автоматически
-        if (chatController) {
-            QTimer::singleShot(1000, [this]() {
-                // Запрашиваем историю сообщений для всех известных пользователей
-                chatController->requestRecentChatPartners();
-                
-                // Запрашиваем счетчики непрочитанных сообщений
-                chatController->requestUnreadCounts();
-            });
-        }
+    }
+    
+    // Устанавливаем текущего пользователя в GroupChatController
+    if (groupChatController) {
+        groupChatController->setCurrentUsername(view->getCurrentUsername());
+        qDebug() << "Set current username in GroupChatController to" << view->getCurrentUsername();
+    }
+    
+    // Загрузка истории сообщений, но НЕ открытие окон автоматически
+    if (chatController) {
+        QTimer::singleShot(1000, [this]() {
+            // Запрашиваем историю сообщений для всех известных пользователей
+            chatController->requestRecentChatPartners();
+            
+            // Запрашиваем счетчики непрочитанных сообщений
+            chatController->requestUnreadCounts();
+        });
     }
     
     view->display();
@@ -296,23 +354,41 @@ void MainWindowController::handleSearchResultsReady(const QStringList &users)
 
 void MainWindowController::handleGroupMessageReceived(const QString &chatId, const QString &sender, const QString &message, const QString &timestamp)
 {
-    Q_UNUSED(chatId);
-    Q_UNUSED(sender);
-    Q_UNUSED(message);
-    Q_UNUSED(timestamp);
-    
-    // TODO: Реализовать обработку группового сообщения в контроллере
+    // Перенаправляем в GroupChatController для обработки
+    if (groupChatController) {
+        groupChatController->handleIncomingMessage(chatId, sender, message, timestamp);
+    }
 }
 
 void MainWindowController::handleGroupMembersUpdated(const QString &chatId, const QStringList &members, const QString &creator)
 {
-    // Функциональность должна быть добавлена в MainWindow
-    Q_UNUSED(chatId);
-    Q_UNUSED(members);
-    Q_UNUSED(creator);
-    
-    // TODO: Реализовать обновление списка участников группы
+    // Перенаправляем в GroupChatController для обработки
+    if (groupChatController) {
+        groupChatController->handleMembersUpdated(chatId, members, creator);
+    }
+}
 
+void MainWindowController::handleGroupChatCreated(const QString &chatId, const QString &chatName)
+{
+    qDebug() << "MainWindowController: Group chat created:" << chatName << "with ID:" << chatId;
+    
+    // Только создаем окно группового чата, но не открываем его
+    if (groupChatController) {
+        groupChatController->findOrCreateChatWindow(chatId, chatName);
+        qDebug() << "Group chat window created for" << chatName;
+    }
+    
+    // Показываем главное окно после создания чата
+    if (view) {
+        view->show();
+        view->activateWindow();
+        view->raise();
+    }
+    
+    // Обновляем список пользователей чтобы показать новый групповой чат
+    if (chatController) {
+        chatController->requestUserList();
+    }
 }
 
 void MainWindowController::handleUnreadCountsUpdated(const QMap<QString, int> &privateCounts, const QMap<QString, int> &groupCounts)
@@ -345,4 +421,30 @@ void MainWindowController::handleUserDoubleClicked(const QString &username)
     
     // Обрабатываем двойной клик так же, как и обычный выбор пользователя
     handleUserSelected(username);
+}
+
+void MainWindowController::handleGroupChatSelected(const QString &chatId)
+{
+    qDebug() << "MainWindowController: Group chat selected:" << chatId;
+    
+    // Проверяем, что groupChatController инициализирован
+    if (groupChatController) {
+        // Используем groupChatController для создания/получения окна группового чата
+        GroupChatWindow *window = groupChatController->findOrCreateChatWindow(chatId, ""); // Имя будет получено автоматически
+        
+        if (window) {
+            // Помечаем сообщения как прочитанные при открытии окна
+            if (chatController) {
+                // TODO: Добавить метод markGroupMessagesAsRead в ChatController
+                // chatController->markGroupMessagesAsRead(chatId);
+            }
+            
+            window->show();
+            window->activateWindow();
+            window->raise(); // Поднимаем окно наверх
+        }
+    }
+    else {
+        qDebug() << "Error: groupChatController is null in handleGroupChatSelected";
+    }
 }

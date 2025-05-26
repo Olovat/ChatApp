@@ -21,6 +21,8 @@ SOURCES += \
     privatechat_controller.cpp \
     privatechatwindow.cpp \
     privatechat_model.cpp \
+    groupchat_controller.cpp \
+    groupchat_model.cpp \
 
 HEADERS += \
     mainwindow.h \
@@ -35,6 +37,8 @@ HEADERS += \
     privatechat_controller.h \
     privatechatwindow.h \
     privatechat_model.h \
+    groupchat_controller.h \
+    groupchat_model.h \
 
 FORMS += \
     auth_window.ui \

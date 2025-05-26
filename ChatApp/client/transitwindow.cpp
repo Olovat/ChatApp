@@ -1,6 +1,7 @@
 #include "transitwindow.h"
 #include "ui_transitwindow.h"
 #include "mainwindow.h"
+#include "mainwindow_controller.h"
 #include <QMessageBox>
 #include <QUuid>
 #include <QDateTime>
@@ -8,7 +9,22 @@
 TransitWindow::TransitWindow(MainWindow *mainWindow, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::TransitWindow),
-    mainWindow(mainWindow)
+    mainWindow(mainWindow),
+    controller(nullptr)
+{
+    ui->setupUi(this);
+    setWindowTitle("Создание группового чата");
+    setModal(true);
+    
+    // Устанавливаем фокус на поле ввода названия чата
+    ui->chatNameLineEdit->setFocus();
+}
+
+TransitWindow::TransitWindow(MainWindowController *controller, QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::TransitWindow),
+    mainWindow(nullptr),
+    controller(controller)
 {
     ui->setupUi(this);
     setWindowTitle("Создание группового чата");
@@ -31,7 +47,15 @@ void TransitWindow::on_createButton_clicked()
         QMessageBox::warning(this, "Ошибка", "Введите название чата");
         return;
     }
-      // Отправляем запрос на создание чата через контроллер
+    
+    // Если используется новая архитектура с контроллером
+    if (controller) {
+        controller->handleCreateGroupChat(chatName);
+        accept();
+        return;
+    }
+    
+    // Обратная совместимость со старой архитектурой
     if (mainWindow && mainWindow->getController()) {
         // Генерируем уникальный идентификатор для чата (UUID)
         QString chatId = QUuid::createUuid().toString(QUuid::WithoutBraces);
