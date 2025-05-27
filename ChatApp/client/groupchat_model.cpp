@@ -99,9 +99,12 @@ void GroupChatModel::addMessage(const GroupMessage &message)
 void GroupChatModel::setMessageHistory(const QList<GroupMessage> &messages)
 {
     m_messages = messages;
+    // Важно: вызываем updateUnreadCount() для обновления счетчика непрочитанных
+    // сообщений на основе признака isRead в сообщениях
     updateUnreadCount();
     emit messagesCleared(); // Сигнализируем об обновлении истории
-    qDebug() << "Message history set for group chat" << m_chatName << ":" << messages.size() << "messages";
+    qDebug() << "Message history set for group chat" << m_chatName << ":" 
+             << messages.size() << "messages, unread count:" << m_unreadCount;
 }
 
 void GroupChatModel::clearMessages()
@@ -190,12 +193,15 @@ void GroupChatModel::updateUnreadCount()
 {
     int count = 0;
     for (const auto &message : m_messages) {
+        // Учитываем только непрочитанные сообщения от других пользователей
         if (!message.isRead && message.sender != m_currentUser) {
             count++;
         }
     }
     
+    // Отправляем сигнал только при изменении счетчика
     if (m_unreadCount != count) {
+        qDebug() << "Group chat" << m_chatName << "unread count changed from" << m_unreadCount << "to" << count;
         m_unreadCount = count;
         emit unreadCountChanged(count);
     }

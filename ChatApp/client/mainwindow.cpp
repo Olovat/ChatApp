@@ -853,8 +853,7 @@ void MainWindow::updateGroupUnreadCounts(const QMap<QString, int> &counts)
                                      Qt::QueuedConnection, Q_ARG(int, count));
         }
     }
-    
-    // Обновляем отображение списка групповых чатов в главном окне
+      // Обновляем отображение списка групповых чатов в главном окне
     for (int i = 0; i < ui->userListWidget->count(); ++i) {
         QListWidgetItem *item = ui->userListWidget->item(i);
         if (!item || !(item->flags() & Qt::ItemIsEnabled))
@@ -865,17 +864,21 @@ void MainWindow::updateGroupUnreadCounts(const QMap<QString, int> &counts)
         if (type == "G") {
             QString chatId = item->data(Qt::UserRole).toString();
             QString chatName = item->data(Qt::UserRole + 2).toString();
-              if (unreadGroupMessageCounts.value(chatId, 0) > 0) {
-                int count = unreadGroupMessageCounts[chatId];
-                // Убираем старый счетчик, если он был
-                QString cleanName = chatName;
-                int parenIndex = cleanName.indexOf(" (");
-                if (parenIndex != -1) {
-                    cleanName = cleanName.left(parenIndex);
-                }
-                
+            
+            // Всегда получаем актуальное значение счетчика из карты
+            int unreadCount = unreadGroupMessageCounts.value(chatId, 0);
+            qDebug() << "Group chat" << chatName << "(" << chatId << ") has" << unreadCount << "unread messages";
+            
+            // Убираем старый счетчик, если он был
+            QString cleanName = chatName;
+            int parenIndex = cleanName.indexOf(" (");
+            if (parenIndex != -1) {
+                cleanName = cleanName.left(parenIndex);
+            }
+            
+            if (unreadCount > 0) {
                 // Устанавливаем новый текст с счетчиком
-                item->setText(cleanName + " (" + QString::number(count) + ")");
+                item->setText(cleanName + " (" + QString::number(unreadCount) + ")");
                 item->setBackground(Qt::yellow); // Жёлтый фон для чатов с непрочитанными сообщениями
                 item->setForeground(Qt::black);  // Чёрный текст для читаемости
             } else {

@@ -105,11 +105,19 @@ void GroupChatWindow::receiveMessage(const QString &sender, const QString &messa
         ui->textBrowser->append("[" + localTimeStr + "] " + sender + ": " + message);
     }
     
-    // ИСПРАВЛЕНИЕ: НЕ помечаем сообщения как прочитанные автоматически при получении
-    // Это должно происходить только при активном взаимодействии пользователя с окном
-    // if (isActiveWindow() && isVisible() && !isMinimized()) {
-    //     emit markAsReadRequested(chatId);
-    // }
+    // Помечаем сообщения прочитанными ТОЛЬКО если окно активно и видимо в данный момент
+    bool windowIsActiveAndVisible = isActiveWindow() && isVisible() && !isMinimized();
+    if (windowIsActiveAndVisible) {
+        // Даем небольшую задержку, чтобы сначала добавилось сообщение
+        QTimer::singleShot(50, this, [this]() {
+            emit markAsReadRequested(chatId);
+        });
+    } else {
+        // Если окно неактивно, запрашиваем обновление счетчика непрочитанных
+        if (groupChatController) {
+            groupChatController->getChatController()->requestUnreadCountForGroupChat(chatId);
+        }
+    }
 }
 
 void GroupChatWindow::beginHistoryDisplay()
@@ -437,7 +445,11 @@ void GroupChatWindow::onUnreadCountChanged(int count)
     
     // Обновляем заголовок окна с учетом непрочитанных сообщений
     if (count > 0) {
-        setWindowTitle(QString("Групповой чат: %1 (%2)").arg(chatName).arg(count));
+        // При изменении счетчика обновляем заголовок только если окно неактивно
+        // Это позволяет избежать "мигания" счетчика при активном окне
+        if (!isActiveWindow()) {
+            setWindowTitle(QString("Групповой чат: %1 (%2)").arg(chatName).arg(count));
+        }
     } else {
         // Возвращаем обычный заголовок
         updateWindowTitle();
@@ -476,14 +488,21 @@ void GroupChatWindow::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
     
-    // ИСПРАВЛЕНИЕ: Отмечаем сообщения как прочитанные только при активном показе окна пользователем
-    // Убираем автоматическое обнуление через таймер
-    // QTimer::singleShot(500, this, [this]() {
-    //     emit markAsReadRequested(chatId);
-    // });
+    // Отмечаем сообщения как прочитанные только при пользовательском взаимодействии
+    // (событие активации окна обычно происходит после showEvent)
+    // Проверяем, вызван ли показ окна пользовательским взаимодействием
+    if (isActiveWindow()) {
+        emit markAsReadRequested(chatId);
+    }
     
-    // Отмечаем сообщения как прочитанные сразу при показе окна
-    emit markAsReadRequested(chatId);
+    // При первом показе окна запрашиваем непрочитанные сообщения
+    if (!initialHistoryRequested) {
+        initialHistoryRequested = true;
+        if (groupChatController) {
+            // Запрашиваем информацию о непрочитанных сообщениях с сервера
+            groupChatController->getChatController()->requestUnreadCountForGroupChat(chatId);
+        }
+    }
 }
 
 void GroupChatWindow::sendCurrentMessage()
@@ -504,9 +523,16 @@ bool GroupChatWindow::event(QEvent *e)
     if (e->type() == QEvent::WindowActivate) {
         qDebug() << "GroupChatWindow: Window activated for chat" << chatName;
         
-        // ИСПРАВЛЕНИЕ: Отмечаем сообщения как прочитанные сразу при активации окна
-        // без таймера, чтобы избежать задержек и конфликтов
-        emit markAsReadRequested(chatId);
+        // Отмечаем сообщения как прочитанные при активации окна
+        if (isVisible() && !isMinimized()) {
+            emit markAsReadRequested(chatId);
+            // После активации окна запрашиваем обновления счетчика явно
+            if (groupChatController) {
+                QTimer::singleShot(100, [this]() {
+                    groupChatController->getChatController()->requestUnreadCountForGroupChat(chatId);
+                });
+            }
+        }
     }
     return QWidget::event(e);
 }
