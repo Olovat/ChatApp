@@ -130,9 +130,11 @@ void MainWindowController::setupControllerConnections()
     if (groupChatController && chatController) {
         connect(chatController, &ChatController::groupMessageReceived,
                 groupChatController, &GroupChatController::handleIncomingMessage);
-        
-        connect(chatController, &ChatController::groupMembersUpdated,
+          connect(chatController, &ChatController::groupMembersUpdated,
                 groupChatController, &GroupChatController::handleMembersUpdated);
+                
+        connect(chatController, &ChatController::groupCreatorUpdated,
+                this, &MainWindowController::handleGroupCreatorUpdated);
                 
         // Добавляем обработчик истории сообщений для групповых чатов
         connect(chatController, &ChatController::groupHistoryReceived,
@@ -369,6 +371,15 @@ void MainWindowController::handleGroupMembersUpdated(const QString &chatId, cons
     // Перенаправляем в GroupChatController для обработки
     if (groupChatController) {
         groupChatController->handleMembersUpdated(chatId, members, creator);
+    }
+}
+
+void MainWindowController::handleGroupCreatorUpdated(const QString &chatId, const QString &creator)
+{
+    qDebug() << "MainWindowController: Group creator updated for" << chatId << "- creator:" << creator;
+    // Перенаправляем в GroupChatController для обработки
+    if (groupChatController) {
+        groupChatController->handleCreatorUpdated(chatId, creator);
     }
 }
 

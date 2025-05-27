@@ -65,6 +65,7 @@ protected:
     void closeEvent(QCloseEvent *event) override;
     void showEvent(QShowEvent *event) override;
     bool event(QEvent *e) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
     void setupUi();
@@ -80,11 +81,11 @@ private:
     QString chatId;
     QString chatName;
     MainWindowController *controller;
-    GroupChatController *groupChatController;
-    QString creator; // Имя создателя чата
+    GroupChatController *groupChatController;    QString creator; // Имя создателя чата
     bool isCreator = false; // Флаг, указывающий, является ли текущий пользователь создателем
     bool historyDisplayed = false; // Флаги для отображения истории сообщений
     bool initialHistoryRequested = false; // Флаг, показывающий была ли запрошена начальная история
+    bool isRemovalModeActive = false; // Флаг активного режима удаления пользователей
 
     // Вспомогательные методы
     void sendMessage(const QString &message);

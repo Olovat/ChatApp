@@ -8,9 +8,8 @@
 #include <QDateTime>
 #include <QDebug>
 
-/**
- * @brief Структура для хранения сообщения группового чата
- */
+
+
 struct GroupMessage {
     QString sender;
     QString content;
@@ -26,11 +25,6 @@ struct GroupMessage {
         : sender(sender), content(content), timestamp(timestamp), isRead(isFromCurrentUser || forceRead) {}
 };
 
-/**
- * @brief Модель данных для группового чата (Model в MVC)
- * 
- * Хранит данные о сообщениях чата, участниках, статусе создателя
- */
 class GroupChatModel : public QObject
 {
     Q_OBJECT
@@ -38,8 +32,7 @@ class GroupChatModel : public QObject
 public:
     explicit GroupChatModel(const QString &chatId, const QString &chatName, const QString &currentUser, QObject *parent = nullptr);
     ~GroupChatModel();
-    
-    // Геттеры
+      // Геттеры
     QString getChatId() const;
     QString getChatName() const;
     QString getCurrentUser() const;
@@ -48,6 +41,9 @@ public:
     QStringList getMembers() const;
     int getUnreadCount() const;
     bool isCurrentUserCreator() const;
+    
+    // Методы проверки возможности действий
+    bool canRemoveMember(const QString &username) const;
     
     // Методы для работы с сообщениями
     void addMessage(const QString &sender, const QString &content, const QString &timestamp);

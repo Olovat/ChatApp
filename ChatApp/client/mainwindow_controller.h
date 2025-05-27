@@ -50,9 +50,9 @@ public slots:
     void handleRegistrationSuccessful();
     void handleRegistrationFailed(const QString &errorMessage);
     void handleUserListUpdated(const QStringList &users);
-    void handleSearchResultsReady(const QStringList &users);
-    void handleGroupMessageReceived(const QString &chatId, const QString &sender, const QString &message, const QString &timestamp);
+    void handleSearchResultsReady(const QStringList &users);    void handleGroupMessageReceived(const QString &chatId, const QString &sender, const QString &message, const QString &timestamp);
     void handleGroupMembersUpdated(const QString &chatId, const QStringList &members, const QString &creator);
+    void handleGroupCreatorUpdated(const QString &chatId, const QString &creator);
     void handleGroupChatCreated(const QString &chatId, const QString &chatName);
     void handleUnreadCountsUpdated(const QMap<QString, int> &privateCounts, const QMap<QString, int> &groupCounts);
 

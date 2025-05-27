@@ -840,14 +840,14 @@ void MainWindow::updateUnreadCounts(const QMap<QString, int> &counts)
 void MainWindow::updateGroupUnreadCounts(const QMap<QString, int> &counts)
 {
     unreadGroupMessageCounts = counts;
-    
-    // Обновляем заголовки окон групповых чатов
+      // Обновляем заголовки окон групповых чатов
     for (auto it = groupChatWindows.begin(); it != groupChatWindows.end(); ++it) {
         QString chatId = it.key();
         GroupChatWindow* window = it.value();
         
-        if (window && unreadGroupMessageCounts.contains(chatId)) {
-            int count = unreadGroupMessageCounts[chatId];
+        if (window) {
+            // ИСПРАВЛЕНИЕ: Всегда обновляем счетчик, даже если он равен 0
+            int count = unreadGroupMessageCounts.value(chatId, 0);
             // Вызываем слот обновления счетчика в окне чата
             QMetaObject::invokeMethod(window, "onUnreadCountChanged", 
                                      Qt::QueuedConnection, Q_ARG(int, count));
@@ -865,8 +865,7 @@ void MainWindow::updateGroupUnreadCounts(const QMap<QString, int> &counts)
         if (type == "G") {
             QString chatId = item->data(Qt::UserRole).toString();
             QString chatName = item->data(Qt::UserRole + 2).toString();
-            
-            if (unreadGroupMessageCounts.contains(chatId) && unreadGroupMessageCounts[chatId] > 0) {
+              if (unreadGroupMessageCounts.value(chatId, 0) > 0) {
                 int count = unreadGroupMessageCounts[chatId];
                 // Убираем старый счетчик, если он был
                 QString cleanName = chatName;

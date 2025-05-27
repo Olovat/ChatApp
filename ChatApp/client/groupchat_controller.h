@@ -50,6 +50,7 @@ public slots:
     void handleIncomingMessage(const QString &chatId, const QString &sender, const QString &message, const QString &timestamp = QString());
     void handleMessageHistory(const QString &chatId, const QList<QPair<QString, QString>> &history);
     void handleMembersUpdated(const QString &chatId, const QStringList &members, const QString &creator);
+    void handleCreatorUpdated(const QString &chatId, const QString &creator);
     void handleChatDeleted(const QString &chatId);
     
     // Обработка действий пользователя

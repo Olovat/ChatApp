@@ -530,21 +530,14 @@ void ChatController::processServerResponse(const QString &response)
         // Определяем, является ли это групповым чатом по формату идентификатора
         // Групповые чаты обычно имеют UUID-подобный формат, а приватные чаты - имя пользователя
         bool isGroupChat = chatPartner.contains("-") || emit groupChatExists(chatPartner);
-        
-        if (isGroupChat) {
+          if (isGroupChat) {
             // Обновляем счетчик непрочитанных сообщений для группового чата
-            if (count > 0) {
-                unreadGroupMessageCounts[chatPartner] = count;
-            } else {
-                unreadGroupMessageCounts.remove(chatPartner);
-            }
+            // ИСПРАВЛЕНИЕ: НЕ удаляем chatPartner из карты, а устанавливаем значение
+            unreadGroupMessageCounts[chatPartner] = count;
         } else {
             // Обновляем счетчик непрочитанных сообщений для приватного чата
-            if (count > 0) {
-                unreadPrivateMessageCounts[chatPartner] = count;
-            } else {
-                unreadPrivateMessageCounts.remove(chatPartner);
-            }
+            // ИСПРАВЛЕНИЕ: НЕ удаляем chatPartner из карты, а устанавливаем значение
+            unreadPrivateMessageCounts[chatPartner] = count;
         }
         
         // Отправляем сигнал об обновлении счетчиков
@@ -572,6 +565,12 @@ void ChatController::processServerResponse(const QString &response)
         QString timestamp = parts.size() > 4 ? parts[4] : QDateTime::currentDateTime().toString("hh:mm:ss");
         
         qDebug() << "Received group message in chat" << chatId << "from" << sender << ":" << message;
+         bool isSystemMessage = (sender == "SYSTEM" || sender.isEmpty()) || 
+                              message.contains("присоединился к чату") ||
+                              message.contains("покинул чат") ||
+                              message.contains("был добавлен") ||
+                              message.contains("был удален") ||
+                              message.contains("создал чат");
         
         // Проверка на дубликаты
         if (!isMessageDuplicate(chatId, message, true)) {
@@ -579,7 +578,7 @@ void ChatController::processServerResponse(const QString &response)
             emit groupMessageReceived(chatId, sender, message, timestamp);
             
             // Обновляем счетчик непрочитанных сообщений для группового чата
-            if (sender != getCurrentUsername()) {
+            if (!isSystemMessage && sender != getCurrentUsername()) {
                 unreadGroupMessageCounts[chatId]++;
                 emit unreadCountsUpdated(unreadPrivateMessageCounts, unreadGroupMessageCounts);
             }

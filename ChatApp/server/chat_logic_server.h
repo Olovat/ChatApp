@@ -95,7 +95,7 @@ private:
 
     // Методы для работы с групповыми чатами
     bool createGroupChat(const std::string &chatId, const std::string &chatName, const std::string &creator);
-    bool addUserToGroupChat(const std::string &chatId, const std::string &username);
+    bool addUserToGroupChat(const std::string &chatId, const std::string &username, bool sendJoinMessage = true);
     bool removeUserFromGroupChat(const std::string &chatId, const std::string &username);
     void sendGroupChatInfo(const std::string &chatId, std::shared_ptr<INetworkClient> client);
     bool saveGroupChatMessage(const std::string &chatId, const std::string &sender, const std::string &message);

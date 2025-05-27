@@ -200,12 +200,11 @@ void ChatLogicServer::handleMessageReceived(std::shared_ptr<INetworkClient> clie
                 chatMessage += parts[i] + (i == parts.size() - 1 ? "" : ":");
             }
             sendGroupChatMessageToClients(chatId, senderUsername, chatMessage);
-        }
-    } else if (command == "GROUP_ADD_USER" && parts.size() >= 3) {
+        }    } else if (command == "GROUP_ADD_USER" && parts.size() >= 3) {
          if (!senderUsername.empty()) { // Только аутентифицированный пользователь может добавлять
             std::string chatId = parts[1];
             std::string userToAdd = parts[2];
-            if (addUserToGroupChat(chatId, userToAdd)) {
+            if (addUserToGroupChat(chatId, userToAdd, false)) { // Отключаем автоматическое сообщение о присоединении
                  sendGroupChatMessageToClients(chatId, "SYSTEM", userToAdd + " добавлен в чат пользователем " + senderUsername);
             } else {
                 client->sendMessage("ERROR:Failed to add user " + userToAdd + " to group " + chatId);
@@ -921,7 +920,7 @@ bool ChatLogicServer::createGroupChat(const std::string &chatId, const std::stri
     return false;
 }
 
-bool ChatLogicServer::addUserToGroupChat(const std::string &chatId, const std::string &username) {
+bool ChatLogicServer::addUserToGroupChat(const std::string &chatId, const std::string &username, bool sendJoinMessage) {
     if (!m_db) return false;
     // Проверки существования чата и пользователя (как и раньше)
     if (!(m_db->fetchOne("SELECT 1 FROM group_chats WHERE id = ?;", {chatId})).has_value()){
@@ -947,7 +946,9 @@ bool ChatLogicServer::addUserToGroupChat(const std::string &chatId, const std::s
     if (success) {
         addUserToGroupChatInCache(username, chatId); // Обновляем кэш
         broadcastGroupChatInfo(chatId); 
-        sendGroupChatMessageToClients(chatId, "SYSTEM", username + " присоединился к чату.");
+        if (sendJoinMessage) {
+            sendGroupChatMessageToClients(chatId, "SYSTEM", username + " присоединился к чату.");
+        }
     } else {
         std::cerr << "Failed to add user " << username << " to group " << chatId << " in DB: " << m_db->lastError() << std::endl;
     }

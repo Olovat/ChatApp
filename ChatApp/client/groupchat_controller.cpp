@@ -189,10 +189,9 @@ void GroupChatController::markMessagesAsRead(const QString &chatId)
         // Уведомляем сервер о прочтении
         m_chatController->sendMessageToServer("MARK_GROUP_READ:" + chatId);
         
-        // Запрашиваем обновленный счетчик непрочитанных сообщений
-        QTimer::singleShot(300, this, [this, chatId]() {
-            m_chatController->requestUnreadCountForGroupChat(chatId);
-        });
+        // ИСПРАВЛЕНИЕ: Убираем задержку и запрашиваем обновленный счетчик сразу
+        // Это предотвращает исчезновение счетчика непрочитанных сообщений
+        m_chatController->requestUnreadCountForGroupChat(chatId);
         
         qDebug() << "Marked messages as read and sent update to server for chat" << chatId;
     }
@@ -212,27 +211,13 @@ void GroupChatController::handleIncomingMessage(const QString &chatId, const QSt
         findOrCreateChatModel(chatId, QString("Групповой чат %1").arg(chatId.left(8)));
     }
     
-    GroupChatModel *model = m_chatModels[chatId];
-    if (model) {
-        // Проверяем статус окна
-        bool windowIsVisibleAndActive = false;
-        if (m_chatWindows.contains(chatId)) {
-            GroupChatWindow* window = m_chatWindows[chatId];
-            windowIsVisibleAndActive = window && 
-                                      window->isVisible() && 
-                                      !window->isMinimized() &&
-                                      window->isActiveWindow();
-            
-            qDebug() << "Window check for chat" << chatId << ": exists=" << (window != nullptr) 
-                     << ", visible=" << (window ? window->isVisible() : false)
-                     << ", minimized=" << (window ? window->isMinimized() : false)
-                     << ", active=" << (window ? window->isActiveWindow() : false)
-                     << ", final=" << windowIsVisibleAndActive;
-        }
+    GroupChatModel *model = m_chatModels[chatId];    if (model) {
+        // ИСПРАВЛЕНИЕ: НЕ помечаем входящие сообщения как прочитанные автоматически
+        // Это должно происходить только при явном взаимодействии пользователя
         
-        // Добавляем сообщение в модель с правильным статусом прочитанности
+        // Добавляем сообщение в модель как непрочитанное (кроме собственных сообщений)
         // Сообщения от текущего пользователя всегда считаются прочитанными
-        bool isRead = sender == m_currentUsername || windowIsVisibleAndActive;
+        bool isRead = (sender == m_currentUsername);
         GroupMessage newMessage(sender, message, actualTimestamp, isRead);
         model->addMessage(newMessage);
     }
@@ -342,6 +327,23 @@ void GroupChatController::handleAddUserToGroup(const QString &chatId, const QStr
 void GroupChatController::handleRemoveUserFromGroup(const QString &chatId, const QString &username)
 {
     qDebug() << "GroupChatController: Removing user" << username << "from chat" << chatId;
+    
+    // Получаем модель чата для проверки прав
+    if (!m_chatModels.contains(chatId)) {
+        qDebug() << "GroupChatController: Chat model not found for" << chatId;
+        return;
+    }
+    
+    GroupChatModel *model = m_chatModels[chatId];
+    
+    // Используем метод модели для проверки возможности удаления
+    if (!model->canRemoveMember(username)) {
+        qDebug() << "GroupChatController: Cannot remove user" << username << "from chat" << chatId;
+        // В будущем можно добавить сигнал об ошибке для отображения в UI
+        return;
+    }
+    
+    // Если все проверки пройдены, отправляем запрос
     emit userRemovalRequested(chatId, username);
 }
 
@@ -396,12 +398,15 @@ void GroupChatController::setupConnectionsForWindow(GroupChatWindow *window, con
     // Подключаем сигнал для отметки сообщений как прочитанных
     connect(window, &GroupChatWindow::markAsReadRequested,
             this, &GroupChatController::markMessagesAsRead);
-            
-    // Подключаем модель к окну для обновления счетчика непрочитанных сообщений
+              // Подключаем модель к окну для обновления счетчика непрочитанных сообщений
     if (m_chatModels.contains(chatId)) {
         GroupChatModel *model = m_chatModels[chatId];
         connect(model, &GroupChatModel::unreadCountChanged,
                 window, &GroupChatWindow::onUnreadCountChanged);
+        connect(model, &GroupChatModel::creatorChanged,
+                window, &GroupChatWindow::onCreatorChanged);
+        connect(model, &GroupChatModel::membersUpdated,
+                window, &GroupChatWindow::onMembersUpdated);
     }
     
     qDebug() << "Connections set up for group chat window" << chatId;
@@ -446,4 +451,21 @@ void GroupChatController::parseMessageHistory(const QString &chatId, const QList
 QString GroupChatController::generateChatId() const
 {
     return QUuid::createUuid().toString(QUuid::WithoutBraces);
+}
+
+void GroupChatController::handleCreatorUpdated(const QString &chatId, const QString &creator)
+{
+    qDebug() << "GroupChatController: Creator updated for chat" << chatId << ":" << creator;
+    
+    // Обновляем модель
+    if (m_chatModels.contains(chatId)) {
+        GroupChatModel *model = m_chatModels[chatId];
+        model->setCreator(creator);
+    }
+    
+    // Обновляем окно
+    if (m_chatWindows.contains(chatId)) {
+        GroupChatWindow *window = m_chatWindows[chatId];
+        window->setCreator(creator);
+    }
 }

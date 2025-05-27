@@ -54,6 +54,27 @@ bool GroupChatModel::isCurrentUserCreator() const
     return m_creator == m_currentUser;
 }
 
+// Методы проверки возможности действий
+bool GroupChatModel::canRemoveMember(const QString &username) const
+{
+    // Только создатель может удалять участников
+    if (!isCurrentUserCreator()) {
+        return false;
+    }
+    
+    // Создателя нельзя удалить
+    if (username == m_creator) {
+        return false;
+    }
+    
+    // Пользователь должен быть в списке участников
+    if (!m_members.contains(username)) {
+        return false;
+    }
+    
+    return true;
+}
+
 // Методы для работы с сообщениями
 void GroupChatModel::addMessage(const QString &sender, const QString &content, const QString &timestamp)
 {

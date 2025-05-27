@@ -105,10 +105,11 @@ void GroupChatWindow::receiveMessage(const QString &sender, const QString &messa
         ui->textBrowser->append("[" + localTimeStr + "] " + sender + ": " + message);
     }
     
-    // Если окно активно, отмечаем сообщение как прочитанное
-    if (isActiveWindow() && isVisible() && !isMinimized()) {
-        emit markAsReadRequested(chatId);
-    }
+    // ИСПРАВЛЕНИЕ: НЕ помечаем сообщения как прочитанные автоматически при получении
+    // Это должно происходить только при активном взаимодействии пользователя с окном
+    // if (isActiveWindow() && isVisible() && !isMinimized()) {
+    //     emit markAsReadRequested(chatId);
+    // }
 }
 
 void GroupChatWindow::beginHistoryDisplay()
@@ -151,10 +152,14 @@ void GroupChatWindow::updateMembersList(const QStringList &members)
         
         ui->userListWidget->addItem(item);
     }
-    
-    // Обновляем состояние кнопки удаления
-    ui->pushButton_3->setEnabled(false); // По умолчанию отключена, пока не выбран участник
-    ui->pushButton_3->setToolTip("Выберите участника в списке для удаления");
+      // Обновляем состояние кнопки удаления
+    if (isCreator) {
+        ui->pushButton_3->setEnabled(true); // Включена для создателя
+        ui->pushButton_3->setToolTip("Активировать режим удаления участников");
+    } else {
+        ui->pushButton_3->setEnabled(false); // Отключена для обычных участников
+        ui->pushButton_3->setToolTip("У вас нет прав для удаления участников");
+    }
     
     qDebug() << "Обновлен список участников группового чата:" << chatName 
              << ", всего участников:" << members.size();
@@ -176,14 +181,21 @@ void GroupChatWindow::setCreator(const QString &creator)
         // Получаем из groupChatController, если он доступен
         currentUser = groupChatController->getCurrentUsername();
     }
-    
-    // Проверяем, является ли текущий пользователь создателем чата
+      // Проверяем, является ли текущий пользователь создателем чата
     bool isCurrentUserCreator = !currentUser.isEmpty() && (currentUser == creator);
     this->isCreator = isCurrentUserCreator; // Сохраняем статус создателя
     
-    // Делаем кнопку удаления видимой только для создателя
+    // Делаем кнопки удаления видимыми только для создателя
     if (ui->pushButton_4) {
         ui->pushButton_4->setVisible(isCurrentUserCreator);
+    }
+      // ИСПРАВЛЕНИЕ: Кнопка "-" (удаление пользователей) также только для создателя
+    if (ui->pushButton_3) {
+        ui->pushButton_3->setVisible(isCurrentUserCreator);
+        if (isCurrentUserCreator) {
+            ui->pushButton_3->setEnabled(true); // Включаем кнопку для создателя
+            ui->pushButton_3->setToolTip("Активировать режим удаления участников");
+        }
     }
     
     // Обновляем список участников, чтобы отметить создателя
@@ -253,44 +265,25 @@ void GroupChatWindow::on_pushButton_clicked()
 // Обработчик кнопки удаления пользователя из чата
 void GroupChatWindow::on_pushButton_3_clicked()
 {
-    // Получаем выбранный элемент в списке участников
-    QListWidgetItem *selectedItem = ui->userListWidget->currentItem();
-    if (!selectedItem) {
-        QMessageBox::warning(this, "Ошибка", "Выберите пользователя для удаления из списка");
-        return;
-    }
-    
-    QString selectedUser = selectedItem->text();
-    QString originalUserName = selectedUser;
-    
-    // Убираем метку "(создатель)" для обработки
-    if (selectedUser.endsWith(" (создатель)")) {
-        originalUserName = selectedUser.left(selectedUser.length() - 12);
-    }
-    
-    // Проверяем возможность удаления
-    if (!canRemoveMember(originalUserName)) {
-        QMessageBox::warning(this, "Ошибка", "Невозможно удалить этого участника");
-        return;
-    }
-    
-    // Запрашиваем подтверждение
-    QMessageBox::StandardButton reply = QMessageBox::question(
-        this, 
-        "Подтверждение удаления", 
-        "Вы уверены, что хотите удалить пользователя " + originalUserName + " из чата?",
-        QMessageBox::Yes | QMessageBox::No
-    );
-    
-    if (reply == QMessageBox::Yes) {
-        // Отправляем сигнал на удаление пользователя
-        emit removeUserRequested(chatId, originalUserName);
+    if (!isRemovalModeActive) {
+        // Активируем режим удаления
+        isRemovalModeActive = true;
+        ui->pushButton_3->setText("Отмена");
+        ui->pushButton_3->setToolTip("Отменить режим удаления пользователей");
+        ui->pushButton_3->setStyleSheet("QPushButton { background-color: #ff6b6b; color: white; }");
         
-        // Отключаем кнопку до следующего выбора
-        ui->pushButton_3->setEnabled(false);
-        ui->pushButton_3->setToolTip("Выберите участника в списке для удаления");
+        // Показываем инструкцию
+        QMessageBox::information(this, "Режим удаления", 
+                               "Режим удаления активирован.\nВыберите пользователя в списке для удаления.\nНажмите 'Отмена' для выхода из режима.");
         
-        qDebug() << "Отправлен запрос на удаление участника:" << originalUserName;
+        qDebug() << "Removal mode activated";
+    } else {        // Отключаем режим удаления
+        isRemovalModeActive = false;
+        ui->pushButton_3->setText("-");
+        ui->pushButton_3->setToolTip("Удалить пользователя из чата");
+        ui->pushButton_3->setStyleSheet(""); // Сбрасываем стиль
+        
+        qDebug() << "Removal mode deactivated";
     }
 }
 
@@ -371,24 +364,32 @@ void GroupChatWindow::setGroupChatController(GroupChatController *controller)
 
 void GroupChatWindow::setupUi()
 {
-    // Скрываем кнопку удаления по умолчанию
-    ui->pushButton_4->setVisible(false);
+    // Скрываем кнопки удаления по умолчанию (они станут видимыми только создателю)
+    ui->pushButton_3->setVisible(false); // Кнопка "-" (удаление пользователей)
+    ui->pushButton_4->setVisible(false); // Кнопка удаления чата
     
     // Подключаем сигналы кнопки отправки и поля ввода
     connect(ui->pushButton_2, &QPushButton::clicked, this, &GroupChatWindow::on_pushButton_2_clicked);
     connect(ui->lineEdit, &QLineEdit::returnPressed, this, &GroupChatWindow::on_lineEdit_returnPressed);
     
+    // Добавляем обработчик клика в области сообщений для отметки как прочитанных
+    connect(ui->textBrowser, &QTextBrowser::anchorClicked, this, [this]() {
+        emit markAsReadRequested(chatId);
+    });
+    
+    // Добавляем обработчик получения фокуса в области сообщений
+    ui->textBrowser->installEventFilter(this);
+    
     // Добавляем горячую клавишу Enter для отправки
     QShortcut *shortcut = new QShortcut(QKeySequence(Qt::Key_Return), ui->lineEdit);
     connect(shortcut, &QShortcut::activated, this, &GroupChatWindow::on_pushButton_2_clicked);
     
-    // Всегда делаем кнопки активными сразу
+    // Кнопка добавления пользователя всегда активна
     ui->pushButton->setEnabled(true);
-    ui->pushButton_3->setEnabled(true);
     
     // Устанавливаем подсказки для кнопок
     ui->pushButton->setToolTip("Добавить пользователя в чат");
-    ui->pushButton_3->setToolTip("Удалить выбранного пользователя из чата");
+    ui->pushButton_3->setToolTip("Удалить выбранного пользователя из чата (только для создателя)");
     ui->pushButton_4->setToolTip("Удалить чат (только для создателя)");
     
     // Настраиваем список участников
@@ -457,6 +458,16 @@ void GroupChatWindow::onCreatorChanged(const QString &creator)
 void GroupChatWindow::closeEvent(QCloseEvent *event)
 {
     qDebug() << "Group chat window closing for" << chatName;
+    
+    // Сбрасываем режим удаления при закрытии окна
+    if (isRemovalModeActive) {
+        isRemovalModeActive = false;
+        if (ui->pushButton_3) {
+            ui->pushButton_3->setText("-");
+            ui->pushButton_3->setStyleSheet("");
+        }
+    }
+    
     emit windowClosed(chatId);
     event->accept();
 }
@@ -465,14 +476,14 @@ void GroupChatWindow::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
     
-    // Отмечаем сообщения как прочитанные при показе окна
-    QTimer::singleShot(500, this, [this]() {
-        emit markAsReadRequested(chatId);
-    });
+    // ИСПРАВЛЕНИЕ: Отмечаем сообщения как прочитанные только при активном показе окна пользователем
+    // Убираем автоматическое обнуление через таймер
+    // QTimer::singleShot(500, this, [this]() {
+    //     emit markAsReadRequested(chatId);
+    // });
     
-    // ИСПРАВЛЕНИЕ: Убираем дублирующие запросы, так как теперь 
-    // GroupChatController::findOrCreateChatWindow() сам запрашивает данные
-    // Оставляем только отметку сообщений как прочитанных
+    // Отмечаем сообщения как прочитанные сразу при показе окна
+    emit markAsReadRequested(chatId);
 }
 
 void GroupChatWindow::sendCurrentMessage()
@@ -481,6 +492,9 @@ void GroupChatWindow::sendCurrentMessage()
     if (!message.isEmpty()) {
         sendMessage(message);
         ui->lineEdit->clear();
+        
+        // При отправке сообщения пользователем также помечаем сообщения как прочитанные
+        emit markAsReadRequested(chatId);
     }
 }
 
@@ -490,12 +504,23 @@ bool GroupChatWindow::event(QEvent *e)
     if (e->type() == QEvent::WindowActivate) {
         qDebug() << "GroupChatWindow: Window activated for chat" << chatName;
         
-        // Отмечаем сообщения как прочитанные при активации окна
-        QTimer::singleShot(100, this, [this]() {
-            emit markAsReadRequested(chatId);
-        });
+        // ИСПРАВЛЕНИЕ: Отмечаем сообщения как прочитанные сразу при активации окна
+        // без таймера, чтобы избежать задержек и конфликтов
+        emit markAsReadRequested(chatId);
     }
     return QWidget::event(e);
+}
+
+// Фильтр событий для обработки кликов в области сообщений
+bool GroupChatWindow::eventFilter(QObject *watched, QEvent *event)
+{
+    // Если клик произошел в области сообщений (textBrowser)
+    if (watched == ui->textBrowser && event->type() == QEvent::MouseButtonPress) {
+        // Помечаем сообщения как прочитанные при клике в области сообщений
+        emit markAsReadRequested(chatId);
+    }
+    
+    return QWidget::eventFilter(watched, event);
 }
 
 // Настройка списка участников
@@ -504,12 +529,17 @@ void GroupChatWindow::setupMembersList()
     // Подключаем сигналы для интерактивности списка
     connect(ui->userListWidget, &QListWidget::itemClicked, this, &GroupChatWindow::onUserListItemClicked);
     connect(ui->userListWidget, &QListWidget::itemDoubleClicked, this, &GroupChatWindow::onUserListItemDoubleClicked);
-    
-    // Настраиваем режим выбора
+      // Настраиваем режим выбора
     ui->userListWidget->setSelectionMode(QAbstractItemView::SingleSelection);
     
-    // Отключаем кнопку удаления по умолчанию
-    ui->pushButton_3->setEnabled(false);
+    // Устанавливаем состояние кнопки удаления в зависимости от статуса создателя
+    if (isCreator) {
+        ui->pushButton_3->setEnabled(true);
+        ui->pushButton_3->setToolTip("Активировать режим удаления участников");
+    } else {
+        ui->pushButton_3->setEnabled(false);
+        ui->pushButton_3->setToolTip("У вас нет прав для удаления участников");
+    }
 }
 
 // Обновление внешнего вида элемента участника
@@ -572,19 +602,53 @@ void GroupChatWindow::onUserListItemClicked(QListWidgetItem *item)
         originalUserName = selectedUser.left(selectedUser.length() - 12);
     }
     
-    // Обновляем состояние кнопки удаления
-    bool canRemove = canRemoveMember(originalUserName);
-    ui->pushButton_3->setEnabled(canRemove);
-    
-    if (canRemove) {
-        ui->pushButton_3->setToolTip("Удалить " + originalUserName + " из чата");
-    } else if (originalUserName == creator) {
-        ui->pushButton_3->setToolTip("Нельзя удалить создателя чата");
+    // Если активен режим удаления, пытаемся удалить пользователя
+    if (isRemovalModeActive) {
+        // Проверяем возможность удаления
+        if (!canRemoveMember(originalUserName)) {
+            if (originalUserName == creator) {
+                QMessageBox::warning(this, "Ошибка", "Нельзя удалить создателя чата");
+            } else {
+                QMessageBox::warning(this, "Ошибка", "У вас нет прав для удаления этого участника");
+            }
+            return;
+        }
+        
+        // Запрашиваем подтверждение
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this, 
+            "Подтверждение удаления", 
+            "Вы уверены, что хотите удалить пользователя " + originalUserName + " из чата?",
+            QMessageBox::Yes | QMessageBox::No
+        );
+        
+        if (reply == QMessageBox::Yes) {
+            // Отправляем сигнал контроллеру
+            emit removeUserRequested(chatId, originalUserName);
+            
+            // Отключаем режим удаления после удаления
+            isRemovalModeActive = false;
+            ui->pushButton_3->setText("-");
+            ui->pushButton_3->setToolTip("Удалить пользователя из чата");
+            ui->pushButton_3->setStyleSheet("");
+            
+            qDebug() << "User removal requested for:" << originalUserName;
+        }
     } else {
-        ui->pushButton_3->setToolTip("У вас нет прав для удаления участников");
+        // Обычный режим - просто обновляем состояние кнопки удаления
+        bool canRemove = canRemoveMember(originalUserName);
+        ui->pushButton_3->setEnabled(canRemove);
+        
+        if (canRemove) {
+            ui->pushButton_3->setToolTip("Удалить " + originalUserName + " из чата");
+        } else if (originalUserName == creator) {
+            ui->pushButton_3->setToolTip("Нельзя удалить создателя чата");
+        } else {
+            ui->pushButton_3->setToolTip("У вас нет прав для удаления участников");
+        }
+        
+        qDebug() << "Selected member:" << originalUserName << "Can remove:" << canRemove;
     }
-    
-    qDebug() << "Selected member:" << originalUserName << "Can remove:" << canRemove;
 }
 
 // Обработчик двойного клика по участнику
@@ -600,8 +664,18 @@ void GroupChatWindow::onUserListItemDoubleClicked(QListWidgetItem *item)
         originalUserName = selectedUser.left(selectedUser.length() - 12);
     }
     
-    // При двойном клике пытаемся удалить участника (если возможно)
-    if (canRemoveMember(originalUserName)) {
+    // Двойной клик работает только в режиме удаления
+    if (isRemovalModeActive) {
+        // Проверяем возможность удаления
+        if (!canRemoveMember(originalUserName)) {
+            if (originalUserName == creator) {
+                QMessageBox::warning(this, "Ошибка", "Нельзя удалить создателя чата");
+            } else {
+                QMessageBox::warning(this, "Ошибка", "У вас нет прав для удаления этого участника");
+            }
+            return;
+        }
+        
         // Запрашиваем подтверждение
         QMessageBox::StandardButton reply = QMessageBox::question(
             this, 
@@ -611,21 +685,26 @@ void GroupChatWindow::onUserListItemDoubleClicked(QListWidgetItem *item)
         );
         
         if (reply == QMessageBox::Yes) {
-            // Отправляем сигнал на удаление пользователя
+            // Отправляем сигнал контроллеру
             emit removeUserRequested(chatId, originalUserName);
             
-            // Отключаем кнопку до следующего выбора
-            ui->pushButton_3->setEnabled(false);
-            ui->pushButton_3->setToolTip("Выберите участника в списке для удаления");
+            // Отключаем режим удаления после удаления
+            isRemovalModeActive = false;
+            ui->pushButton_3->setText("-");
+            ui->pushButton_3->setToolTip("Удалить пользователя из чата");
+            ui->pushButton_3->setStyleSheet("");
             
             qDebug() << "Double-click removal request sent for:" << originalUserName;
         }
     } else {
-        // Показываем информацию о том, почему нельзя удалить
+        // В обычном режиме двойной клик просто показывает информацию о пользователе
         if (originalUserName == creator) {
-            QMessageBox::information(this, "Информация", "Создателя чата нельзя удалить");
+            QMessageBox::information(this, "Информация о пользователе", 
+                                   "Пользователь: " + originalUserName + "\nРоль: Создатель чата");
         } else {
-            QMessageBox::information(this, "Информация", "У вас нет прав для удаления участников");
+            QMessageBox::information(this, "Информация о пользователе", 
+                                   "Пользователь: " + originalUserName + "\nРоль: Участник чата");
         }
+        qDebug() << "Double-click on member in normal mode:" << originalUserName;
     }
 }
