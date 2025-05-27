@@ -275,6 +275,26 @@ void ChatLogicServer::handleMessageReceived(std::shared_ptr<INetworkClient> clie
         } else {
             client->sendMessage("ERROR:Could not get creator for chat " + chatId);
         }
+    } else if (command == "GROUP_GET_INFO" && parts.size() >= 2) {
+        std::cout << "DEBUG: Processing GROUP_GET_INFO command, senderUsername: '" << senderUsername << "'" << std::endl;
+        if (!senderUsername.empty()) {
+            std::string chatId = parts[1];
+            std::cout << "DEBUG: Sending group chat info for chatId: " << chatId << std::endl;
+            sendGroupChatInfo(chatId, client);
+        } else {
+            std::cout << "DEBUG: Authentication required for GROUP_GET_INFO" << std::endl;
+            client->sendMessage("ERROR:Authentication required to get group chat info.");
+        }
+    } else if (command == "GET_GROUP_HISTORY" && parts.size() >= 2) {
+        std::cout << "DEBUG: Processing GET_GROUP_HISTORY command, senderUsername: '" << senderUsername << "'" << std::endl;
+        if (!senderUsername.empty()) {
+            std::string chatId = parts[1];
+            std::cout << "DEBUG: Sending group chat history for chatId: " << chatId << std::endl;
+            sendGroupChatHistory(chatId, client);
+        } else {
+            std::cout << "DEBUG: Authentication required for GET_GROUP_HISTORY" << std::endl;
+            client->sendMessage("ERROR:Authentication required to get group chat history.");
+        }
     }
     else if (command == "GET_GROUP_CHATS") {
         if (!senderUsername.empty()) {

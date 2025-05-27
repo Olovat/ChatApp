@@ -8,6 +8,7 @@
 
 class MainWindowController;
 class GroupChatController;
+class QListWidgetItem;
 
 namespace Ui {
 class Form;
@@ -57,6 +58,8 @@ private slots:
     void on_pushButton_clicked();  // Кнопка добавления пользователя в чат
     void on_pushButton_3_clicked(); // Кнопка удаления пользователя из чата
     void on_pushButton_4_clicked(); // Кнопка удаления чата
+    void onUserListItemClicked(QListWidgetItem *item); // Обработка клика по участнику
+    void onUserListItemDoubleClicked(QListWidgetItem *item); // Обработка двойного клика по участнику
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -69,6 +72,9 @@ private:
     void sendCurrentMessage();
     void updateWindowTitle();
     QString convertUtcToLocalTime(const QString &utcTimestamp);
+    void setupMembersList(); // Настройка списка участников
+    void updateMemberItemAppearance(QListWidgetItem *item, const QString &memberName); // Обновление внешнего вида элемента участника
+    bool canRemoveMember(const QString &memberName); // Проверка возможности удаления участника
 
     Ui::Form *ui;
     QString chatId;

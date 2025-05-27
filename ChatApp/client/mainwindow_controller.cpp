@@ -134,6 +134,10 @@ void MainWindowController::setupControllerConnections()
         connect(chatController, &ChatController::groupMembersUpdated,
                 groupChatController, &GroupChatController::handleMembersUpdated);
                 
+        // Добавляем обработчик истории сообщений для групповых чатов
+        connect(chatController, &ChatController::groupHistoryReceived,
+                groupChatController, &GroupChatController::handleMessageHistory);
+                
         // Добавляем обработчик создания группового чата
         connect(chatController, &ChatController::groupChatCreated,
                 this, &MainWindowController::handleGroupChatCreated);

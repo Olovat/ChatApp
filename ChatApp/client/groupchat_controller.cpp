@@ -62,6 +62,27 @@ GroupChatWindow* GroupChatController::findOrCreateChatWindow(const QString &chat
     // Проверяем, существует ли уже окно для этого чата
     if (m_chatWindows.contains(chatId)) {
         qDebug() << "Returning existing group chat window for" << chatName;
+        
+        // ИСПРАВЛЕНИЕ: Даже для существующих окон запрашиваем данные как в PrivateChatController
+        // Проверяем, есть ли данные в модели
+        if (m_chatModels.contains(chatId)) {
+            GroupChatModel *model = m_chatModels[chatId];
+            if (model->getMessages().isEmpty() || model->getMembers().isEmpty()) {
+                qDebug() << "Requesting data for existing group chat window" << chatId;
+                // Запрашиваем информацию о чате и историю
+                QTimer::singleShot(100, [this, chatId]() {
+                    requestGroupChatInfo(chatId);
+                    requestMessageHistory(chatId);
+                });
+            }
+        } else {
+            // Если модель не существует, обязательно запрашиваем данные
+            QTimer::singleShot(100, [this, chatId]() {
+                requestGroupChatInfo(chatId);
+                requestMessageHistory(chatId);
+            });
+        }
+        
         return m_chatWindows[chatId];
     }
     
@@ -75,6 +96,13 @@ GroupChatWindow* GroupChatController::findOrCreateChatWindow(const QString &chat
     
     // Сохраняем ссылку на окно
     m_chatWindows[chatId] = window;
+    
+    // ИСПРАВЛЕНИЕ: Всегда запрашиваем информацию о чате и историю как в PrivateChatController
+    qDebug() << "Requesting data for new group chat window" << chatId;
+    QTimer::singleShot(100, [this, chatId]() {
+        requestGroupChatInfo(chatId);
+        requestMessageHistory(chatId);
+    });
     
     qDebug() << "Created new group chat window for" << chatName << "with ID" << chatId;
     return window;
@@ -110,6 +138,11 @@ void GroupChatController::setCurrentUsername(const QString &username)
 QString GroupChatController::getCurrentUsername() const
 {
     return m_currentUsername;
+}
+
+ChatController* GroupChatController::getChatController() const
+{
+    return m_chatController;
 }
 
 // Методы для работы с чатами
@@ -220,9 +253,10 @@ void GroupChatController::handleMessageHistory(const QString &chatId, const QLis
     parseMessageHistory(chatId, history);
     
     // Отображаем историю в окне, если оно существует
-    if (m_chatWindows.contains(chatId)) {
-        // TODO: Реализовать отображение истории в окне
-        // m_chatWindows[chatId]->displayMessages(model->getMessages());
+    if (m_chatWindows.contains(chatId) && m_chatModels.contains(chatId)) {
+        GroupChatModel *model = m_chatModels[chatId];
+        m_chatWindows[chatId]->displayMessages(model->getMessages());
+        qDebug() << "Displayed" << model->getMessages().size() << "messages in window for chat" << chatId;
     }
 }
 
@@ -277,6 +311,13 @@ void GroupChatController::requestMessageHistory(const QString &chatId)
 {
     qDebug() << "GroupChatController: Requesting message history for chat" << chatId;
     m_chatController->sendMessageToServer("GET_GROUP_HISTORY:" + chatId);
+}
+
+void GroupChatController::requestGroupChatInfo(const QString &chatId)
+{
+    qDebug() << "GroupChatController: Requesting group chat info for chat" << chatId;
+    m_chatController->sendMessageToServer("GROUP_GET_INFO:" + chatId);
+    m_chatController->sendMessageToServer("GROUP_GET_CREATOR:" + chatId);
 }
 
 void GroupChatController::handleChatWindowClosed(const QString &chatId)
@@ -380,15 +421,21 @@ void GroupChatController::parseMessageHistory(const QString &chatId, const QList
         QString senderAndTime = entry.first;
         QString content = entry.second;
         
+        qDebug() << "GroupChatController: Parsing history entry - senderAndTime:" << senderAndTime << "content:" << content;
+        
         // Парсим строку формата "[время] отправитель"
         QStringList parts = senderAndTime.split("] ");
         if (parts.size() >= 2) {
             QString timeStr = parts[0].mid(1); // Убираем [
             QString sender = parts[1];
             
+            qDebug() << "GroupChatController: Parsed - time:" << timeStr << "sender:" << sender;
+            
             bool isFromCurrentUser = (sender == m_currentUsername);
             GroupMessage message(sender, content, timeStr, isFromCurrentUser, true); // История всегда считается прочитанной
             messages.append(message);
+        } else {
+            qDebug() << "GroupChatController: Failed to parse senderAndTime:" << senderAndTime << "parts size:" << parts.size();
         }
     }
     

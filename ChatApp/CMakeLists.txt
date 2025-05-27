@@ -45,7 +45,17 @@ set(UI_FILES
 qt6_wrap_ui(UI_HEADERS ${UI_FILES})
 
 # Компилируем сервер
-add_executable(server server/main.cpp server/server.cpp server/server.h)
+add_executable(server 
+    server/main.cpp 
+    server/ChatLogicServer.cpp 
+    server/qt_database_adapter.cpp 
+    server/qt_network_adapter.cpp
+    server/chat_logic_server.h
+    server/database_interface.h
+    server/network_interface.h
+    server/qt_database_adapter.h
+    server/qt_network_adapter.h
+)
 target_link_libraries(server gtest gtest_main Qt6::Core Qt6::Network Qt6::Sql)
 
 # Компилируем клиент

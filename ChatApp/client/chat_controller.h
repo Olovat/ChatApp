@@ -157,6 +157,10 @@ private:
     // Добавляем поля для сбора истории сообщений
     QStringList historyBuffer;
     QString currentHistoryTarget;
+    
+    // Поля для сбора истории групповых чатов
+    QStringList groupHistoryBuffer;
+    QString currentGroupHistoryTarget;
 
     QTimer *newFriendStatusPollTimer;     
     QString currentlyPollingFriend;        

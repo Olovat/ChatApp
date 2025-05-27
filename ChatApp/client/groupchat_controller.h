@@ -41,6 +41,9 @@ public:
     
     // Методы для работы с сообщениями
     void markMessagesAsRead(const QString &chatId);
+    
+    // Доступ к ChatController
+    ChatController* getChatController() const;
 
 public slots:
     // Обработка входящих сообщений и обновлений
@@ -52,6 +55,7 @@ public slots:
     // Обработка действий пользователя
     void sendMessage(const QString &chatId, const QString &message);
     void requestMessageHistory(const QString &chatId);
+    void requestGroupChatInfo(const QString &chatId);
     void handleChatWindowClosed(const QString &chatId);
     
     // Обработка управления участниками

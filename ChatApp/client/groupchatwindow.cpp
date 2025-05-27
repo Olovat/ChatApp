@@ -29,13 +29,9 @@ GroupChatWindow::GroupChatWindow(const QString &chatId, const QString &chatName,
     setupUi();
     updateWindowTitle();
     
-    // Устанавливаем таймер для загрузки истории сообщений
-    QTimer::singleShot(300, this, [this, chatId]() {
-        if (!initialHistoryRequested && groupChatController) {
-            groupChatController->requestMessageHistory(chatId);
-            initialHistoryRequested = true;
-        }
-    });
+    // ИСПРАВЛЕНИЕ: Убираем дублирующие запросы из конструктора, 
+    // так как теперь GroupChatController::findOrCreateChatWindow() сам запрашивает данные
+    // Оставляем только базовую инициализацию
     
     qDebug() << "Created group chat window for" << chatName << "with ID" << chatId;
 }
@@ -150,8 +146,15 @@ void GroupChatWindow::updateMembersList(const QStringList &members)
             item->setFont(font);
         }
         
+        // Обновляем внешний вид элемента
+        updateMemberItemAppearance(item, member);
+        
         ui->userListWidget->addItem(item);
     }
+    
+    // Обновляем состояние кнопки удаления
+    ui->pushButton_3->setEnabled(false); // По умолчанию отключена, пока не выбран участник
+    ui->pushButton_3->setToolTip("Выберите участника в списке для удаления");
     
     qDebug() << "Обновлен список участников группового чата:" << chatName 
              << ", всего участников:" << members.size();
@@ -250,33 +253,44 @@ void GroupChatWindow::on_pushButton_clicked()
 // Обработчик кнопки удаления пользователя из чата
 void GroupChatWindow::on_pushButton_3_clicked()
 {
-    // Убрана проверка на создателя чата
-    
     // Получаем выбранный элемент в списке участников
     QListWidgetItem *selectedItem = ui->userListWidget->currentItem();
     if (!selectedItem) {
-        QMessageBox::warning(this, "Ошибка", "Выберите пользователя для удаления");
+        QMessageBox::warning(this, "Ошибка", "Выберите пользователя для удаления из списка");
         return;
     }
     
     QString selectedUser = selectedItem->text();
+    QString originalUserName = selectedUser;
     
-    // Оставляем проверку на удаление создателя чата
-    if (selectedUser == creator || selectedUser == creator + " (создатель)") {
-        QMessageBox::warning(this, "Ошибка", "Невозможно удалить создателя чата");
+    // Убираем метку "(создатель)" для обработки
+    if (selectedUser.endsWith(" (создатель)")) {
+        originalUserName = selectedUser.left(selectedUser.length() - 12);
+    }
+    
+    // Проверяем возможность удаления
+    if (!canRemoveMember(originalUserName)) {
+        QMessageBox::warning(this, "Ошибка", "Невозможно удалить этого участника");
         return;
     }
     
     // Запрашиваем подтверждение
-    QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Подтверждение удаления", 
-                               "Вы уверены, что хотите удалить пользователя " + selectedUser + " из чата?",
-                               QMessageBox::Yes | QMessageBox::No);
-      if (reply == QMessageBox::Yes) {
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this, 
+        "Подтверждение удаления", 
+        "Вы уверены, что хотите удалить пользователя " + originalUserName + " из чата?",
+        QMessageBox::Yes | QMessageBox::No
+    );
+    
+    if (reply == QMessageBox::Yes) {
         // Отправляем сигнал на удаление пользователя
-        if (controller) {
-            emit removeUserRequested(chatId, selectedUser);
-        }
+        emit removeUserRequested(chatId, originalUserName);
+        
+        // Отключаем кнопку до следующего выбора
+        ui->pushButton_3->setEnabled(false);
+        ui->pushButton_3->setToolTip("Выберите участника в списке для удаления");
+        
+        qDebug() << "Отправлен запрос на удаление участника:" << originalUserName;
     }
 }
 
@@ -377,6 +391,9 @@ void GroupChatWindow::setupUi()
     ui->pushButton_3->setToolTip("Удалить выбранного пользователя из чата");
     ui->pushButton_4->setToolTip("Удалить чат (только для создателя)");
     
+    // Настраиваем список участников
+    setupMembersList();
+    
     // Устанавливаем фокус на поле ввода
     ui->lineEdit->setFocus();
 }
@@ -453,11 +470,9 @@ void GroupChatWindow::showEvent(QShowEvent *event)
         emit markAsReadRequested(chatId);
     });
     
-    // Запрашиваем начальную историю, если еще не запрашивали
-    if (!initialHistoryRequested && groupChatController) {
-        groupChatController->requestMessageHistory(chatId);
-        initialHistoryRequested = true;
-    }
+    // ИСПРАВЛЕНИЕ: Убираем дублирующие запросы, так как теперь 
+    // GroupChatController::findOrCreateChatWindow() сам запрашивает данные
+    // Оставляем только отметку сообщений как прочитанных
 }
 
 void GroupChatWindow::sendCurrentMessage()
@@ -481,4 +496,136 @@ bool GroupChatWindow::event(QEvent *e)
         });
     }
     return QWidget::event(e);
+}
+
+// Настройка списка участников
+void GroupChatWindow::setupMembersList()
+{
+    // Подключаем сигналы для интерактивности списка
+    connect(ui->userListWidget, &QListWidget::itemClicked, this, &GroupChatWindow::onUserListItemClicked);
+    connect(ui->userListWidget, &QListWidget::itemDoubleClicked, this, &GroupChatWindow::onUserListItemDoubleClicked);
+    
+    // Настраиваем режим выбора
+    ui->userListWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+    
+    // Отключаем кнопку удаления по умолчанию
+    ui->pushButton_3->setEnabled(false);
+}
+
+// Обновление внешнего вида элемента участника
+void GroupChatWindow::updateMemberItemAppearance(QListWidgetItem *item, const QString &memberName)
+{
+    if (!item) return;
+    
+    // Сбрасываем стиль на обычный
+    item->setData(Qt::BackgroundRole, QVariant());
+    
+    // Если это создатель чата, выделяем жирным шрифтом и добавляем метку
+    if (memberName == creator) {
+        QFont font = item->font();
+        font.setBold(true);
+        item->setFont(font);
+        
+        if (!item->text().endsWith(" (создатель)")) {
+            item->setText(memberName + " (создатель)");
+        }
+    } else {
+        // Для обычных участников убираем жирный шрифт
+        QFont font = item->font();
+        font.setBold(false);
+        item->setFont(font);
+        
+        // Убираем метку создателя, если она есть
+        QString text = item->text();
+        if (text.endsWith(" (создатель)")) {
+            item->setText(memberName);
+        }
+    }
+}
+
+// Проверка возможности удаления участника
+bool GroupChatWindow::canRemoveMember(const QString &memberName)
+{
+    // Создателя нельзя удалить
+    if (memberName == creator) {
+        return false;
+    }
+    
+    // Проверяем, является ли текущий пользователь создателем
+    if (!isCreator) {
+        return false; // Только создатель может удалять участников
+    }
+    
+    return true;
+}
+
+// Обработчик клика по участнику
+void GroupChatWindow::onUserListItemClicked(QListWidgetItem *item)
+{
+    if (!item) return;
+    
+    QString selectedUser = item->text();
+    QString originalUserName = selectedUser;
+    
+    // Убираем метку "(создатель)" для обработки
+    if (selectedUser.endsWith(" (создатель)")) {
+        originalUserName = selectedUser.left(selectedUser.length() - 12);
+    }
+    
+    // Обновляем состояние кнопки удаления
+    bool canRemove = canRemoveMember(originalUserName);
+    ui->pushButton_3->setEnabled(canRemove);
+    
+    if (canRemove) {
+        ui->pushButton_3->setToolTip("Удалить " + originalUserName + " из чата");
+    } else if (originalUserName == creator) {
+        ui->pushButton_3->setToolTip("Нельзя удалить создателя чата");
+    } else {
+        ui->pushButton_3->setToolTip("У вас нет прав для удаления участников");
+    }
+    
+    qDebug() << "Selected member:" << originalUserName << "Can remove:" << canRemove;
+}
+
+// Обработчик двойного клика по участнику
+void GroupChatWindow::onUserListItemDoubleClicked(QListWidgetItem *item)
+{
+    if (!item) return;
+    
+    QString selectedUser = item->text();
+    QString originalUserName = selectedUser;
+    
+    // Убираем метку "(создатель)" для обработки
+    if (selectedUser.endsWith(" (создатель)")) {
+        originalUserName = selectedUser.left(selectedUser.length() - 12);
+    }
+    
+    // При двойном клике пытаемся удалить участника (если возможно)
+    if (canRemoveMember(originalUserName)) {
+        // Запрашиваем подтверждение
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this, 
+            "Подтверждение удаления", 
+            "Вы уверены, что хотите удалить пользователя " + originalUserName + " из чата?",
+            QMessageBox::Yes | QMessageBox::No
+        );
+        
+        if (reply == QMessageBox::Yes) {
+            // Отправляем сигнал на удаление пользователя
+            emit removeUserRequested(chatId, originalUserName);
+            
+            // Отключаем кнопку до следующего выбора
+            ui->pushButton_3->setEnabled(false);
+            ui->pushButton_3->setToolTip("Выберите участника в списке для удаления");
+            
+            qDebug() << "Double-click removal request sent for:" << originalUserName;
+        }
+    } else {
+        // Показываем информацию о том, почему нельзя удалить
+        if (originalUserName == creator) {
+            QMessageBox::information(this, "Информация", "Создателя чата нельзя удалить");
+        } else {
+            QMessageBox::information(this, "Информация", "У вас нет прав для удаления участников");
+        }
+    }
 }
