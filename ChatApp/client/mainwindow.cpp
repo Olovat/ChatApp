@@ -200,6 +200,10 @@ void MainWindow::updateUserList(const QStringList &users)
 {
     qDebug() << "Updating user list with users:" << users;
 
+    // ВАЖНО: Сохраняем текущие счетчики уведомлений перед обновлением списка
+    QMap<QString, int> savedUnreadMessageCounts = unreadMessageCounts;
+    QMap<QString, int> savedUnreadGroupMessageCounts = unreadGroupMessageCounts;
+
     // Для отладки - выводим все статусы пользователей
     for (const QString &userInfo : users) {
         QStringList debug_parts = userInfo.split(":", Qt::SkipEmptyParts);
@@ -417,22 +421,48 @@ void MainWindow::updateUserList(const QStringList &users)
     if (ui->userListWidget->count() == 0) {
         QListWidgetItem *emptyItem = new QListWidgetItem("Список пользователей пуст");
         emptyItem->setFlags(Qt::NoItemFlags);
-        ui->userListWidget->addItem(emptyItem);
-    }    // Добавляем метки непрочитанных сообщений к элементам списка
+        ui->userListWidget->addItem(emptyItem);    }    
+    
+    // ВАЖНО: Восстанавливаем сохраненные счетчики уведомлений ПЕРЕД применением к UI
+    unreadMessageCounts = savedUnreadMessageCounts;
+    unreadGroupMessageCounts = savedUnreadGroupMessageCounts;
+    
+    // Добавляем метки непрочитанных сообщений к элементам списка
     for (int i = 0; i < ui->userListWidget->count(); ++i) {
         QListWidgetItem *item = ui->userListWidget->item(i);
         if (!item || !(item->flags() & Qt::ItemIsEnabled))
             continue;
             
         QString username = item->text();
+        
+        // Проверяем приватные сообщения
         if (unreadMessageCounts.contains(username) && unreadMessageCounts[username] > 0) {
             item->setText(username + " (" + QString::number(unreadMessageCounts[username]) + ")");
             item->setBackground(Qt::yellow); // Жёлтый фон для пользователей с непрочитанными сообщениями
             item->setForeground(Qt::black);  // Чёрный текст для читаемости
         }
-    }
-    
+        
+        // Проверяем групповые чаты
+        QString itemType = item->data(Qt::UserRole + 1).toString();
+        if (itemType == "G") {
+            QString chatId = item->data(Qt::UserRole).toString();
+            if (unreadGroupMessageCounts.contains(chatId) && unreadGroupMessageCounts[chatId] > 0) {
+                QString currentText = item->text();
+                // Убираем старый счетчик, если есть
+                int parenIndex = currentText.indexOf(" (");
+                if (parenIndex != -1) {
+                    currentText = currentText.left(parenIndex);
+                }
+                // Добавляем новый счетчик
+                item->setText(currentText + " (" + QString::number(unreadGroupMessageCounts[chatId]) + ")");
+                item->setBackground(Qt::yellow);
+                item->setForeground(Qt::black);
+            }
+        }
+    }    
     qDebug() << "Final UI user list count:" << ui->userListWidget->count();
+    qDebug() << "Applied unread message counts:" << unreadMessageCounts;
+    qDebug() << "Applied unread group message counts:" << unreadGroupMessageCounts;
 }
 
 void MainWindow::onUserSelected(QListWidgetItem *item)

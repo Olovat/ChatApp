@@ -28,10 +28,9 @@ ChatController::ChatController(QObject *parent)
     newFriendStatusPollTimer = new QTimer(this);
     connect(newFriendStatusPollTimer, &QTimer::timeout, this, &ChatController::onPollNewFriendStatus);
 
-   
-    userListRefreshTimer = new QTimer(this);
+     userListRefreshTimer = new QTimer(this);
     connect(userListRefreshTimer, &QTimer::timeout, this, &ChatController::refreshUserListSlot);
-    userListRefreshTimer->start(500); // Обновляем каждые 0.5 секунд для корректной работы уведомлений
+    userListRefreshTimer->start(5000); // Обновляем каждые 5 секунд чтобы не сбрасывать счетчики уведомлений
     
     // Инициализация счетчиков непрочитанных сообщений
     unreadPrivateMessageCounts = QMap<QString, int>();
