@@ -122,14 +122,14 @@ void GroupChatController::setCurrentUsername(const QString &username)
 {
     m_currentUsername = username;
     
-    // Обновляем имя пользователя во всех моделях
     for (auto it = m_chatModels.begin(); it != m_chatModels.end(); ++it) {
-        // Создаем новую модель с правильным именем пользователя
-        QString chatId = it.key();
-        QString chatName = it.value()->getChatName();
-        
-        delete it.value();
-        m_chatModels[chatId] = new GroupChatModel(chatId, chatName, username, this);
+        GroupChatModel *model = it.value();        if (model) {
+            
+            model->setCurrentUser(username);
+            
+            qDebug() << "Updated current user to" << username << "for chat model" << it.key() 
+                     << "unread count:" << model->getUnreadCount();
+        }
     }
     
     qDebug() << "Current username set to" << username << "in GroupChatController";
@@ -196,7 +196,6 @@ void GroupChatController::markMessagesAsRead(const QString &chatId)
                 qDebug() << "Requested updated unread count for group chat" << chatId;
             }
         });
-        
         qDebug() << "Marked messages as read and sent update to server for chat" << chatId;
     }
 }
@@ -450,16 +449,30 @@ void GroupChatController::parseMessageHistory(const QString &chatId, const QList
         
         qDebug() << "GroupChatController: Parsing history entry - senderAndTime:" << senderAndTime << "content:" << content;
         
+        // Извлекаем информацию о статусе прочитанности из content
+        bool isRead = true; // По умолчанию считаем прочитанным
+        QString actualContent = content;
+        
+        // Проверяем, есть ли в content информация о статусе прочитанности
+        if (content.contains("|READ:")) {
+            QStringList contentParts = content.split("|READ:");
+            if (contentParts.size() >= 2) {
+                actualContent = contentParts[0];
+                QString readStatus = contentParts[1];
+                isRead = (readStatus == "1");
+                qDebug() << "GroupChatController: Extracted read status:" << readStatus << "isRead:" << isRead;
+            }
+        }
+        
         // Парсим строку формата "[время] отправитель"
         QStringList parts = senderAndTime.split("] ");
         if (parts.size() >= 2) {
             QString timeStr = parts[0].mid(1); // Убираем [
             QString sender = parts[1];
-              qDebug() << "GroupChatController: Parsed - time:" << timeStr << "sender:" << sender;
+            qDebug() << "GroupChatController: Parsed - time:" << timeStr << "sender:" << sender << "isRead:" << isRead;
             
-            bool isFromCurrentUser = (sender == m_currentUsername);
-            // История НЕ всегда считается прочитанной, только собственные сообщения
-            GroupMessage message(sender, content, timeStr, isFromCurrentUser, isFromCurrentUser); 
+            // Создаем сообщение с правильным статусом прочитанности
+            GroupMessage message(sender, actualContent, timeStr, isRead);
             messages.append(message);
         } else {
             qDebug() << "GroupChatController: Failed to parse senderAndTime:" << senderAndTime << "parts size:" << parts.size();

@@ -652,7 +652,6 @@ void ChatController::processServerResponse(const QString &response)
         groupHistoryBuffer.clear();
     }
 } else if (command == "GROUP_HISTORY_MSG") {
-    // Сообщение из истории группового чата: GROUP_HISTORY_MSG:chatId|timestamp|sender|message
     if (parts.size() >= 2) {
         QString messageData = parts.mid(1).join(":");
         QStringList msgParts = messageData.split("|");
@@ -662,14 +661,15 @@ void ChatController::processServerResponse(const QString &response)
             QString timestamp = msgParts[1];
             QString sender = msgParts[2];
             QString message = msgParts[3];
+            QString isRead = msgParts.size() >= 5 ? msgParts[4] : "1"; // По умолчанию считаем прочитанным для совместимости
             
             // Пропускаем системные сообщения о пустой истории
             if (sender != "SYSTEM" || !message.contains("пуста")) {
-                QString formattedMessage = QString("[%1] %2: %3").arg(timestamp, sender, message);
+                QString formattedMessage = QString("[%1] %2: %3|READ:%4").arg(timestamp, sender, message, isRead);
                 groupHistoryBuffer.append(formattedMessage);
             }
             
-            qDebug() << "Received group history message for chat" << chatId << "from" << sender;
+            qDebug() << "Received group history message for chat" << chatId << "from" << sender << "isRead:" << isRead;
         }
     }
 } else if (command == "GROUP_HISTORY_END") {
@@ -677,22 +677,23 @@ void ChatController::processServerResponse(const QString &response)
     if (parts.size() >= 2) {
         QString chatId = parts[1];
         qDebug() << "Finished receiving group history for chat" << chatId << "with" << groupHistoryBuffer.size() << "messages";
-        
-        // Отправляем всю собранную историю
+          // Отправляем всю собранную историю
         QList<QPair<QString, QString>> history;
         for (const QString &message : groupHistoryBuffer) {
-            // Парсим сообщение обратно для формата истории
-            QRegularExpression regex(R"(\[(.+?)\] (.+?): (.+))");
+            QRegularExpression regex(R"(\[(.+?)\] (.+?): (.+)\|READ:(.+))");
             QRegularExpressionMatch match = regex.match(message);
             
             if (match.hasMatch()) {
                 QString timestamp = match.captured(1);
                 QString sender = match.captured(2);
                 QString content = match.captured(3);
+                QString readStatus = match.captured(4);
                 // Формируем строку в ожидаемом GroupChatController формате: "[время] отправитель"
                 QString formattedSender = "[" + timestamp + "] " + sender;
-                history.append(qMakePair(formattedSender, content));
-                qDebug() << "ChatController: Formatted history entry - sender:" << formattedSender << "content:" << content;
+                QString contentWithReadStatus = content + "|READ:" + readStatus;
+                history.append(qMakePair(formattedSender, contentWithReadStatus));
+                qDebug() << "ChatController: Formatted history entry - sender:" << formattedSender 
+                         << "content:" << content << "readStatus:" << readStatus;
             } else {
                 qDebug() << "ChatController: Failed to parse message:" << message;
             }
@@ -975,13 +976,6 @@ void ChatController::refreshUserListSlot()
     }
 }
 
-void ChatController::requestRecentChatPartners()
-{
-    // Запрашиваем список недавних собеседников
-    QString command = "GET_RECENT_PARTNERS";
-    sendToServer(command);
-    qDebug() << "Requesting recent chat partners";
-}
 
 bool ChatController::isLoginSuccessful() const
 {

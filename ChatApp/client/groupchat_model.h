@@ -62,6 +62,7 @@ public:
     // Методы для работы с непрочитанными сообщениями
     void markAllAsRead();
     void setUnreadCount(int count);
+    void setCurrentUser(const QString &username);
     
     // Методы для работы с названием чата
     void setChatName(const QString &name);

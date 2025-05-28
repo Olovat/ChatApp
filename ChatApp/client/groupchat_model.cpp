@@ -78,6 +78,14 @@ bool GroupChatModel::canRemoveMember(const QString &username) const
 // Методы для работы с сообщениями
 void GroupChatModel::addMessage(const QString &sender, const QString &content, const QString &timestamp)
 {
+    if (!m_messages.isEmpty()) {
+        const GroupMessage &lastMessage = m_messages.last();
+        if (lastMessage.sender == sender && 
+            lastMessage.timestamp == timestamp) {
+            qDebug() << "Duplicate message ignored (same timestamp):" << sender << timestamp;
+            return;
+        }
+    }
     bool isFromCurrentUser = (sender == m_currentUser);
     GroupMessage message(sender, content, timestamp, isFromCurrentUser);
     addMessage(message);
@@ -185,6 +193,17 @@ void GroupChatModel::setChatName(const QString &name)
         m_chatName = name;
         emit chatNameChanged(name);
         qDebug() << "Chat name changed from" << m_chatName << "to" << name;
+    }
+}
+
+// Метод для обновления текущего пользователя
+void GroupChatModel::setCurrentUser(const QString &username)
+{
+    if (m_currentUser != username) {
+        qDebug() << "Group chat" << m_chatName << "current user changed from" << m_currentUser << "to" << username;
+        m_currentUser = username;
+        // После изменения текущего пользователя обновляем счетчик непрочитанных
+        updateUnreadCount();
     }
 }
 
