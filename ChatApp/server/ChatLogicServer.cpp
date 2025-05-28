@@ -199,7 +199,15 @@ void ChatLogicServer::handleMessageReceived(std::shared_ptr<INetworkClient> clie
             for (size_t i = 2; i < parts.size(); ++i) {
                 chatMessage += parts[i] + (i == parts.size() - 1 ? "" : ":");
             }
-            sendGroupChatMessageToClients(chatId, senderUsername, chatMessage);
+            // Сохраняем в БД только один раз
+            saveGroupChatMessage(chatId, senderUsername, chatMessage);
+    
+            // Отправляем всем участникам только один раз
+            for (auto& client : m_cachedGroupChats[chatId].memberUsernames) {
+                if (auto adapter = getClientFromCache(client)) {
+                    adapter->sendMessage("GROUP_MESSAGE:" + chatId + ":" + senderUsername + ":" + chatMessage);
+                }
+            }
         }    } else if (command == "GROUP_ADD_USER" && parts.size() >= 3) {
          if (!senderUsername.empty()) { // Только аутентифицированный пользователь может добавлять
             std::string chatId = parts[1];
@@ -1163,7 +1171,7 @@ int ChatLogicServer::getUnreadMessageCount(const std::string &username, const st
     bool isGroupChat = (m_db->fetchOne("SELECT 1 FROM group_chats WHERE id = ?", {chatPartner})).has_value();
 
     if (isGroupChat) {
-        query_str = "SELECT COUNT(*) as unread_count FROM group_chat_messages WHERE chat_id = ? AND id > ? AND sender_username != ?;";
+        query_str = "SELECT COUNT(DISTINCT message_text || timestamp) as unread_count FROM group_chat_messages WHERE chat_id = ? AND id > ? AND sender_username != ?;";
         results = m_db->fetchAll(query_str, {chatPartner, lastReadId, username});
     } else {
         query_str = "SELECT COUNT(*) as unread_count FROM messages WHERE sender = ? AND recipient = ? AND id > ?;";

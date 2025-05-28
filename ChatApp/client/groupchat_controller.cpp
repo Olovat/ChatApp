@@ -186,11 +186,18 @@ void GroupChatController::markMessagesAsRead(const QString &chatId)
         // Отмечаем сообщения как прочитанные в локальной модели
         m_chatModels[chatId]->markAllAsRead();
         
+        // ИСПРАВЛЕНИЕ: Немедленно обновляем счетчик в ChatController (как в приватных чатах)
+        if (m_chatController) {
+            // Обновляем локальные счетчики в ChatController
+            m_chatController->updateUnreadGroupCount(chatId, 0);
+            qDebug() << "Immediately updated unread count in ChatController for group chat" << chatId;
+        }
+        
         // Уведомляем сервер о прочтении
         m_chatController->sendMessageToServer("MARK_GROUP_READ:" + chatId);
         
-        // Запрашиваем обновленный счетчик с сервера
-        QTimer::singleShot(500, this, [this, chatId]() {
+        // Запрашиваем обновленный счетчик с сервера для подтверждения
+        QTimer::singleShot(200, this, [this, chatId]() {
             if (m_chatController) {
                 m_chatController->requestUnreadCountForGroupChat(chatId);
                 qDebug() << "Requested updated unread count for group chat" << chatId;
@@ -213,41 +220,53 @@ void GroupChatController::handleIncomingMessage(const QString &chatId, const QSt
         qDebug() << "Creating new model for incoming message from chat" << chatId;
         findOrCreateChatModel(chatId, QString("Групповой чат %1").arg(chatId.left(8)));
     }
-      GroupChatModel *model = m_chatModels[chatId];
+    
+    GroupChatModel *model = m_chatModels[chatId];
     if (model) {
-        // Проверяем, активно ли окно чата - это нужно для определения статуса прочитанности
-        bool windowIsActiveAndVisible = false;
+        // ИСПРАВЛЕНИЕ: Используем упрощенную логику - если окно видимо, считаем сообщение прочитанным
+        bool windowIsVisibleAndActive = false;
         if (m_chatWindows.contains(chatId)) {
             GroupChatWindow *window = m_chatWindows[chatId];
-            if (window) {
-                windowIsActiveAndVisible = window->isVisible() && window->isActiveWindow() && !window->isMinimized();
-            }
+            // Упрощаем проверку: если окно видимо и не свернуто, считаем его активным
+            windowIsVisibleAndActive = window && 
+                                      window->isVisible() && 
+                                      !window->isMinimized();
+            
+            qDebug() << "Window check for chat" << chatId << ": exists=" << (window != nullptr) 
+                     << ", visible=" << (window ? window->isVisible() : false)
+                     << ", minimized=" << (window ? window->isMinimized() : false)
+                     << ", final=" << windowIsVisibleAndActive;
         }
         
-        // Сообщения считаются прочитанными только если:
-        // 1. Это сообщения от текущего пользователя ИЛИ
-        // 2. Окно чата активно и видимо в данный момент
-        bool isRead = (sender == m_currentUsername) || windowIsActiveAndVisible;
-        
-        // Добавляем сообщение в модель
+        // КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Создаем сообщение с правильным статусом прочитанности
+        bool isRead = (sender == m_currentUsername) || windowIsVisibleAndActive;
         GroupMessage newMessage(sender, message, actualTimestamp, isRead);
         model->addMessage(newMessage);
         
-        // Запрашиваем обновление счетчика непрочитанных сообщений с сервера
-        if (!isRead) {
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если окно видимо, немедленно сбрасываем счетчик
+        if (windowIsVisibleAndActive) {
+            // Помечаем все сообщения как прочитанные в модели
+            model->markAllAsRead();
+            
+            // Немедленно обновляем счетчик в ChatController на 0
+            if (m_chatController) {
+                m_chatController->updateUnreadGroupCount(chatId, 0);
+                qDebug() << "FORCE RESET: Set unread count to 0 for visible group chat" << chatId;
+            }
+            
+            qDebug() << "Marked all messages as read because window is visible for chat" << chatId;
+        } else {
+            // Только если окно НЕ видимо, запрашиваем обновление счетчика с сервера
             QTimer::singleShot(100, this, [this, chatId]() {
                 if (m_chatController) {
                     m_chatController->requestUnreadCountForGroupChat(chatId);
                 }
             });
         }
-    }
-    
-    // Отображаем сообщение в окне, если оно открыто
-    if (m_chatWindows.contains(chatId)) {
-        GroupChatWindow *window = m_chatWindows[chatId];
-        if (window) {
-            window->receiveMessage(sender, message, actualTimestamp);
+        
+        // Отображаем сообщение в окне, если оно существует
+        if (m_chatWindows.contains(chatId)) {
+            m_chatWindows[chatId]->receiveMessage(sender, message, actualTimestamp);
         }
     }
 }
@@ -443,6 +462,8 @@ void GroupChatController::parseMessageHistory(const QString &chatId, const QList
     if (!model) return;
     
     QList<GroupMessage> messages;
+    QSet<QString> processedMessages; // Для фильтрации дубликатов
+    
     for (const auto &entry : history) {
         QString senderAndTime = entry.first;
         QString content = entry.second;
@@ -469,18 +490,28 @@ void GroupChatController::parseMessageHistory(const QString &chatId, const QList
         if (parts.size() >= 2) {
             QString timeStr = parts[0].mid(1); // Убираем [
             QString sender = parts[1];
-            qDebug() << "GroupChatController: Parsed - time:" << timeStr << "sender:" << sender << "isRead:" << isRead;
             
-            // Создаем сообщение с правильным статусом прочитанности
-            GroupMessage message(sender, actualContent, timeStr, isRead);
-            messages.append(message);
+            // ИСПРАВЛЕНИЕ: Создаем уникальный ключ для проверки дубликатов
+            QString messageKey = QString("%1|%2|%3").arg(timeStr, sender, actualContent);
+            
+            // Проверяем дубликаты
+            if (!processedMessages.contains(messageKey)) {
+                qDebug() << "GroupChatController: Parsed - time:" << timeStr << "sender:" << sender << "isRead:" << isRead;
+                
+                // Создаем сообщение с правильным статусом прочитанности
+                GroupMessage message(sender, actualContent, timeStr, isRead);
+                messages.append(message);
+                processedMessages.insert(messageKey);
+            } else {
+                qDebug() << "GroupChatController: Skipping duplicate message:" << messageKey;
+            }
         } else {
             qDebug() << "GroupChatController: Failed to parse senderAndTime:" << senderAndTime << "parts size:" << parts.size();
         }
     }
     
     model->setMessageHistory(messages);
-    qDebug() << "Parsed" << messages.size() << "messages from history for chat" << chatId;
+    qDebug() << "Parsed" << messages.size() << "messages from history for chat" << chatId << "(filtered" << (history.size() - messages.size()) << "duplicates)";
 }
 
 QString GroupChatController::generateChatId() const
@@ -504,3 +535,5 @@ void GroupChatController::handleCreatorUpdated(const QString &chatId, const QStr
         window->setCreator(creator);
     }
 }
+
+

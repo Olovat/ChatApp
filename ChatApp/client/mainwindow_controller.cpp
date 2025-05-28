@@ -442,11 +442,11 @@ void MainWindowController::handleGroupChatSelected(const QString &chatId)
     
     // Проверяем, что groupChatController инициализирован
     if (groupChatController) {
+        // Сначала отмечаем сообщения как прочитанные (это автоматически обновит UI)
+        groupChatController->markMessagesAsRead(chatId);
+        
         // Используем groupChatController для создания/получения окна группового чата
         GroupChatWindow *window = groupChatController->findOrCreateChatWindow(chatId, ""); // Имя будет получено автоматически
-        
-        // Отмечаем сообщения как прочитанные при выборе чата
-        groupChatController->markMessagesAsRead(chatId);
         
         if (window) {
             window->show();

@@ -72,6 +72,9 @@ public:
     // Получение контроллера для тестов
     MainWindowController* getController() const { return controller; }
     
+    // Метод для получения счетчиков непрочитанных сообщений групповых чатов
+    QMap<QString, int> getUnreadGroupMessageCounts() const { return unreadGroupMessageCounts; }
+    
     void initializeCommon(); // Инициализация общих компонентов
 
 signals:

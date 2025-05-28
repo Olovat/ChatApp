@@ -1,0 +1,2123 @@
+18:20:16: Starting /Users/user/Desktop/git/ChatApp/client/build/Desktop-Debug/client.app/Contents/MacOS/client...
+qt.core.qmetaobject.connectslotsbyname: QMetaObject::connectSlotsByName: No matching signal for on_pushButton_2_clicked()
+Reconnecting existing ChatController instance
+Connected to server "localhost" : 5402
+PrivateChatController initialized
+GroupChatController initialized
+2025-05-28 18:20:16.831 client[78656:2549844] +[IMKClient subclass]: chose IMKClient_Modern
+2025-05-28 18:20:16.831 client[78656:2549844] +[IMKInputSession subclass]: chose IMKInputSession_Modern
+Starting with empty friend list for user "2" , friends will be loaded from server
+Starting with empty friend list for user "2" , friends will be loaded from server
+Received from server: "AUTH_SUCCESS"
+Login status set to: successful
+Initializing userFriends from ChatController, found 0 friends
+PrivateChatController: Current username set to "2"
+Set current username in PrivateChatController to "2"
+Current username set to "2" in GroupChatController
+Set current username in GroupChatController to "2"
+Requesting user list
+Received from server: "PRIVATE:1:pip"
+Received private message from "1" : "pip"
+PrivateChatController: Handling incoming message from "1" : "pip"
+Created private chat model for conversation with "1"
+Increased unread count to 1 for sender "1" , isRead= false
+Requesting server to store message in history: "STORE_PRIVMSG:1:2:pip:18:20:22"
+Requested updated unread count for "1" from server
+Received from server: "PRIVATE:1:ppip"
+Received private message from "1" : "ppip"
+Technical duplicate detected for "1" time diff: 1 ms - likely network duplicate
+PRIVATE: Duplicate message detected, ignoring
+Received from server: "HISTORY_CMD:BEGIN"
+ChatController: Unknown command from server: "HISTORY_CMD"
+Received from server: "HISTORY_MSG:2025-05-26 07:28:04|1|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-26 07:28:04|1|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-26 07:30:30|2|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-26 07:30:30|2|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-26 07:30:37|1|STORE_PRIVMSG:1:2:pip:10:30:37"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-26 07:30:37|2|STORE_PRIVMSG:1:2:pip:10:30:37"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-26 07:30:38|1|STORE_PRIVMSG:1:2:ppip:10:30:38"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-26 07:30:38|2|STORE_PRIVMSG:1:2:ppip:10:30:38"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:01:46|1|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:01:46|1|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:02:20|2|STORE_PRIVMSG:1:2:pip:17:02:20"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:02:21|2|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:02:21|2|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:02:57|1|SEND_GROUP:rQ54cjWw1yI5hodc:1"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:02:58|1|SEND_GROUP:rQ54cjWw1yI5hodc:2"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:02:59|1|SEND_GROUP:rQ54cjWw1yI5hodc:3"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:07:47|1|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:07:47|1|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:08:04|2|STORE_PRIVMSG:1:2:pip:17:08:04"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:08:05|2|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:08:05|2|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:08:15|1|SEND_GROUP:rQ54cjWw1yI5hodc:1"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:08:15|1|SEND_GROUP:rQ54cjWw1yI5hodc:2"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:08:16|1|SEND_GROUP:rQ54cjWw1yI5hodc:3"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:42:13|1|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:42:13|1|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:42:22|2|STORE_PRIVMSG:1:2:pip:17:42:22"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:42:23|2|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:42:23|2|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:42:35|1|SEND_GROUP:rQ54cjWw1yI5hodc:test"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:42:51|1|SEND_GROUP:rQ54cjWw1yI5hodc:one"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:42:58|1|SEND_GROUP:rQ54cjWw1yI5hodc:lone"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:58:47|1|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:58:47|1|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:58:54|2|STORE_PRIVMSG:1:2:pip:17:58:54"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:58:55|2|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:58:55|2|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:59:07|1|SEND_GROUP:rQ54cjWw1yI5hodc:1"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:59:20|1|SEND_GROUP:rQ54cjWw1yI5hodc:1"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:59:39|1|SEND_GROUP:rQ54cjWw1yI5hodc:1"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:59:57|2|STORE_PRIVMSG:1:2:pip:17:59:57"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:59:58|2|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 14:59:58|2|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:07:43|1|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:07:43|1|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:07:51|2|STORE_PRIVMSG:1:2:pip:18:07:51"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:07:52|2|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:07:52|2|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:08:12|1|SEND_GROUP:rQ54cjWw1yI5hodc:2"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:08:19|1|SEND_GROUP:rQ54cjWw1yI5hodc:3"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:08:54|2|STORE_PRIVMSG:1:2:pip:18:08:54"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:08:55|2|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:08:55|2|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:16:07|1|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:16:07|1|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:16:30|2|STORE_PRIVMSG:1:2:pip:18:16:30"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:16:31|2|GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:16:31|2|GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:16:56|1|SEND_GROUP:rQ54cjWw1yI5hodc:ц"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:17:02|1|SEND_GROUP:rQ54cjWw1yI5hodc:ц"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_MSG:2025-05-28 15:17:03|1|SEND_GROUP:rQ54cjWw1yI5hodc:ц"
+ChatController: Unknown command from server: "HISTORY_MSG"
+Received from server: "HISTORY_CMD:END"
+ChatController: Unknown command from server: "HISTORY_CMD"
+Received from server: "GROUP_CHATS_LIST:rQ54cjWw1yI5hodc:123"
+Received group chats list: QList("rQ54cjWw1yI5hodc:123")
+Received from server: "USERLIST:1:0:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:0:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:0:U:F" (username= "1" , isOnline= false , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:0:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "0" type: "U:F" (Original: "1:0:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:0:U:F"
+Parsed status for "1" : "0"  -> isOnline= false  (Raw data: "1:0:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: false ). Status: offline
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 0 , Offline friend users: 1 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added offline user to UI list: "1" with white background
+Final UI user list count: 4
+Applied unread message counts: QMap()
+Applied unread group message counts: QMap()
+Received from server: "AUTH_FAIL:User already logged in."
+Ignoring authentication error as currentOperation is not Auth
+Received from server: "USERLIST:1:0:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:0:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:0:U:F" (username= "1" , isOnline= false , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:0:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "0" type: "U:F" (Original: "1:0:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:0:U:F"
+Parsed status for "1" : "0"  -> isOnline= false  (Raw data: "1:0:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: offline
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 0 , Offline friend users: 1 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added offline user to UI list: "1" with white background
+Final UI user list count: 4
+Applied unread message counts: QMap()
+Applied unread group message counts: QMap()
+Received from server: "USERLIST:1:0:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:0:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:0:U:F" (username= "1" , isOnline= false , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:0:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "0" type: "U:F" (Original: "1:0:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:0:U:F"
+Parsed status for "1" : "0"  -> isOnline= false  (Raw data: "1:0:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: offline
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 0 , Offline friend users: 1 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added offline user to UI list: "1" with white background
+Final UI user list count: 4
+Applied unread message counts: QMap()
+Applied unread group message counts: QMap()
+Received from server: "2: STORE_PRIVMSG:1:2:pip:18:20:22"
+ChatController: Unknown command from server: "2"
+Received from server: "UNREAD_COUNT:1:0"
+Received unread count for "1" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)) , group: QMap()
+Updating user list with users: QList("1:0:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "0" type: "U:F" (Original: "1:0:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:0:U:F"
+Parsed status for "1" : "0"  -> isOnline= false  (Raw data: "1:0:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: offline
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 0 , Offline friend users: 1 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added offline user to UI list: "1" with white background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0))
+Applied unread group message counts: QMap()
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 0 unread messages
+Requesting recent chat partners
+Received from server: "2: GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "2"
+Received from server: "2: GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "2"
+Requesting user list
+Received from server: "USERLIST:1:0:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:0:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:0:U:F" (username= "1" , isOnline= false , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:0:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "0" type: "U:F" (Original: "1:0:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:0:U:F"
+Parsed status for "1" : "0"  -> isOnline= false  (Raw data: "1:0:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: offline
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 0 , Offline friend users: 1 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added offline user to UI list: "1" with white background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0))
+Applied unread group message counts: QMap()
+Received from server: "USERLIST:1:0:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:0:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:0:U:F" (username= "1" , isOnline= false , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:0:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "0" type: "U:F" (Original: "1:0:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:0:U:F"
+Parsed status for "1" : "0"  -> isOnline= false  (Raw data: "1:0:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: offline
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 0 , Offline friend users: 1 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added offline user to UI list: "1" with white background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0))
+Applied unread group message counts: QMap()
+Requesting user list
+Received from server: "USERLIST:1:0:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:0:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:0:U:F" (username= "1" , isOnline= false , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:0:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "0" type: "U:F" (Original: "1:0:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:0:U:F"
+Parsed status for "1" : "0"  -> isOnline= false  (Raw data: "1:0:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: offline
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 0 , Offline friend users: 1 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added offline user to UI list: "1" with white background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0))
+Applied unread group message counts: QMap()
+Received from server: "USERLIST:1:0:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:0:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:0:U:F" (username= "1" , isOnline= false , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:0:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "0" type: "U:F" (Original: "1:0:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:0:U:F"
+Parsed status for "1" : "0"  -> isOnline= false  (Raw data: "1:0:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: offline
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 0 , Offline friend users: 1 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added offline user to UI list: "1" with white background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0))
+Applied unread group message counts: QMap()
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0))
+Applied unread group message counts: QMap()
+Received from server: "1: GET_RECENT_PARTNERS"
+ChatController: Unknown command from server: "1"
+Received from server: "1: GET_UNREAD_COUNTS"
+ChatController: Unknown command from server: "1"
+Requesting user list
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0))
+Applied unread group message counts: QMap()
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0))
+Applied unread group message counts: QMap()
+Received from server: "GROUP_MESSAGE:rQ54cjWw1yI5hodc:SYSTEM:2 добавлен в чат пользователем 1"
+Received group message in chat "rQ54cjWw1yI5hodc" from "SYSTEM" : "2 добавлен в чат пользователем 1"
+GroupChatController: Handling incoming message from "SYSTEM" in chat "rQ54cjWw1yI5hodc"
+Creating new model for incoming message from chat "rQ54cjWw1yI5hodc"
+Created new group chat model for "Групповой чат rQ54cjWw" with ID "rQ54cjWw1yI5hodc"
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap()
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap()
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 0 unread messages
+Requesting user list
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap()
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap()
+Requesting user list
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap()
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap()
+Requesting user list
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap()
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap()
+Received from server: "1: SEND_GROUP:rQ54cjWw1yI5hodc:test!"
+ChatController: Unknown command from server: "1"
+Received from server: "GROUP_MESSAGE:rQ54cjWw1yI5hodc:1:test!"
+Received group message in chat "rQ54cjWw1yI5hodc" from "1" : "test!"
+GroupChatController: Handling incoming message from "1" in chat "rQ54cjWw1yI5hodc"
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap()
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "GROUP_MESSAGE:rQ54cjWw1yI5hodc:1:test!"
+Received group message in chat "rQ54cjWw1yI5hodc" from "1" : "test!"
+Technical duplicate detected for "rQ54cjWw1yI5hodc" time diff: 3 ms - likely network duplicate
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+MainWindowController: Group chat selected: "rQ54cjWw1yI5hodc"
+Created group chat window for "" with ID "rQ54cjWw1yI5hodc"
+Connections set up for group chat window "rQ54cjWw1yI5hodc"
+Requesting data for new group chat window "rQ54cjWw1yI5hodc"
+Created new group chat window for "" with ID "rQ54cjWw1yI5hodc"
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 0 unread messages
+Reset unread count for group chat "rQ54cjWw1yI5hodc" in main window
+GroupChatController: Marking messages as read for chat "rQ54cjWw1yI5hodc"
+Unread count changed for chat "" : 0
+All messages marked as read for group chat "Групповой чат rQ54cjWw"
+MainWindowController: Unread counts updated - private: QMap() , group: QMap(("rQ54cjWw1yI5hodc", 0))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap()
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 0))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 0 unread messages
+Immediately reset unread count for group chat "rQ54cjWw1yI5hodc" in main window
+Marked messages as read and sent update to server for chat "rQ54cjWw1yI5hodc"
+Group chat window shown for "" ( "rQ54cjWw1yI5hodc" )
+GroupChatController: Marking messages as read for chat "rQ54cjWw1yI5hodc"
+MainWindowController: Unread counts updated - private: QMap() , group: QMap(("rQ54cjWw1yI5hodc", 0))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap()
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 0))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 0 unread messages
+Immediately reset unread count for group chat "rQ54cjWw1yI5hodc" in main window
+Marked messages as read and sent update to server for chat "rQ54cjWw1yI5hodc"
+GroupChatController: Marking messages as read for chat "rQ54cjWw1yI5hodc"
+MainWindowController: Unread counts updated - private: QMap() , group: QMap(("rQ54cjWw1yI5hodc", 0))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap()
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 0))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 0 unread messages
+Immediately reset unread count for group chat "rQ54cjWw1yI5hodc" in main window
+Marked messages as read and sent update to server for chat "rQ54cjWw1yI5hodc"
+GroupChatWindow: Window activated for chat ""
+GroupChatController: Marking messages as read for chat "rQ54cjWw1yI5hodc"
+MainWindowController: Unread counts updated - private: QMap() , group: QMap(("rQ54cjWw1yI5hodc", 0))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap()
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 0))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 0 unread messages
+Immediately reset unread count for group chat "rQ54cjWw1yI5hodc" in main window
+Marked messages as read and sent update to server for chat "rQ54cjWw1yI5hodc"
+GroupChatController: Marking messages as read for chat "rQ54cjWw1yI5hodc"
+MainWindowController: Unread counts updated - private: QMap() , group: QMap(("rQ54cjWw1yI5hodc", 0))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap()
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 0))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 0 unread messages
+Immediately reset unread count for group chat "rQ54cjWw1yI5hodc" in main window
+Marked messages as read and sent update to server for chat "rQ54cjWw1yI5hodc"
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 0))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+GroupChatController: Requesting group chat info for chat "rQ54cjWw1yI5hodc"
+GroupChatController: Requesting message history for chat "rQ54cjWw1yI5hodc"
+Received from server: "GROUP_CHAT_INFO:rQ54cjWw1yI5hodc:123:1,2"
+Received group chat info for "123" ( "rQ54cjWw1yI5hodc" ) - members: QList("1", "2")
+GroupChatController: Members updated for chat "rQ54cjWw1yI5hodc" : QList("1", "2") Creator: ""
+Обновление списка участников чата "" - новый список: QList("1", "2")
+Обновлен список участников группового чата: "" , всего участников: 2
+Members updated for group chat "Групповой чат rQ54cjWw" : QList("1", "2")
+Обновление списка участников чата "" - новый список: QList("1", "2")
+Обновлен список участников группового чата: "" , всего участников: 2
+Установлен создатель чата: "" Текущий пользователь: "2" Кнопка удаления  скрыта
+Received from server: "GROUP_CHAT_CREATOR:rQ54cjWw1yI5hodc:1"
+Received group chat creator info for "rQ54cjWw1yI5hodc" - creator: "1"
+MainWindowController: Group creator updated for "rQ54cjWw1yI5hodc" - creator: "1"
+GroupChatController: Creator updated for chat "rQ54cjWw1yI5hodc" : "1"
+Установлен создатель чата: "1" Текущий пользователь: "2" Кнопка удаления  скрыта
+Creator set for group chat "Групповой чат rQ54cjWw" : "1"
+Установлен создатель чата: "1" Текущий пользователь: "2" Кнопка удаления  скрыта
+Received from server: "GROUP_CHAT_CREATOR:rQ54cjWw1yI5hodc:1"
+Received group chat creator info for "rQ54cjWw1yI5hodc" - creator: "1"
+MainWindowController: Group creator updated for "rQ54cjWw1yI5hodc" - creator: "1"
+GroupChatController: Creator updated for chat "rQ54cjWw1yI5hodc" : "1"
+Установлен создатель чата: "1" Текущий пользователь: "2" Кнопка удаления  скрыта
+Received from server: "GROUP_HISTORY_BEGIN:rQ54cjWw1yI5hodc"
+Beginning group history reception for chat "rQ54cjWw1yI5hodc"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:02:35|SYSTEM|1 присоединился к чату."
+Received group history message for chat "rQ54cjWw1yI5hodc" from "SYSTEM" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:02:49|SYSTEM|2 добавлен в чат пользователем 1"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "SYSTEM" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:02:57|1|1"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:02:57|1|1"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:02:58|1|2"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:02:58|1|2"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:02:59|1|3"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:02:59|1|3"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:08:15|1|1"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:08:15|1|1"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:08:15|1|2"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:08:15|1|2"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:08:16|1|3"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:08:16|1|3"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:42:35|1|test"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:42:35|1|test"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:42:51|1|one"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:42:51|1|one"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:42:58|1|lone"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:42:58|1|lone"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:59:07|1|1"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:59:07|1|1"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:59:20|1|1"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:59:20|1|1"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:59:39|1|1"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 14:59:39|1|1"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:08:12|1|2"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:08:12|1|2"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:08:19|1|3"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:08:19|1|3"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:16:56|1|ц"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:16:56|1|ц"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:17:02|1|ц"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:17:02|1|ц"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:17:03|1|ц"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:17:03|1|ц"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:20:38|SYSTEM|2 добавлен в чат пользователем 1"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "SYSTEM" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:20:51|1|test!"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_MSG:rQ54cjWw1yI5hodc|2025-05-28 15:20:51|1|test!"
+Received group history message for chat "rQ54cjWw1yI5hodc" from "1" isRead: "1"
+Received from server: "GROUP_HISTORY_END:rQ54cjWw1yI5hodc"
+Finished receiving group history for chat "rQ54cjWw1yI5hodc" with 39 messages
+ChatController: Formatted history entry - sender: "[2025-05-28 14:02:35] SYSTEM" content: "1 присоединился к чату." readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:02:49] SYSTEM" content: "2 добавлен в чат пользователем 1" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:02:57] 1" content: "1" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:02:57] 1" content: "1" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:02:58] 1" content: "2" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:02:58] 1" content: "2" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:02:59] 1" content: "3" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:02:59] 1" content: "3" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:08:15] 1" content: "1" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:08:15] 1" content: "1" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:08:15] 1" content: "2" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:08:15] 1" content: "2" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:08:16] 1" content: "3" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:08:16] 1" content: "3" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:42:35] 1" content: "test" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:42:35] 1" content: "test" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:42:51] 1" content: "one" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:42:51] 1" content: "one" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:42:58] 1" content: "lone" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:42:58] 1" content: "lone" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:59:07] 1" content: "1" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:59:07] 1" content: "1" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:59:20] 1" content: "1" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:59:20] 1" content: "1" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:59:39] 1" content: "1" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 14:59:39] 1" content: "1" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:08:12] 1" content: "2" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:08:12] 1" content: "2" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:08:19] 1" content: "3" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:08:19] 1" content: "3" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:16:56] 1" content: "ц" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:16:56] 1" content: "ц" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:17:02] 1" content: "ц" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:17:02] 1" content: "ц" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:17:03] 1" content: "ц" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:17:03] 1" content: "ц" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:20:38] SYSTEM" content: "2 добавлен в чат пользователем 1" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:20:51] 1" content: "test!" readStatus: "1"
+ChatController: Formatted history entry - sender: "[2025-05-28 15:20:51] 1" content: "test!" readStatus: "1"
+ChatController: Emitting groupHistoryReceived with 39 messages for chat "rQ54cjWw1yI5hodc"
+GroupChatController: Handling message history for chat "rQ54cjWw1yI5hodc" with 39 messages
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:02:35] SYSTEM" content: "1 присоединился к чату.|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:02:35" sender: "SYSTEM" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:02:49] SYSTEM" content: "2 добавлен в чат пользователем 1|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:02:49" sender: "SYSTEM" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:02:57] 1" content: "1|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:02:57" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:02:57] 1" content: "1|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 14:02:57|1|1"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:02:58] 1" content: "2|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:02:58" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:02:58] 1" content: "2|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 14:02:58|1|2"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:02:59] 1" content: "3|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:02:59" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:02:59] 1" content: "3|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 14:02:59|1|3"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:08:15] 1" content: "1|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:08:15" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:08:15] 1" content: "1|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 14:08:15|1|1"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:08:15] 1" content: "2|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:08:15" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:08:15] 1" content: "2|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 14:08:15|1|2"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:08:16] 1" content: "3|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:08:16" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:08:16] 1" content: "3|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 14:08:16|1|3"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:42:35] 1" content: "test|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:42:35" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:42:35] 1" content: "test|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 14:42:35|1|test"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:42:51] 1" content: "one|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:42:51" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:42:51] 1" content: "one|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 14:42:51|1|one"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:42:58] 1" content: "lone|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:42:58" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:42:58] 1" content: "lone|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 14:42:58|1|lone"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:59:07] 1" content: "1|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:59:07" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:59:07] 1" content: "1|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 14:59:07|1|1"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:59:20] 1" content: "1|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:59:20" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:59:20] 1" content: "1|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 14:59:20|1|1"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:59:39] 1" content: "1|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 14:59:39" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 14:59:39] 1" content: "1|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 14:59:39|1|1"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:08:12] 1" content: "2|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 15:08:12" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:08:12] 1" content: "2|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 15:08:12|1|2"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:08:19] 1" content: "3|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 15:08:19" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:08:19] 1" content: "3|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 15:08:19|1|3"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:16:56] 1" content: "ц|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 15:16:56" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:16:56] 1" content: "ц|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 15:16:56|1|ц"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:17:02] 1" content: "ц|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 15:17:02" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:17:02] 1" content: "ц|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 15:17:02|1|ц"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:17:03] 1" content: "ц|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 15:17:03" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:17:03] 1" content: "ц|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 15:17:03|1|ц"
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:20:38] SYSTEM" content: "2 добавлен в чат пользователем 1|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 15:20:38" sender: "SYSTEM" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:20:51] 1" content: "test!|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Parsed - time: "2025-05-28 15:20:51" sender: "1" isRead: true
+GroupChatController: Parsing history entry - senderAndTime: "[2025-05-28 15:20:51] 1" content: "test!|READ:1"
+GroupChatController: Extracted read status: "1" isRead: true
+GroupChatController: Skipping duplicate message: "2025-05-28 15:20:51|1|test!"
+Message history set for group chat "Групповой чат rQ54cjWw" : 21 messages, unread count: 0
+Parsed 21 messages from history for chat "rQ54cjWw1yI5hodc" (filtered 18 duplicates)
+Displayed 21 messages in window for chat "rQ54cjWw1yI5hodc"
+GroupChatController: Marking messages as read for chat "rQ54cjWw1yI5hodc"
+MainWindowController: Unread counts updated - private: QMap() , group: QMap(("rQ54cjWw1yI5hodc", 0))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap()
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 0 unread messages
+Immediately reset unread count for group chat "rQ54cjWw1yI5hodc" in main window
+Marked messages as read and sent update to server for chat "rQ54cjWw1yI5hodc"
+GroupChatController: Marking messages as read for chat "rQ54cjWw1yI5hodc"
+MainWindowController: Unread counts updated - private: QMap() , group: QMap(("rQ54cjWw1yI5hodc", 0))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap()
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 0))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 0 unread messages
+Immediately reset unread count for group chat "rQ54cjWw1yI5hodc" in main window
+Marked messages as read and sent update to server for chat "rQ54cjWw1yI5hodc"
+Additional markAsReadRequested for chat "rQ54cjWw1yI5hodc"
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 0))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Requested updated unread count for group chat "rQ54cjWw1yI5hodc"
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Requested updated unread count for group chat "rQ54cjWw1yI5hodc"
+Requested updated unread count for group chat "rQ54cjWw1yI5hodc"
+Requested updated unread count for group chat "rQ54cjWw1yI5hodc"
+Requested updated unread count for group chat "rQ54cjWw1yI5hodc"
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Requested updated unread count for group chat "rQ54cjWw1yI5hodc"
+Requested updated unread count for group chat "rQ54cjWw1yI5hodc"
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:rQ54cjWw1yI5hodc:0"
+Received unread count for "rQ54cjWw1yI5hodc" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Requesting user list
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat window closing for ""
+GroupChatController: Chat window closed for "rQ54cjWw1yI5hodc"
+Window hidden instead of destroyed for chat "rQ54cjWw1yI5hodc"
+GroupChatController: Chat window closed for "rQ54cjWw1yI5hodc"
+Window hidden instead of destroyed for chat "rQ54cjWw1yI5hodc"
+Requesting user list
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Received from server: "PRIVATE:1:test"
+Received private message from "1" : "test"
+PrivateChatController: Handling incoming message from "1" : "test"
+Increased unread count to 2 for sender "1" , isRead= false
+Requesting server to store message in history: "STORE_PRIVMSG:1:2:test:18:21:02"
+Requested updated unread count for "1" from server
+Received from server: "1: STORE_PRIVMSG:1:2:test:18:21:02"
+ChatController: Unknown command from server: "1"
+Received from server: "2: STORE_PRIVMSG:1:2:test:18:21:02"
+ChatController: Unknown command from server: "2"
+Received from server: "UNREAD_COUNT:1:1"
+Received unread count for "1" : 1
+MainWindowController: Unread counts updated - private: QMap(("1", 1)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 1)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Created private chat window for conversation with "1"
+Setup connections for chat window with "1"
+Requesting message history for new chat window with "1"
+PrivateChatController: Requesting message history for "1"
+Requesting private message history with "1"
+Window shown for "1"
+PrivateChatController: Marking messages as read for "1"
+Marked messages as read in model for "1"
+Sent mark as read command to server for "1"
+PrivateChatController: Marking messages as read for "1"
+Marked messages as read in model for "1"
+Sent mark as read command to server for "1"
+Received from server: "UNREAD_COUNT:1:1"
+Received unread count for "1" : 1
+MainWindowController: Unread counts updated - private: QMap(("1", 1)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 1)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "PRIVATE_HISTORY_CMD:BEGIN:1"
+Starting to receive private history for: "1"
+Received from server: "PRIVATE_HISTORY_MSG:2025-05-26 07:30:37|1|2|pip"
+Received history message: "2025-05-26 07:30:37|1|2|pip"
+Received from server: "PRIVATE_HISTORY_MSG:2025-05-26 07:30:38|1|2|ppip"
+Received history message: "2025-05-26 07:30:38|1|2|ppip"
+Received from server: "PRIVATE_HISTORY_MSG:2025-05-28 15:21:02|1|2|test"
+Received history message: "2025-05-28 15:21:02|1|2|test"
+Received from server: "PRIVATE_HISTORY_CMD:END"
+Finished receiving private history for: "1"
+PrivateChatController: Received message history for "1" with 3 messages
+History message 0 : "2025-05-26 07:30:37|1|2|pip"
+History message 1 : "2025-05-26 07:30:38|1|2|ppip"
+History message 2 : "2025-05-28 15:21:02|1|2|test"
+Parsing message history for "1" with 3 messages
+Processing message data: "2025-05-26 07:30:37|1|2|pip"
+Adding unique message: sender= "1" , content= "pip" , timestamp= "2025-05-26 07:30:37"
+Processing message data: "2025-05-26 07:30:38|1|2|ppip"
+Adding unique message: sender= "1" , content= "ppip" , timestamp= "2025-05-26 07:30:38"
+Processing message data: "2025-05-28 15:21:02|1|2|test"
+Adding unique message: sender= "1" , content= "test" , timestamp= "2025-05-28 15:21:02"
+Setting message history with 3 unique messages
+Added message to chat: sender= "1" , peer= "1" , content= "pip"
+Added message to chat: sender= "1" , peer= "1" , content= "ppip"
+Added message to chat: sender= "1" , peer= "1" , content= "test"
+Updated chat window display for "1"
+Added message to chat: sender= "1" , peer= "1" , content= "pip"
+Added message to chat: sender= "1" , peer= "1" , content= "ppip"
+Added message to chat: sender= "1" , peer= "1" , content= "test"
+Received from server: "UNREAD_COUNT:1:0"
+Received unread count for "1" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:1:0"
+Received unread count for "1" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "UNREAD_COUNT:1:0"
+Received unread count for "1" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+PrivateChatController: Requesting message history for "1"
+Requesting private message history with "1"
+Received from server: "PRIVATE_HISTORY_CMD:BEGIN:1"
+Starting to receive private history for: "1"
+Received from server: "PRIVATE_HISTORY_MSG:2025-05-26 07:30:37|1|2|pip"
+Received history message: "2025-05-26 07:30:37|1|2|pip"
+Received from server: "PRIVATE_HISTORY_MSG:2025-05-26 07:30:38|1|2|ppip"
+Received history message: "2025-05-26 07:30:38|1|2|ppip"
+Received from server: "PRIVATE_HISTORY_MSG:2025-05-28 15:21:02|1|2|test"
+Received history message: "2025-05-28 15:21:02|1|2|test"
+Received from server: "PRIVATE_HISTORY_CMD:END"
+Finished receiving private history for: "1"
+PrivateChatController: Received message history for "1" with 3 messages
+History message 0 : "2025-05-26 07:30:37|1|2|pip"
+History message 1 : "2025-05-26 07:30:38|1|2|ppip"
+History message 2 : "2025-05-28 15:21:02|1|2|test"
+Parsing message history for "1" with 3 messages
+Processing message data: "2025-05-26 07:30:37|1|2|pip"
+Adding unique message: sender= "1" , content= "pip" , timestamp= "2025-05-26 07:30:37"
+Processing message data: "2025-05-26 07:30:38|1|2|ppip"
+Adding unique message: sender= "1" , content= "ppip" , timestamp= "2025-05-26 07:30:38"
+Processing message data: "2025-05-28 15:21:02|1|2|test"
+Adding unique message: sender= "1" , content= "test" , timestamp= "2025-05-28 15:21:02"
+Setting message history with 3 unique messages
+Added message to chat: sender= "1" , peer= "1" , content= "pip"
+Added message to chat: sender= "1" , peer= "1" , content= "ppip"
+Added message to chat: sender= "1" , peer= "1" , content= "test"
+Updated chat window display for "1"
+Added message to chat: sender= "1" , peer= "1" , content= "pip"
+Added message to chat: sender= "1" , peer= "1" , content= "ppip"
+Added message to chat: sender= "1" , peer= "1" , content= "test"
+Explicitly requesting initial history for "1"
+Explicitly requesting initial history for "1"
+Requesting user list
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Received from server: "PRIVATE:1:1"
+Received private message from "1" : "1"
+PrivateChatController: Handling incoming message from "1" : "1"
+Window check for "1" : exists= true , visible= true , minimized= false , active= false , final= false
+Increased unread count to 4 for sender "1" , isRead= false
+Added message to chat: sender= "1" , peer= "1" , content= "1"
+PrivateChatController: Marking messages as read for "1"
+Marked messages as read in model for "1"
+Sent mark as read command to server for "1"
+Displayed message in window for "1"
+Requesting server to store message in history: "STORE_PRIVMSG:1:2:1:18:21:10"
+Requested updated unread count for "1" from server
+Received from server: "1: STORE_PRIVMSG:1:2:1:18:21:10"
+ChatController: Unknown command from server: "1"
+Received from server: "UNREAD_COUNT:1:0"
+Received unread count for "1" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "2: STORE_PRIVMSG:1:2:1:18:21:10"
+ChatController: Unknown command from server: "2"
+Received from server: "UNREAD_COUNT:1:0"
+Received unread count for "1" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "PRIVATE:1:2"
+Received private message from "1" : "2"
+PrivateChatController: Handling incoming message from "1" : "2"
+Window check for "1" : exists= true , visible= true , minimized= false , active= false , final= false
+Increased unread count to 1 for sender "1" , isRead= false
+Added message to chat: sender= "1" , peer= "1" , content= "2"
+PrivateChatController: Marking messages as read for "1"
+Marked messages as read in model for "1"
+Sent mark as read command to server for "1"
+Displayed message in window for "1"
+Requesting server to store message in history: "STORE_PRIVMSG:1:2:2:18:21:10"
+Requested updated unread count for "1" from server
+Received from server: "1: STORE_PRIVMSG:1:2:2:18:21:10"
+ChatController: Unknown command from server: "1"
+Received from server: "UNREAD_COUNT:1:0"
+Received unread count for "1" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "2: STORE_PRIVMSG:1:2:2:18:21:10"
+ChatController: Unknown command from server: "2"
+Received from server: "UNREAD_COUNT:1:0"
+Received unread count for "1" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "PRIVATE:1:3"
+Received private message from "1" : "3"
+PrivateChatController: Handling incoming message from "1" : "3"
+Window check for "1" : exists= true , visible= true , minimized= false , active= false , final= false
+Increased unread count to 1 for sender "1" , isRead= false
+Added message to chat: sender= "1" , peer= "1" , content= "3"
+PrivateChatController: Marking messages as read for "1"
+Marked messages as read in model for "1"
+Sent mark as read command to server for "1"
+Displayed message in window for "1"
+Requesting server to store message in history: "STORE_PRIVMSG:1:2:3:18:21:11"
+Requested updated unread count for "1" from server
+Received from server: "1: STORE_PRIVMSG:1:2:3:18:21:11"
+ChatController: Unknown command from server: "1"
+Received from server: "UNREAD_COUNT:1:0"
+Received unread count for "1" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Received from server: "2: STORE_PRIVMSG:1:2:3:18:21:11"
+ChatController: Unknown command from server: "2"
+Received from server: "UNREAD_COUNT:1:0"
+Received unread count for "1" : 0
+MainWindowController: Unread counts updated - private: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0)) , group: QMap(("rQ54cjWw1yI5hodc", 1))
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Group chat "123" ( "rQ54cjWw1yI5hodc" ) has 1 unread messages
+Requesting user list
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Received from server: "USERLIST:1:1:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:1:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:1:U:F" (username= "1" , isOnline= true , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:1:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "1" type: "U:F" (Original: "1:1:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:1:U:F"
+Parsed status for "1" : "1"  -> isOnline= true  (Raw data: "1:1:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: online
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 1 , Offline friend users: 0 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added online friend to UI list: "1" with green background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+PrivateChatController: Chat window closed for "1"
+Window hidden instead of destroyed for "1"
+Chat window with "1" was hidden (not closed)
+Received from server: "USERLIST:1:0:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:0:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:0:U:F" (username= "1" , isOnline= false , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:0:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "0" type: "U:F" (Original: "1:0:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:0:U:F"
+Parsed status for "1" : "0"  -> isOnline= false  (Raw data: "1:0:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: offline
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 0 , Offline friend users: 1 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added offline user to UI list: "1" with white background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Requesting user list
+Received from server: "USERLIST:1:0:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:0:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:0:U:F" (username= "1" , isOnline= false , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:0:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "0" type: "U:F" (Original: "1:0:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:0:U:F"
+Parsed status for "1" : "0"  -> isOnline= false  (Raw data: "1:0:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: offline
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 0 , Offline friend users: 1 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added offline user to UI list: "1" with white background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Received from server: "USERLIST:1:0:U:F,rQ54cjWw1yI5hodc:1:G:123"
+Received user list command. Payload: "1:0:U:F,rQ54cjWw1yI5hodc:1:G:123" Entries count: 2
+ChatController parsed user entry: "1:0:U:F" (username= "1" , isOnline= false , userType= "U:F" )
+ChatController parsed user entry: "rQ54cjWw1yI5hodc:1:G:123" (username= "rQ54cjWw1yI5hodc" , isOnline= true , userType= "G:123" )
+Updating user list with users: QList("1:0:U:F", "rQ54cjWw1yI5hodc:1:G:123")
+DEBUG RAW User: "1" status: "0" type: "U:F" (Original: "1:0:U:F" )
+DEBUG RAW User: "rQ54cjWw1yI5hodc" status: "1" type: "G:123" (Original: "rQ54cjWw1yI5hodc:1:G:123" )
+Got friend list from ChatController, found 0 friends from server
+Current username:  "2"
+Processing user info: "1:0:U:F"
+Parsed status for "1" : "0"  -> isOnline= false  (Raw data: "1:0:U:F" )
+Parsed type for "1" : "U:F" ""
+User "1" is a friend (server type: "U:F" , was in existingFriends: true ). Status: offline
+Processing user info: "rQ54cjWw1yI5hodc:1:G:123"
+Parsed status for "rQ54cjWw1yI5hodc" : "1"  -> isOnline= true  (Raw data: "rQ54cjWw1yI5hodc:1:G:123" )
+Parsed type for "rQ54cjWw1yI5hodc" : "G" " (Group name: 123)"
+Identified as group chat: "rQ54cjWw1yI5hodc" with name: "123"
+After processing: Online friend users: 0 , Offline friend users: 1 , Group chats: 1
+Added group chat to UI list: "rQ54cjWw1yI5hodc"
+Added offline user to UI list: "1" with white background
+Final UI user list count: 4
+Applied unread message counts: QMap(("1", 0)("rQ54cjWw1yI5hodc", 0))
+Applied unread group message counts: QMap(("rQ54cjWw1yI5hodc", 1))
+Destroyed private chat model for conversation with "1"
+PrivateChatController destroyed
+GroupChatController destroyed
+18:21:18: Процесс аварийно завершился.

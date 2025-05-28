@@ -102,21 +102,29 @@ void GroupChatWindow::receiveMessage(const QString &sender, const QString &messa
     if (sender == "SYSTEM") {
         ui->textBrowser->append("<i>[" + localTimeStr + "] " + message + "</i>");
     } else {
-        ui->textBrowser->append("[" + localTimeStr + "] " + sender + ": " + message);
+        // Добавляем выделение для собственных сообщений
+        if (groupChatController && sender == groupChatController->getCurrentUsername()) {
+            ui->textBrowser->append("<b>[" + localTimeStr + "] " + sender + "</b>: " + message);
+        } else {
+            ui->textBrowser->append("[" + localTimeStr + "] " + sender + ": " + message);
+        }
     }
     
-    // Помечаем сообщения прочитанными ТОЛЬКО если окно активно и видимо в данный момент
-    bool windowIsActiveAndVisible = isActiveWindow() && isVisible() && !isMinimized();
-    if (windowIsActiveAndVisible) {
-        // Даем небольшую задержку, чтобы сначала добавилось сообщение
-        QTimer::singleShot(50, this, [this]() {
-            emit markAsReadRequested(chatId);
-        });
-    } else {
-        // Если окно неактивно, запрашиваем обновление счетчика непрочитанных
-        if (groupChatController) {
-            groupChatController->getChatController()->requestUnreadCountForGroupChat(chatId);
-        }
+    // Прокручиваем вниз, чтобы видеть новые сообщения
+    QScrollBar *scrollbar = ui->textBrowser->verticalScrollBar();
+    if (scrollbar) {
+        scrollbar->setValue(scrollbar->maximum());
+    }
+    
+    // ИСПРАВЛЕНИЕ: Упрощаем логику как в приватном чате - если окно видимо, сразу помечаем как прочитанные
+    if (this->isVisible()) {
+        emit markAsReadRequested(chatId);
+    }
+    
+    // Активируем окно только если оно не активно (как в приватном чате)
+    if (!this->isActiveWindow()) {
+        this->activateWindow();
+        this->raise();
     }
 }
 
@@ -488,12 +496,21 @@ void GroupChatWindow::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
     
-    // Отмечаем сообщения как прочитанные только при пользовательском взаимодействии
-    // (событие активации окна обычно происходит после showEvent)
-    // Проверяем, вызван ли показ окна пользовательским взаимодействием
-    if (isActiveWindow()) {
+    qDebug() << "Group chat window shown for" << chatName << "(" << chatId << ")";
+    
+    // ИСПРАВЛЕНИЕ: Сразу помечаем как прочитанные при показе окна (как в приватном чате)
+    emit markAsReadRequested(chatId);
+    
+    // ИСПРАВЛЕНИЕ: Активируем окно и устанавливаем фокус (как в приватном чате)
+    this->activateWindow();
+    this->raise();
+    this->setFocus();
+    
+    // ИСПРАВЛЕНИЕ: Дополнительно через таймер для надежности
+    QTimer::singleShot(100, this, [this]() {
         emit markAsReadRequested(chatId);
-    }
+        qDebug() << "Additional markAsReadRequested for chat" << chatId;
+    });
     
     // При первом показе окна запрашиваем непрочитанные сообщения
     if (!initialHistoryRequested) {

@@ -69,11 +69,15 @@ public:
     QString getPendingGroupChatId() const;
     void clearPendingGroupChatId();
     
-    // Методы для обработки непрочитанных сообщений
+    // Методы для работы с непрочитанными сообщениями
     void requestUnreadCounts();
     void requestUnreadCountForUser(const QString &username);
     void requestUnreadCountForGroupChat(const QString &chatId);
     void markMessagesAsRead(const QString &username);
+    
+    // Методы для обновления локальных счетчиков
+    void updateUnreadGroupCount(const QString &chatId, int count);
+    void updateUnreadPrivateCount(const QString &username, int count);
     
     // Метод для отправки произвольных сообщений на сервер
     void sendMessageToServer(const QString &message);
