@@ -975,7 +975,13 @@ void ChatController::refreshUserListSlot()
         requestUserList();
     }
 }
-
+void ChatController::requestRecentChatPartners()
+{
+    // Запрашиваем список недавних собеседников
+    QString command = "GET_RECENT_PARTNERS";
+    sendToServer(command);
+    qDebug() << "Requesting recent chat partners";
+}
 
 bool ChatController::isLoginSuccessful() const
 {
