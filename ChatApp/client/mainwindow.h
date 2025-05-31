@@ -77,6 +77,12 @@ public:
     
     void initializeCommon(); // Инициализация общих компонентов
 
+    //методы для тестов
+    bool testAuthorizeUser(const QString& login, const QString& password);
+    bool testRegisterUser(const QString& username, const QString& password);
+    bool internalAuthorizeUser(const QString& login, const QString& password);
+    bool internalRegisterUser(const QString& username, const QString& password);
+
 signals:
     void authSuccess();
     void registerSuccess();

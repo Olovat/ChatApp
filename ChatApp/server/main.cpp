@@ -5,7 +5,9 @@
 #include <QDir>
 #include <memory>
 #include <iostream>
+#include <gtest/gtest.h>
 
+#ifndef TESTING
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
@@ -46,3 +48,11 @@ int main(int argc, char *argv[])
     std::cout << "Server application event loop finished. Exiting..." << std::endl;
     return result;
 }
+
+#else
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    ::testing::GTEST_FLAG(filter) = "ChatLogicServerTest.*";
+    return RUN_ALL_TESTS();
+}
+#endif

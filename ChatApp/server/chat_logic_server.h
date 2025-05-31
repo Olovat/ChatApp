@@ -28,6 +28,19 @@ public:
     void handleClientDisconnected(std::shared_ptr<INetworkClient> client);
     void handleMessageReceived(std::shared_ptr<INetworkClient> client, const std::string& message);
 
+    bool TestInitUserTable();
+    bool TestInitMessageTable();
+    bool TestInitHistoryTable();
+    bool TestInitGroupChatTables();
+    bool TestInitReadMessageTable();
+    bool TestInitFriendshipsTable();
+    bool TestLogMessage(const std::string &sender, const std::string &recipient, const std::string &message);
+    std::vector<std::string> TestGetUserFriends(const std::string &username);
+    bool TestSaveToHistory(const std::string &sender, const std::string &message);
+    bool TestRegisterUser(const std::string& username, const std::string& password, std::shared_ptr<INetworkClient> client);
+    bool TestAuthenticateUser(const std::string& username, const std::string& password, std::shared_ptr<INetworkClient> client);
+    bool TestAddFriend(const std::string &username, const std::string &friendName);
+    bool TestRemoveFriend(const std::string &username, const std::string &friendName);
 private:
     bool authenticateUser(const std::string& username, const std::string& password, std::shared_ptr<INetworkClient> client);
     bool registerUser(const std::string& username, const std::string& password, std::shared_ptr<INetworkClient> client);

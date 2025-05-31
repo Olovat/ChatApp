@@ -38,7 +38,7 @@ void MainWindow::initializeCommon()
 
     // Добавляем явное подключение для поля поиска
     connect(ui->lineEdit, &QLineEdit::returnPressed, this, &MainWindow::on_lineEdit_returnPressed);
-    
+    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::on_pushButton_2_clicked);
     // Инициализация переменных для поиска
     searchDialog = nullptr;
     searchListWidget = nullptr;
@@ -925,4 +925,58 @@ void MainWindow::updateGroupUnreadCounts(const QMap<QString, int> &counts)
             }
         }
     }
+}
+
+
+
+bool MainWindow::testAuthorizeUser(const QString& login, const QString& password) {
+    return internalAuthorizeUser(login, password);
+}
+
+bool MainWindow::testRegisterUser(const QString& username, const QString& password) {
+    return internalRegisterUser(username, password);
+}
+
+bool MainWindow::internalAuthorizeUser(const QString& login, const QString& password) {
+    if (login.isEmpty() || password.isEmpty()) {
+        return false;
+    }
+
+    ChatController *chatController = controller->getChatController();
+
+    if (isLoginSuccessful() && chatController->getCurrentUsername() == login) {
+        return true; // Логин уже успешен
+    }
+
+    m_username = login;
+    m_userpass = password;
+
+    if (!chatController->isConnected()) {
+        if (!chatController->reconnectToServer()) {
+            return false;
+        }
+    }
+
+    emit requestAuthorizeUser(login, password);
+    return true;
+}
+
+bool MainWindow::internalRegisterUser(const QString& username, const QString& password) {
+    if (username.isEmpty() || password.isEmpty()) {
+        return false;
+    }
+
+    m_username = username;
+    m_userpass = password;
+
+    ChatController *chatController = controller->getChatController();
+
+    if (!chatController->isConnected()) {
+        if (!chatController->reconnectToServer()) {
+            return false;
+        }
+    }
+
+    emit requestRegisterUser(username, password);
+    return true;
 }

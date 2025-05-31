@@ -35,8 +35,10 @@ public:
     };
 
     explicit ChatController(QObject *parent = nullptr);
-    ~ChatController();
 
+    explicit ChatController(QObject *parent, QTcpSocket *externalSocket);
+    ~ChatController();
+    void processServerResponse(const QString &response);
     // Методы подключения и отключения
     bool connectToServer(const QString& host, quint16 port);
     void disconnectFromServer();
@@ -99,6 +101,18 @@ public:
     bool isFriend(const QString &username) const;
     QStringList getFriendList() const;
 
+    // методы для тестов
+    void setSocketForTesting(QTcpSocket* socket);
+    bool test_connectToServer(const QString& host, quint16 port, QTcpSocket* testSocket);
+    void setUsernameForTesting(const QString& name);
+    void setPasswordForTesting(const QString& pass);
+    void resetAuthStateForTesting();
+    QTcpSocket* GetSocket(){
+        return socket;
+    }
+public slots:
+    void handleReadyRead();
+    void handleDisconnected();
 signals:
     // Сигналы для UI
     void connectionEstablished();
@@ -176,7 +190,7 @@ private:
     QMap<QString, QString> lastGroupChatTimestamps;
 
     void sendToServer(const QString &message);
-    void processServerResponse(const QString &response);
+
     void clearSocketBuffer();
     bool isMessageDuplicate(const QString &chatId, const QString &content, bool isGroup);
     void startPollingForFriendStatus(const QString& username);

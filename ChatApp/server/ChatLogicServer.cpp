@@ -34,7 +34,7 @@ std::string generateRandomId(size_t length = 16) {
 
 ChatLogicServer::ChatLogicServer(std::unique_ptr<IDatabase> db)
     : m_db(std::move(db)) {
-    std::cout << "ChatLogicServer created." << std::endl;
+    //std::cout << "ChatLogicServer created." << std::endl;
 }
 
 ChatLogicServer::~ChatLogicServer() {
@@ -1407,3 +1407,216 @@ void ChatLogicServer::updateUserCacheOnLogout(const std::string& username) {
     }
 }
 
+bool ChatLogicServer::TestInitUserTable() {
+    return initUserTable();
+}
+
+bool ChatLogicServer::TestInitMessageTable() {
+    return initMessageTable();
+}
+
+bool ChatLogicServer::TestInitHistoryTable() {
+    return initHistoryTable();
+}
+
+bool ChatLogicServer::TestInitFriendshipsTable() {
+    return initFriendshipsTable();
+}
+
+bool ChatLogicServer::TestInitGroupChatTables() {
+    return initGroupChatTables();
+}
+
+bool ChatLogicServer::TestInitReadMessageTable() {
+    return initReadMessageTable();
+}
+
+bool ChatLogicServer::TestLogMessage(const std::string &sender, const std::string &recipient, const std::string &message) {
+    if (!m_db) return false;
+    std::string query = "INSERT INTO messages (sender, recipient, message) VALUES (?, ?, ?);";
+    bool success = m_db->execute(query, {sender, recipient, message});
+    if (!success) std::cerr << "Failed to log message: " << m_db->lastError() << std::endl;
+    return success;
+}
+
+std::vector<std::string> ChatLogicServer::TestGetUserFriends(const std::string &username) {
+    std::vector<std::string> friends;
+    if (!m_db) return friends;
+
+    auto userIdOpt = m_db->fetchOne("SELECT id FROM users WHERE username = ?;", {username});
+    if (!userIdOpt || !userIdOpt.value().count("id")) return friends;
+    long long userId = std::any_cast<long long>(userIdOpt.value().at("id"));
+
+    // Выбираем имена друзей
+    std::string query = "SELECT u.username FROM users u JOIN friendships f ON u.id = f.friend_id WHERE f.user_id = ?;";
+    auto results = m_db->fetchAll(query, {userId});
+    for (const auto& row : results) {
+        try {
+            friends.push_back(std::any_cast<std::string>(row.at("username")));
+        } catch (const std::bad_any_cast& e) {
+            std::cerr << "Bad any_cast in getUserFriends: " << e.what() << std::endl;
+        }
+    }
+    return friends;
+}
+
+bool ChatLogicServer::TestSaveToHistory(const std::string &sender, const std::string &message) {
+    if (!m_db) return false;
+    std::string query = "INSERT INTO history (sender, message) VALUES (?, ?);";
+    bool success = m_db->execute(query, {sender, message});
+    if (!success) std::cerr << "Failed to save to history: " << m_db->lastError() << std::endl;
+    return success;
+}
+
+
+bool ChatLogicServer::TestRegisterUser(const std::string& username, const std::string& password, std::shared_ptr<INetworkClient> client) {
+    if (m_cachedUsers.count(username)) {
+        client->sendMessage("REGISTER_FAILED:Username already exists");
+        return false;
+    }
+    if (!m_db) return false;
+    std::string check_query = "SELECT id FROM users WHERE username = ?;";
+    auto existing_user = m_db->fetchOne(check_query, {username});
+
+    if (existing_user.has_value()) {
+        client->sendMessage("REGISTER_FAILED:Username already exists.");
+        return false;
+    }
+
+    std::string insert_query = "INSERT INTO users (username, password) VALUES (?, ?);";
+    if (m_db->execute(insert_query, {username, password})) {
+        client->sendMessage("REGISTER_SUCCESS");
+        std::cout << "User " << username << " registered." << std::endl;
+        auto userRow = m_db->fetchOne("SELECT id FROM users WHERE username = ?;", {username});
+        if (userRow && userRow.value().count("id")) {
+            try {
+                long long userId = std::any_cast<long long>(userRow.value().at("id"));
+                m_cachedUsers[username] = {username, userId, false, nullptr, {}, {}};
+                std::cout << "Cache updated: New user " << username << " added to cache." << std::endl;
+            } catch (const std::bad_any_cast& e) {
+                std::cerr << "Error casting new user ID for cache: " << e.what() << std::endl;
+            }
+        } else {
+            std::cerr << "Could not retrieve ID for newly registered user " << username << " for cache update." << std::endl;
+        }
+        return true;
+    } else {
+        client->sendMessage("REGISTER_FAILED:Database error.");
+        std::cerr << "Failed to register user " << username << ": " << m_db->lastError() << std::endl;
+        return false;
+    }
+}
+
+bool ChatLogicServer::TestAuthenticateUser(const std::string& username, const std::string& password, std::shared_ptr<INetworkClient> client) {
+    if (!m_db) {
+        client->sendMessage("AUTH_FAILED:Database not available");
+        return false;
+    }
+
+    // 1. Получаем пароль из БД
+    std::string query_str = "SELECT password FROM users WHERE username = ?";
+    auto result = m_db->fetchOne(query_str, {username});
+
+    if (!result.has_value()) {
+        client->sendMessage("AUTH_FAILED:User not found");
+        return false;
+    }
+
+    // 2. Проверяем тип и значение пароля
+    try {
+        std::string db_password = std::any_cast<std::string>(result.value().at("password"));
+
+        if (db_password == password) {
+            client->sendMessage("AUTH_SUCCESS");
+            return true;
+        } else {
+            client->sendMessage("AUTH_FAILED:Invalid password");
+            return false;
+        }
+    } catch (const std::bad_any_cast& e) {
+        std::cerr << "Authentication error: Bad cast for password - " << e.what() << std::endl;
+        client->sendMessage("AUTH_FAILED:Internal server error");
+        return false;
+    } catch (const std::out_of_range& e) {
+        std::cerr << "Authentication error: Missing 'password' field in DB result" << std::endl;
+        client->sendMessage("AUTH_FAILED:Internal server error");
+        return false;
+    }
+}
+
+bool ChatLogicServer::TestAddFriend(const std::string& username, const std::string& friendName) {
+    if (!m_db || username == friendName) return false;
+
+    // Получаем ID пользователей из БД
+    auto getUserId = [&](const std::string& name) -> std::optional<long long> {
+        auto result = m_db->fetchOne("SELECT id FROM users WHERE username = ?;", {name});
+        if (result && result.value().count("id")) {
+            try {
+                return std::any_cast<long long>(result.value().at("id"));
+            } catch (const std::bad_any_cast&) {
+                return std::nullopt;
+            }
+        }
+        return std::nullopt;
+    };
+
+    auto userIdOpt = getUserId(username);
+    auto friendIdOpt = getUserId(friendName);
+
+    if (!userIdOpt || !friendIdOpt) {
+        std::cerr << "Cannot add friend: one of the users not found." << std::endl;
+        return false;
+    }
+
+    long long userId = userIdOpt.value();
+    long long friendId = friendIdOpt.value();
+
+    // Добавляем двустороннюю дружбу
+    bool success1 = m_db->execute("INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?, ?);", {userId, friendId});
+    bool success2 = m_db->execute("INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?, ?);", {friendId, userId});
+
+    if (!success1 || !success2) {
+        std::cerr << "Failed to add friend relationship between " << username << " and " << friendName << ": " << m_db->lastError() << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool ChatLogicServer::TestRemoveFriend(const std::string &username, const std::string &friendName) {
+    if (!m_db) return false;
+    long long userId = -1, friendId = -1;
+    if (m_cachedUsers.count(username)) userId = m_cachedUsers.at(username).userId;
+    if (m_cachedUsers.count(friendName)) friendId = m_cachedUsers.at(friendName).userId;
+
+    if (userId == -1 || friendId == -1) {
+        auto getUserIdFromDb = [&](const std::string& name) -> std::optional<long long> {
+            auto res = m_db->fetchOne("SELECT id FROM users WHERE username = ?;", {name});
+            if (res && res.value().count("id")) {
+                try { return std::any_cast<long long>(res.value().at("id")); }
+                catch (const std::bad_any_cast&) { return std::nullopt; }
+            }
+            return std::nullopt;
+        };
+        if (userId == -1) {
+            auto idOpt = getUserIdFromDb(username);
+            if (!idOpt) { std::cerr << "Cannot remove friend: user " << username << " not found." << std::endl; return false; }
+            userId = idOpt.value();
+        }
+        if (friendId == -1) {
+            auto idOpt = getUserIdFromDb(friendName);
+            if (!idOpt) { std::cerr << "Cannot remove friend: user " << friendName << " not found." << std::endl; return false; }
+            friendId = idOpt.value();
+        }
+    }
+
+    bool success1 = m_db->execute("DELETE FROM friendships WHERE user_id = ? AND friend_id = ?;", {userId, friendId});
+    bool success2 = m_db->execute("DELETE FROM friendships WHERE user_id = ? AND friend_id = ?;", {friendId, userId});
+
+    if (!m_db->lastError().empty() && !success1 && !success2) {
+        std::cerr << "DB error while trying to remove friend relationship between " << username << " and " << friendName << ": " << m_db->lastError() << std::endl;
+        return false;
+    }
+    removeFriendFromCache(username, friendName); // Обновляем кэш в любом случае
+    return true;
+}

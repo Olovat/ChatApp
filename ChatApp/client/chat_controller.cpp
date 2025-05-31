@@ -42,6 +42,40 @@ ChatController::ChatController(QObject *parent)
     currentOperation = None;
 }
 
+ChatController::ChatController(QObject* parent, QTcpSocket* externalSocket)
+    : QObject(parent),
+    socket(externalSocket ? externalSocket : new QTcpSocket(this)),
+    loginSuccessful(false),
+    nextBlockSize(0),
+    newFriendPollAttempts(0)
+{
+    if (!externalSocket) {
+        socket = new QTcpSocket(this);
+    }
+
+    // ВСЕ ТАЙМЕРЫ СОЗДАЮТСЯ ЗДЕСЬ
+    authTimeoutTimer = new QTimer(this);
+    newFriendStatusPollTimer = new QTimer(this);
+    userListRefreshTimer = new QTimer(this);
+
+    connect(userListRefreshTimer, &QTimer::timeout, this, &ChatController::refreshUserListSlot);
+    userListRefreshTimer->start(5000);
+
+    // Инициализация счетчиков
+    unreadPrivateMessageCounts = QMap<QString, int>();
+    unreadGroupMessageCounts = QMap<QString, int>();
+
+    friendList = QStringList();
+    lastSearchResults = QStringList();
+    currentOperation = None;
+
+    // Прочие подключения сигналов/слотов
+    connect(socket, &QTcpSocket::readyRead, this, &ChatController::handleSocketReadyRead);
+    connect(socket, &QTcpSocket::disconnected, this, &ChatController::handleDisconnected);
+    connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
+            this, &ChatController::handleSocketError);
+}
+
 ChatController::~ChatController()
 {
     if (socket) {
@@ -1011,3 +1045,50 @@ QString ChatController::getCurrentUsername() const
     return username;
 }
 
+void ChatController::setSocketForTesting(QTcpSocket* socket) {
+    if (this->socket) {
+        this->socket->deleteLater();
+    }
+    this->socket = socket;
+
+    if (socket) {
+        connect(socket, &QTcpSocket::readyRead, this, &ChatController::handleReadyRead);
+        connect(socket, &QTcpSocket::disconnected, this, &ChatController::handleDisconnected);
+        connect(socket, &QAbstractSocket::errorOccurred, this, &ChatController::handleSocketError);
+    }
+}
+
+// Изменим test_connectToServer:
+bool ChatController::test_connectToServer(const QString& host, quint16 port, QTcpSocket* testSocket) {
+    if (!testSocket) return false;
+
+    setSocketForTesting(testSocket); // Устанавливаем наш тестовый сокет
+
+    testSocket->connectToHost(host, port); // ❗ Вызываем connectToHost на тестовом сокете
+    return testSocket->waitForConnected(500);
+}
+
+void ChatController::handleReadyRead() {
+    // Обработка входящих данных
+}
+
+void ChatController::handleDisconnected() {
+    // Обработка отключения
+}
+void ChatController::setUsernameForTesting(const QString& name) {
+    this->username = name;
+}
+
+void ChatController::setPasswordForTesting(const QString& pass) {
+    this->password = pass;
+}
+
+void ChatController::resetAuthStateForTesting() {
+    loginSuccessful = false;
+    currentOperation = None;
+}
+
+void ChatController::setCurrentUser(const QString &username, const QString &password) {
+    this->username = username;
+    this->password = password;
+}

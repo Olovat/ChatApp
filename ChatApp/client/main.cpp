@@ -2,7 +2,7 @@
 #include <QApplication>
 #include <QScreen>
 #include <QStyleFactory>
-//#include <gtest/gtest.h>
+#include <gtest/gtest.h>
 
 #ifndef TESTING
 int main(int argc, char *argv[]) {
@@ -29,10 +29,14 @@ int main(int argc, char *argv[]) {
     return a.exec();
 }
 #else
-#include "../tests/test_client/MockDatabase.h"  // Добавляем для тестов
-int main(int argc, char** argv) {
-    QApplication a(argc, argv);  // Необходимо для Qt тестов
+
+int main(int argc, char *argv[]) {
+    // Инициализация QApplication до запуска тестов
+    QApplication app(argc, argv);
+
+    // Инициализация Google Test
     ::testing::InitGoogleTest(&argc, argv);
+
     return RUN_ALL_TESTS();
 }
 #endif
