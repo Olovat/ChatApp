@@ -46,48 +46,44 @@ jobs:
         version: ${{ matrix.config.qt_version }}
         cache: true
 
-    - name: Install Google Test
-      run: |
-        git clone https://github.com/google/googletest.git --branch release-1.12.1
-        cd googletest
-        cmake -Bbuild -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/gtest_install -DBUILD_GMOCK=ON
-        cmake --build build --target install
-      
     - name: List directory structure (Linux)
       if: runner.os == 'Linux'
       run: |
         ls -la
-        ls -la tests || echo "No tests directory"
+        ls -la ChatApp || echo "No ChatApp directory"
+        ls -la ChatApp/tests || echo "No tests directory"
       
     - name: List directory structure (Windows)
       if: runner.os == 'Windows'
       run: |
         dir
-        dir tests || echo "No tests directory"
+        dir ChatApp || echo "No ChatApp directory"
+        dir ChatApp\tests || echo "No tests directory"
         
     - name: Configure CMake
       run: |
+        cd ChatApp
         mkdir build
         cd build
-        cmake .. -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/gtest_install -DBUILD_CLIENT_TESTS=OFF
+        cmake ..
 
     - name: Build
       run: |
-        cd build
+        cd ChatApp/build
         cmake --build . --config Release
 
     - name: Run Tests on Linux
       if: runner.os == 'Linux'
       run: |
-        cd build
+        cd ChatApp/build
         export DISPLAY=:99
         export QT_QPA_PLATFORM=xcb
         sudo Xvfb :99 -screen 0 1024x768x24 &
         sleep 3
-        ctest -C Release --output-on-failure
+        ctest -C Release  --output-on-failure
       
     - name: Run Tests on Windows
       if: runner.os == 'Windows'
       run: |
-        cd build
+        cd ChatApp/build
         ctest -C Release -V --output-on-failure
