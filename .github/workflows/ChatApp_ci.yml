@@ -56,12 +56,14 @@ jobs:
     - name: List directory structure (Linux)
       if: runner.os == 'Linux'
       run: |
+        cd ChatApp
         ls -la
         ls -la tests || echo "No tests directory"
       
     - name: List directory structure (Windows)
       if: runner.os == 'Windows'
       run: |
+        cd ChatApp
         dir
         dir tests || echo "No tests directory"
         
