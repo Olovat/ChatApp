@@ -45,20 +45,6 @@ jobs:
       with:
         version: ${{ matrix.config.qt_version }}
         cache: true
-
-    - name: List directory structure (Linux)
-      if: runner.os == 'Linux'
-      run: |
-        ls -la
-        ls -la ChatApp || echo "No ChatApp directory"
-        ls -la ChatApp/tests || echo "No tests directory"
-      
-    - name: List directory structure (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        dir
-        dir ChatApp || echo "No ChatApp directory"
-        dir ChatApp\tests || echo "No tests directory"
         
     - name: Configure CMake
       run: |
